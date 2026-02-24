@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Vancouver Finance Company Inc. – Institutional AI Engine</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;700&display=swap" rel="stylesheet">
+
+<style>
+
+body{
+margin:0;
+background: radial-gradient(circle at center, #0a0a0a 0%, #000 70%);
+color:#e8e8e8;
+font-family:'Cormorant Garamond', serif;
+-webkit-font-smoothing: antialiased;
+-moz-osx-font-smoothing: grayscale;
+display:flex;
+justify-content:center;
+align-items:center;
+min-height:100vh;
+text-align:center;
+padding:30px 20px;
+}
+
+.wrapper{
+max-width:720px;
+width:100%;
+}
+
+.brand-top{
+font-size:30px;
+letter-spacing:6px;
+opacity:0;
+animation:fadeDown 1s ease forwards;
+}
+
+.brand-bottom{
+font-size:16px;
+letter-spacing:4px;
+margin-top:6px;
+opacity:0;
+animation:fadeDown 1.2s ease forwards;
+}
+
+.subtitle{
+font-size:11px;
+letter-spacing:2px;
+color:#9a9a9a;
+margin:28px 0 24px;
+opacity:0;
+animation:fadeIn 2s ease forwards;
+}
+
+button{
+padding:12px 28px;
+background:transparent;
+color:#fff;
+border:1px solid #666;
+cursor:pointer;
+letter-spacing:2px;
+font-size:12px;
+transition:all 0.3s ease;
+}
+
+button:hover{
+background:#fff;
+color:#000;
+}
+
+.divider{
+width:120px;
+height:1px;
+background:#2a2a2a;
+margin:26px auto;
+}
+
+.loader{
+border:2px solid #111;
+border-top:2px solid #fff;
+border-radius:50%;
+width:28px;
+height:28px;
+animation:spin 1s linear infinite;
+margin:20px auto;
+display:none;
+}
+
+.output{
+margin-top:20px;
+font-size:14px;
+line-height:1.7;
+min-height:100px;
+max-width:600px;
+margin-left:auto;
+margin-right:auto;
+padding:20px;
+background:rgba(255,255,255,0.03);
+border:1px solid rgba(255,255,255,0.08);
+backdrop-filter: blur(6px);
+word-wrap: break-word;
+}
+
+.disclaimer{
+margin-top:40px;
+font-size:10px;
+color:#555;
+max-width:600px;
+margin-left:auto;
+margin-right:auto;
+line-height:1.5;
+}
+
+@keyframes spin{
+0%{transform:rotate(0deg);}
+100%{transform:rotate(360deg);}
+}
+
+@keyframes fadeDown{
+0%{opacity:0;transform:translateY(-12px);}
+100%{opacity:1;transform:translateY(0);}
+}
+
+@keyframes fadeIn{
+0%{opacity:0;}
+100%{opacity:1;}
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="wrapper">
+
+<div class="brand-top">VANCOUVER</div>
+<div class="brand-bottom">FINANCE COMPANY INC.</div>
+
+<div class="subtitle">AI-GENERATED CONSERVATIVE MARKET ANALYSIS SYSTEM</div>
+
+<button onclick="runAnalysis()">RUN MARKET ANALYSIS</button>
+
+<div class="divider"></div>
+
+<div class="loader" id="loader"></div>
+
+<div class="output" id="output">
+System awaiting analysis.
+</div>
+
+<div class="disclaimer">
+This AI-generated system provides market insights only and does not constitute financial advice.
+No performance guarantee is expressed or implied.
+All capital decisions remain the sole responsibility of the user.
+Independent due diligence is required prior to investing.
+</div>
+
+</div>
+
+<script>
+
+const universe=["XIU.TO","VFV.TO","XIC.TO","RY.TO","TD.TO","ENB.TO","CNQ.TO"];
+
+function sma(data,period){
+if(!data || data.length<period) return null;
+let sum=0;
+for(let i=data.length-period;i<data.length;i++){
+if(data[i]!=null) sum+=data[i];
+}
+return sum/period;
+}
+
+function atr(high,low,close,period=14){
+if(!high || !low || !close) return null;
+let tr=[];
+for(let i=1;i<close.length;i++){
+if(high[i]==null || low[i]==null || close[i-1]==null) continue;
+let hl=high[i]-low[i];
+let hc=Math.abs(high[i]-close[i-1]);
+let lc=Math.abs(low[i]-close[i-1]);
+tr.push(Math.max(hl,hc,lc));
+}
+if(tr.length<period) return null;
+let slice=tr.slice(-period);
+return slice.reduce((a,b)=>a+b,0)/period;
+}
+
+async function fetchData(symbol){
+const proxy="https://api.allorigins.win/raw?url=";
+const url=`https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?range=1y&interval=1d`;
+const response=await fetch(proxy+encodeURIComponent(url));
+return await response.json();
+}
+
+async function runAnalysis(){
+
+const loader=document.getElementById("loader");
+const output=document.getElementById("output");
+
+loader.style.display="block";
+output.innerHTML="Analyzing market regime...";
+
+let approved=[];
+
+try{
+let m=await fetchData("XIU.TO");
+let closes=m.chart.result[0].indicators.quote[0].close;
+let marketLatest=closes[closes.length-1];
+let marketSMA200=sma(closes,200);
+
+if(!marketSMA200 || marketLatest<marketSMA200){
+loader.style.display="none";
+output.innerHTML="<strong>Market Regime: Bearish</strong><br><br>Capital preservation mode. No new entries.";
+return;
+}
+
+}catch(e){
+loader.style.display="none";
+output.innerHTML="Market data unavailable.";
+return;
+}
+
+for(let symbol of universe){
+try{
+let data=await fetchData(symbol);
+let quote=data.chart.result[0].indicators.quote[0];
+let closes=quote.close;
+let highs=quote.high;
+let lows=quote.low;
+
+if(!closes || closes.length<200) continue;
+
+let latest=closes[closes.length-1];
+let prev=closes[closes.length-2];
+let ret1=(latest-prev)/prev;
+
+let sma50=sma(closes,50);
+let sma200=sma(closes,200);
+let volatility=atr(highs,lows,closes)/latest;
+
+let score=0;
+
+if(latest>sma200) score+=35;
+if(latest>sma50) score+=25;
+if(volatility && volatility<0.035) score+=20;
+if(ret1<=-0.004 && ret1>=-0.012) score+=20;
+
+if(score>=80){
+approved.push(symbol+" – AI Confidence: "+score+"%");
+}
+
+}catch(e){}
+}
+
+loader.style.display="none";
+
+if(approved.length===0){
+output.innerHTML="<strong>Market Regime: Bullish</strong><br><br>No high-confidence conservative setups identified.";
+}else{
+output.innerHTML="<strong>Market Regime: Bullish</strong><br><br>"+approved.join("<br>")+"<br><br><strong>Execution Protocol:</strong><br>1. Run after market close (4:15–6:00 PM).<br>2. Review fundamentals & news.<br>3. Enter next morning at market open.<br>4. Use limited capital allocation.<br>5. Apply strict downside risk control.<br>6. Exit within 1–2 sessions.";
+}
+
+}
+
+</script>
+
+</body>
+</html>
