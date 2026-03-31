@@ -131,7 +131,7 @@ input::placeholder{color:#bbb}
         <input id="gPhone" name="phone" class="gi" type="tel" autocomplete="tel" required>
       </div>
       <div class="g-actions">
-        <div class="g-note">One-time unlock on this browser.</div>
+        <div class="g-note">Please enter details to continue. Contact details are saved for follow-up.</div>
         <button class="g-btn" type="submit">Access List</button>
       </div>
       <div class="g-err" id="gErr"></div>
@@ -472,6 +472,44 @@ document.getElementById('cc').textContent=' '+C.length;
 
 var tab='R', provs=[], q='';
 
+// Existing Google Apps Script endpoint used for lead capture
+var scriptURL='https://script.google.com/macros/s/AKfycbxqvRdFTUynTIhWn0h2aU5W1jouIs369XrmkZGGKBPkeursr4_UBIrlwtmdzsdBjStO/exec';
+
+function saveLeadLocal(lead){
+  try{
+    var key='vfcl_leads';
+    var leads=JSON.parse(localStorage.getItem(key)||'[]');
+    leads.push(lead);
+    localStorage.setItem(key,JSON.stringify(leads));
+  }catch(e){}
+}
+
+function saveLeadRemote(lead){
+  if(!scriptURL) return Promise.resolve(false);
+
+  var data=new URLSearchParams({
+    business:'Alternate Lender Directory',
+    name:lead.name||'',
+    phone:lead.phone||'',
+    email:lead.email||'',
+    tier:'LOGIN',
+    score:lead.grantedAt||''
+  });
+
+  return fetch(scriptURL,{
+    method:'POST',
+    mode:'no-cors',
+    keepalive:true,
+    body:data
+  }).then(function(){
+    return true;
+  }).catch(function(){
+    return false;
+  });
+}
+
+
+
 function idx(el){ return el.getAttribute('data-tab')||el.getAttribute('data-p'); }
 
 function draw(){
@@ -561,21 +599,12 @@ function showGate(){
   document.getElementById('gate').classList.remove('hide');
 }
 
-function unlockList(payload){
-  try{localStorage.setItem('vfcl_access',JSON.stringify(payload));}catch(e){}
+function unlockList(){
   document.getElementById('gate').classList.add('hide');
   draw();
 }
 
 (function initGate(){
-  var saved=null;
-  try{saved=JSON.parse(localStorage.getItem('vfcl_access')||'null');}catch(e){saved=null;}
-  if(saved&&saved.name&&saved.email&&saved.phone){
-    document.getElementById('gate').classList.add('hide');
-    draw();
-    return;
-  }
-
   showGate();
   document.getElementById('gateForm').addEventListener('submit',function(e){
     e.preventDefault();
@@ -592,7 +621,18 @@ function unlockList(payload){
     document.getElementById('gErr').textContent=err;
     if(err) return;
 
-    unlockList({name:name,email:email,phone:phone,grantedAt:new Date().toISOString()});
+    var lead={
+      name:name,
+      email:email,
+      phone:phone,
+      grantedAt:new Date().toISOString(),
+      source:'alternate-lender-list'
+    };
+
+    saveLeadLocal(lead);
+    saveLeadRemote(lead).finally(function(){
+      unlockList();
+    });
   });
 })();
 </script>
