@@ -1,1927 +1,492 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>CSBFP Pro | Vancouver Finance Company Inc.</title>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=Mulish:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
-  <style>
-    :root {
-      --black:   #000000;
-      --off-black:#0a0a0a;
-      --gray-900:#111111;
-      --gray-800:#1a1a1a;
-      --gray-700:#252525;
-      --gray-600:#333333;
-      --gray-500:#555555;
-      --gray-400:#888888;
-      --gray-200:#cccccc;
-      --gray-100:#e8e8e8;
-      --white:   #f5f5f5;
-      --red:     #cc0000;
-      --red-dim: #880000;
-      --red-bright:#ff1a1a;
-      --red-bg:  rgba(204,0,0,0.08);
-      --red-b:   rgba(204,0,0,0.35);
-      --green-bg:rgba(0,100,40,0.12);
-      --green-b: rgba(0,180,70,0.3);
-      --green-t: #55dd88;
-      --amber-bg:rgba(150,100,0,0.12);
-      --amber-b: rgba(220,160,0,0.3);
-      --amber-t: #ddaa33;
-    }
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
-
-    body {
-      font-family: 'Mulish', sans-serif;
-      font-style: normal;
-      background: var(--black);
-      color: var(--white);
-      min-height: 100vh;
-      padding: 40px 20px 72px;
-      position: relative;
-      overflow-x: hidden;
-    }
-
-    /* Subtle scanline texture */
-    body::before {
-      content: '';
-      position: fixed; inset: 0;
-      background-image: repeating-linear-gradient(
-        0deg,
-        rgba(255,255,255,0.012) 0px,
-        rgba(255,255,255,0.012) 1px,
-        transparent 1px,
-        transparent 3px
-      );
-      pointer-events: none; z-index: 0;
-    }
-
-    /* Red top bar accent */
-    body::after {
-      content: '';
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      height: 3px;
-      background: var(--red);
-      z-index: 100;
-    }
-
-    .wrap { max-width: 1260px; margin: 0 auto; position: relative; z-index: 1; }
-
-    /* ── HEADER ── */
-    .hdr {
-      text-align: center;
-      margin-bottom: 40px;
-      animation: fadeDown 0.5s ease both;
-      padding-top: 8px;
-    }
-
-    .hdr-firm {
-      font-family: 'DM Mono', monospace;
-      font-size: 10px;
-      font-weight: 400;
-      letter-spacing: 0.28em;
-      text-transform: uppercase;
-      color: var(--gray-400);
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 14px;
-    }
-
-    .hdr-firm::before, .hdr-firm::after {
-      content: '';
-      width: 60px; height: 1px;
-      background: var(--gray-700);
-    }
-
-    .hdr h1 {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: clamp(42px, 7vw, 80px);
-      font-weight: 400;
-      letter-spacing: 0.06em;
-      color: var(--white);
-      line-height: 0.95;
-      margin-bottom: 6px;
-    }
-
-    .hdr h1 .red { color: var(--red); }
-
-    .hdr-sub {
-      font-family: 'DM Mono', monospace;
-      font-size: 10px;
-      font-weight: 400;
-      letter-spacing: 0.18em;
-      color: var(--gray-500);
-      text-transform: uppercase;
-      margin-top: 10px;
-    }
-
-    /* Red divider */
-    .hdr-divider {
-      width: 48px; height: 2px;
-      background: var(--red);
-      margin: 14px auto 0;
-    }
-
-    /* ── TABS ── */
-    .tab-bar {
-      display: flex;
-      gap: 0;
-      margin-bottom: 24px;
-      border: 1px solid var(--gray-700);
-      border-radius: 0;
-      overflow: hidden;
-    }
-
-    .tab-btn {
-      flex: 1;
-      padding: 13px 16px;
-      border: none;
-      border-right: 1px solid var(--gray-700);
-      cursor: pointer;
-      font-family: 'DM Mono', monospace;
-      font-size: 10.5px;
-      font-weight: 500;
-      font-style: normal;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      background: var(--gray-900);
-      color: var(--gray-500);
-      transition: all 0.18s;
-    }
-
-    .tab-btn:last-child { border-right: none; }
-
-    .tab-btn.active {
-      background: var(--red);
-      color: var(--white);
-      font-weight: 700;
-    }
-
-    .tab-btn:hover:not(.active) {
-      background: var(--gray-800);
-      color: var(--gray-200);
-    }
-
-    .tab-panel { display: none; }
-    .tab-panel.active { display: block; }
-
-    /* ── LAYOUT ── */
-    .layout {
-      display: grid;
-      grid-template-columns: 1.1fr 0.9fr;
-      gap: 20px;
-      align-items: start;
-    }
-
-    /* ── CARDS ── */
-    .card {
-      background: var(--gray-900);
-      border: 1px solid var(--gray-700);
-      border-radius: 0;
-      padding: 28px;
-      position: relative;
-      animation: fadeUp 0.5s ease both;
-    }
-
-    /* Red left accent bar */
-    .card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; bottom: 0;
-      width: 3px;
-      background: var(--red);
-    }
-
-    .card-r { animation-delay: 0.07s; }
-
-    .card-head {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 22px;
-      font-weight: 400;
-      letter-spacing: 0.1em;
-      color: var(--white);
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 22px;
-      padding-bottom: 14px;
-      border-bottom: 1px solid var(--gray-700);
-    }
-
-    .card-head .badge {
-      font-family: 'DM Mono', monospace;
-      font-size: 9px;
-      font-weight: 500;
-      font-style: normal;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--red);
-      border: 1px solid var(--red-dim);
-      padding: 3px 8px;
-      background: var(--red-bg);
-    }
-
-    /* ── SECTIONS ── */
-    .sec {
-      font-family: 'DM Mono', monospace;
-      font-size: 9px;
-      font-weight: 500;
-      font-style: normal;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: var(--red);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin: 22px 0 12px;
-    }
-
-    .sec::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: var(--gray-700);
-    }
-
-    /* ── FORM ── */
-    .row  { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
-    .field { margin-bottom: 12px; }
-
-    label {
-      display: block;
-      font-family: 'DM Mono', monospace;
-      font-size: 9.5px;
-      font-weight: 500;
-      font-style: normal;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--gray-400);
-      margin-bottom: 7px;
-    }
-
-    input, select {
-      width: 100%;
-      padding: 11px 13px;
-      border: 1px solid var(--gray-700);
-      background: var(--gray-800);
-      color: var(--white);
-      font-family: 'Mulish', sans-serif;
-      font-size: 14px;
-      font-weight: 400;
-      font-style: normal;
-      outline: none;
-      border-radius: 0;
-      transition: border-color 0.15s, box-shadow 0.15s;
-      -webkit-appearance: none;
-    }
-
-    input::placeholder { color: var(--gray-600); }
-
-    input:focus, select:focus {
-      border-color: var(--red);
-      box-shadow: 0 0 0 2px rgba(204,0,0,0.15);
-    }
-
-    select {
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='6' fill='none'%3E%3Cpath d='M1 1l4.5 4L10 1' stroke='%23555' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 12px center;
-      padding-right: 34px;
-      cursor: pointer;
-    }
-
-    select option { background: #1a1a1a; }
-
-    /* ── CHECKBOXES ── */
-    .check-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      padding: 9px 12px;
-      background: var(--gray-800);
-      border: 1px solid var(--gray-700);
-      cursor: pointer;
-      margin-bottom: 6px;
-      transition: border-color 0.15s;
-    }
-
-    .check-item:hover { border-color: var(--gray-500); }
-
-    .check-item input[type=checkbox] {
-      width: 14px; height: 14px;
-      flex-shrink: 0;
-      margin-top: 2px;
-      accent-color: var(--red);
-      border: 1px solid var(--gray-600);
-      padding: 0;
-    }
-
-    .ci-text { font-size: 12.5px; line-height: 1.45; color: var(--white); }
-    .ci-sub  { font-size: 10.5px; color: var(--gray-500); margin-top: 2px; }
-
-    /* ── BUTTONS ── */
-    .btns { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
-
-    .btn-calc {
-      padding: 13px 28px;
-      border: none;
-      cursor: pointer;
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 16px;
-      font-weight: 400;
-      font-style: normal;
-      letter-spacing: 0.12em;
-      background: var(--red);
-      color: var(--white);
-      transition: background 0.15s, transform 0.1s;
-    }
-
-    .btn-calc:hover { background: var(--red-bright); transform: translateY(-1px); }
-    .btn-calc:active { transform: translateY(0); }
-
-    .btn-sec {
-      padding: 13px 22px;
-      border: 1px solid var(--gray-600);
-      cursor: pointer;
-      font-family: 'DM Mono', monospace;
-      font-size: 10px;
-      font-weight: 500;
-      font-style: normal;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      background: transparent;
-      color: var(--gray-400);
-      transition: border-color 0.15s, color 0.15s;
-    }
-
-    .btn-sec:hover { border-color: var(--gray-400); color: var(--white); }
-
-    /* ── METRICS ── */
-    .metrics {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1px;
-      background: var(--gray-700);
-      border: 1px solid var(--gray-700);
-      margin-bottom: 16px;
-    }
-
-    .metric {
-      background: var(--gray-900);
-      padding: 14px 13px 12px;
-    }
-
-    .m-lbl {
-      font-family: 'DM Mono', monospace;
-      font-size: 8.5px;
-      font-weight: 500;
-      font-style: normal;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: var(--gray-500);
-      margin-bottom: 7px;
-    }
-
-    .m-val {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 30px;
-      font-weight: 400;
-      color: var(--white);
-      line-height: 1;
-      letter-spacing: 0.04em;
-    }
-
-    .m-val.red { color: var(--red); }
-
-    /* ── SCORE BAR ── */
-    .score-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 6px;
-    }
-
-    .score-lbl {
-      font-family: 'DM Mono', monospace;
-      font-size: 8.5px;
-      font-weight: 500;
-      font-style: normal;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: var(--gray-500);
-    }
-
-    .score-num {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 18px;
-      font-weight: 400;
-      color: var(--red);
-      letter-spacing: 0.06em;
-    }
-
-    .track {
-      width: 100%;
-      height: 4px;
-      background: var(--gray-800);
-      border: 1px solid var(--gray-700);
-      margin-bottom: 16px;
-      overflow: hidden;
-    }
-
-    .fill {
-      height: 100%;
-      width: 0%;
-      background: var(--red);
-      transition: width 0.6s cubic-bezier(0.34,1.56,0.64,1);
-    }
-
-    /* ── STATUS ── */
-    .status {
-      padding: 13px 15px;
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      font-weight: 400;
-      font-style: normal;
-      letter-spacing: 0.03em;
-      line-height: 1.55;
-      margin-bottom: 16px;
-      border-left: 3px solid;
-    }
-
-    .status.good {
-      background: var(--green-bg);
-      border-color: var(--green-t);
-      color: var(--green-t);
-    }
-
-    .status.warn {
-      background: var(--amber-bg);
-      border-color: var(--amber-t);
-      color: var(--amber-t);
-    }
-
-    .status.bad {
-      background: var(--red-bg);
-      border-color: var(--red);
-      color: #ff6666;
-    }
-
-    /* ── PILLS ── */
-    .pills {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 5px;
-      margin-bottom: 16px;
-    }
-
-    .pill {
-      padding: 3px 9px;
-      font-family: 'DM Mono', monospace;
-      font-size: 9.5px;
-      font-weight: 400;
-      font-style: normal;
-      letter-spacing: 0.06em;
-      background: var(--gray-800);
-      border: 1px solid var(--gray-700);
-      color: var(--gray-400);
-      cursor: default;
-      transition: border-color 0.15s, color 0.15s;
-    }
-
-    .pill:hover { border-color: var(--red-dim); color: var(--gray-200); }
-
-    /* ── OUTPUT BOXES ── */
-    .out-box {
-      background: var(--gray-900);
-      border: 1px solid var(--gray-700);
-      border-top: 2px solid var(--red);
-      padding: 16px;
-      margin-bottom: 12px;
-    }
-
-    .out-title {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 14px;
-      font-weight: 400;
-      font-style: normal;
-      letter-spacing: 0.14em;
-      color: var(--red);
-      margin-bottom: 12px;
-      text-transform: uppercase;
-    }
-
-    /* ── NOTE ITEMS ── */
-    .note-item {
-      display: flex;
-      gap: 10px;
-      padding: 9px 0;
-      border-bottom: 1px solid var(--gray-800);
-      font-size: 12px;
-      color: var(--gray-200);
-      line-height: 1.55;
-    }
-
-    .note-item:last-child { border-bottom: none; padding-bottom: 0; }
-    .ni { flex-shrink: 0; margin-top: 1px; }
-
-    /* ── CITE BADGE ── */
-    .cite {
-      display: inline-block;
-      background: var(--red-bg);
-      border: 1px solid var(--red-dim);
-      color: #ff6666;
-      font-family: 'DM Mono', monospace;
-      font-size: 8.5px;
-      font-weight: 400;
-      font-style: normal;
-      letter-spacing: 0.06em;
-      padding: 1px 6px;
-      margin-left: 5px;
-      vertical-align: middle;
-      white-space: nowrap;
-    }
-
-    /* ── SUMMARY ── */
-    .s-line {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      padding: 8px 0;
-      border-bottom: 1px solid var(--gray-800);
-      font-size: 12.5px;
-    }
-
-    .s-line:last-child { border-bottom: none; }
-
-    .s-lbl {
-      font-family: 'DM Mono', monospace;
-      font-size: 10px;
-      font-weight: 400;
-      font-style: normal;
-      letter-spacing: 0.08em;
-      color: var(--gray-500);
-      text-transform: uppercase;
-    }
-
-    .s-val {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 18px;
-      font-weight: 400;
-      font-style: normal;
-      color: var(--white);
-      letter-spacing: 0.05em;
-    }
-
-    .s-val.good { color: var(--green-t); }
-    .s-val.warn { color: var(--amber-t); }
-    .s-val.bad  { color: #ff6666; }
-    .s-val.red  { color: var(--red); }
-
-    /* ── BORROWER CHECK ROWS ── */
-    .bq-check-row {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      padding: 10px 12px;
-      background: var(--gray-800);
-      border: 1px solid var(--gray-700);
-      border-left: 3px solid var(--gray-600);
-      margin-bottom: 6px;
-      font-size: 12px;
-      color: var(--gray-200);
-      line-height: 1.55;
-    }
-
-    .bq-check-row .bq-icon { flex-shrink: 0; margin-top: 1px; }
-    .bq-pass { border-left-color: var(--green-t) !important; }
-    .bq-fail { border-left-color: var(--red) !important; background: rgba(204,0,0,0.06) !important; }
-    .bq-warn { border-left-color: var(--amber-t) !important; }
-
-    /* ── FOOTER ── */
-    .footer-note {
-      font-family: 'DM Mono', monospace;
-      font-size: 9.5px;
-      font-weight: 400;
-      font-style: normal;
-      letter-spacing: 0.04em;
-      color: var(--gray-600);
-      line-height: 1.65;
-      margin-top: 16px;
-      padding-top: 14px;
-      border-top: 1px solid var(--gray-800);
-    }
-
-    .disclaimer {
-      margin-top: 32px;
-      text-align: center;
-      font-family: 'DM Mono', monospace;
-      font-size: 9.5px;
-      font-weight: 400;
-      font-style: normal;
-      color: var(--gray-600);
-      line-height: 1.65;
-      max-width: 700px;
-      margin-left: auto;
-      margin-right: auto;
-      padding-top: 24px;
-      border-top: 1px solid var(--gray-800);
-    }
-
-    /* ── ANIMATIONS ── */
-    @keyframes fadeDown {
-      from { opacity: 0; transform: translateY(-16px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    /* ── RESPONSIVE ── */
-    @media (max-width: 980px) {
-      .layout { grid-template-columns: 1fr; }
-    }
-
-    @media (max-width: 640px) {
-      body { padding: 24px 14px 52px; }
-      .card { padding: 20px 16px; }
-      .row, .row3, .metrics { grid-template-columns: 1fr; }
-      .hdr h1 { font-size: 48px; }
-    }
-
-    /* ── EXPORT BUTTON (floating) ── */
-    .export-fab {
-      position: fixed;
-      bottom: 28px;
-      right: 28px;
-      z-index: 999;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      align-items: flex-end;
-    }
-
-    .export-btn {
-      padding: 12px 20px;
-      border: 1px solid #cc0000;
-      background: #000;
-      color: #cc0000;
-      font-family: 'DM Mono', monospace;
-      font-size: 10px;
-      font-weight: 500;
-      font-style: normal;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: background 0.15s, color 0.15s;
-      white-space: nowrap;
-    }
-
-    .export-btn:hover {
-      background: #cc0000;
-      color: #fff;
-    }
-
-    .export-btn svg {
-      display: inline-block;
-      vertical-align: middle;
-      margin-right: 6px;
-      margin-top: -2px;
-    }
-
-    /* ── PRINT REPORT OVERLAY ── */
-    #print-report {
-      display: none;
-    }
-
-    /* ════════════════════════════════════
-       PRINT STYLES
-    ════════════════════════════════════ */
-    @media print {
-      /* Hide entire screen UI */
-      body > *        { display: none !important; }
-      body::before    { display: none !important; }
-      body::after     { display: none !important; }
-      .export-fab     { display: none !important; }
-
-      /* Show only the print report */
-      #print-report   { display: block !important; }
-
-      body {
-        background: #fff !important;
-        color: #000 !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        font-family: 'Mulish', sans-serif !important;
-        font-size: 10pt !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-      }
-
-      #print-report {
-        width: 100%;
-        max-width: 100%;
-        padding: 0;
-        margin: 0;
-      }
-
-      /* PAGE SETUP */
-      @page {
-        size: Letter portrait;
-        margin: 16mm 14mm 16mm 14mm;
-      }
-
-      @page :first {
-        margin-top: 10mm;
-      }
-
-      /* Print report internal styles */
-      .pr-page { page-break-after: always; }
-      .pr-page:last-child { page-break-after: avoid; }
-
-      .pr-header {
-        border-bottom: 3px solid #cc0000;
-        padding-bottom: 10pt;
-        margin-bottom: 14pt;
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-end;
-      }
-
-      .pr-firm {
-        font-family: 'DM Mono', monospace;
-        font-size: 7pt;
-        letter-spacing: 0.2em;
-        text-transform: uppercase;
-        color: #888;
-        margin-bottom: 3pt;
-      }
-
-      .pr-title {
-        font-family: 'Bebas Neue', sans-serif;
-        font-size: 28pt;
-        font-weight: 400;
-        letter-spacing: 0.06em;
-        color: #000;
-        line-height: 1;
-      }
-
-      .pr-title .pr-red { color: #cc0000; }
-
-      .pr-meta {
-        text-align: right;
-        font-family: 'DM Mono', monospace;
-        font-size: 7pt;
-        color: #888;
-        letter-spacing: 0.06em;
-        line-height: 1.6;
-      }
-
-      .pr-section-title {
-        font-family: 'Bebas Neue', sans-serif;
-        font-size: 13pt;
-        font-weight: 400;
-        letter-spacing: 0.1em;
-        color: #cc0000;
-        border-bottom: 1px solid #ddd;
-        padding-bottom: 4pt;
-        margin: 14pt 0 8pt;
-        text-transform: uppercase;
-      }
-
-      .pr-grid-2 {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 8pt;
-        margin-bottom: 10pt;
-      }
-
-      .pr-grid-3 {
-        display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
-        gap: 8pt;
-        margin-bottom: 10pt;
-      }
-
-      .pr-metric {
-        border: 1px solid #ddd;
-        border-left: 3px solid #cc0000;
-        padding: 7pt 8pt;
-      }
-
-      .pr-metric-lbl {
-        font-family: 'DM Mono', monospace;
-        font-size: 6.5pt;
-        letter-spacing: 0.14em;
-        text-transform: uppercase;
-        color: #888;
-        margin-bottom: 3pt;
-      }
-
-      .pr-metric-val {
-        font-family: 'Bebas Neue', sans-serif;
-        font-size: 18pt;
-        font-weight: 400;
-        color: #000;
-        letter-spacing: 0.04em;
-        line-height: 1;
-      }
-
-      .pr-metric-val.pr-red { color: #cc0000; }
-      .pr-metric-val.pr-green { color: #007733; }
-      .pr-metric-val.pr-amber { color: #886600; }
-
-      .pr-status {
-        padding: 8pt 10pt;
-        border-left: 4px solid;
-        margin: 10pt 0;
-        font-family: 'DM Mono', monospace;
-        font-size: 8pt;
-        font-weight: 500;
-        letter-spacing: 0.04em;
-        line-height: 1.5;
-      }
-
-      .pr-status.good { border-color: #007733; background: #f0fff5; color: #004d22; }
-      .pr-status.warn { border-color: #886600; background: #fffbf0; color: #664d00; }
-      .pr-status.bad  { border-color: #cc0000; background: #fff5f5; color: #880000; }
-
-      .pr-flag {
-        display: flex;
-        gap: 8pt;
-        padding: 6pt 0;
-        border-bottom: 0.5pt solid #eee;
-        font-size: 8pt;
-        line-height: 1.5;
-        color: #222;
-        break-inside: avoid;
-      }
-
-      .pr-flag:last-child { border-bottom: none; }
-
-      .pr-flag-dot {
-        flex-shrink: 0;
-        width: 8pt;
-        height: 8pt;
-        border-radius: 50%;
-        margin-top: 2pt;
-      }
-
-      .pr-flag-dot.ok   { background: #007733; }
-      .pr-flag-dot.warn { background: #886600; }
-      .pr-flag-dot.bad  { background: #cc0000; }
-      .pr-flag-dot.info { background: #888; }
-
-      .pr-cite {
-        display: inline-block;
-        border: 0.5pt solid #cc0000;
-        color: #cc0000;
-        font-family: 'DM Mono', monospace;
-        font-size: 6pt;
-        padding: 0.5pt 4pt;
-        margin-left: 4pt;
-        vertical-align: middle;
-        white-space: nowrap;
-      }
-
-      .pr-step {
-        display: flex;
-        gap: 8pt;
-        padding: 5pt 0;
-        border-bottom: 0.5pt solid #eee;
-        font-size: 8pt;
-        line-height: 1.5;
-        color: #333;
-        break-inside: avoid;
-      }
-
-      .pr-step:last-child { border-bottom: none; }
-
-      .pr-step-num {
-        flex-shrink: 0;
-        font-family: 'DM Mono', monospace;
-        font-size: 7pt;
-        color: #cc0000;
-        font-weight: 500;
-        width: 14pt;
-        text-align: right;
-      }
-
-      .pr-summary-line {
-        display: flex;
-        justify-content: space-between;
-        align-items: baseline;
-        padding: 5pt 0;
-        border-bottom: 0.5pt solid #eee;
-        break-inside: avoid;
-      }
-
-      .pr-summary-line:last-child { border-bottom: none; }
-
-      .pr-summary-lbl {
-        font-family: 'DM Mono', monospace;
-        font-size: 7.5pt;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: #888;
-      }
-
-      .pr-summary-val {
-        font-family: 'Bebas Neue', sans-serif;
-        font-size: 14pt;
-        font-weight: 400;
-        color: #000;
-        letter-spacing: 0.04em;
-      }
-
-      .pr-summary-val.good { color: #007733; }
-      .pr-summary-val.warn { color: #886600; }
-      .pr-summary-val.bad  { color: #cc0000; }
-      .pr-summary-val.small { font-family: 'Mulish', sans-serif; font-size: 9pt; }
-
-      .pr-score-bar {
-        width: 100%;
-        height: 6pt;
-        background: #eee;
-        margin: 6pt 0 10pt;
-        position: relative;
-        border: 0.5pt solid #ddd;
-      }
-
-      .pr-score-fill {
-        height: 100%;
-        background: #cc0000;
-        position: absolute;
-        top: 0; left: 0;
-      }
-
-      .pr-footer {
-        margin-top: 20pt;
-        padding-top: 8pt;
-        border-top: 1pt solid #ddd;
-        font-family: 'DM Mono', monospace;
-        font-size: 6.5pt;
-        color: #aaa;
-        letter-spacing: 0.04em;
-        line-height: 1.6;
-      }
-
-      .pr-redbar {
-        height: 3pt;
-        background: #cc0000;
-        margin-bottom: 16pt;
-      }
-
-      .pr-bq-row {
-        display: flex;
-        gap: 8pt;
-        padding: 5pt 0;
-        border-bottom: 0.5pt solid #eee;
-        font-size: 8pt;
-        line-height: 1.5;
-        color: #222;
-        break-inside: avoid;
-      }
-
-      .pr-bq-row:last-child { border-bottom: none; }
-
-      .pr-bq-dot {
-        flex-shrink: 0;
-        width: 8pt;
-        height: 8pt;
-        border-radius: 50%;
-        margin-top: 2pt;
-      }
-
-      .pr-bq-dot.pass { background: #007733; }
-      .pr-bq-dot.fail { background: #cc0000; }
-      .pr-bq-dot.warn { background: #886600; }
-
-      .no-print { display: none !important; }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Vancouver Finance Company Inc.</title>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#fff;color:#111;font-family:'EB Garamond',Georgia,serif;font-size:16px;-webkit-font-smoothing:antialiased;min-height:100vh}
+
+/* HEADER */
+.hd{text-align:center;padding:24px 16px 0}
+.hd-name{font-size:24px;font-weight:400;letter-spacing:-0.2px;line-height:1.2}
+.hd-sub{font-size:13px;color:#999;margin-top:2px}
+
+/* PILLS */
+.pills{display:flex;justify-content:center;padding:14px 16px 0}
+.pill-wrap{display:inline-flex;align-items:center;background:#f0f0f0;border-radius:100px;padding:3px;gap:1px}
+.sep{width:1px;height:14px;background:#d0d0d0;margin:0 2px}
+button{font-family:'EB Garamond',Georgia,serif;border:none;cursor:pointer;border-radius:100px;white-space:nowrap;transition:all .15s;line-height:1}
+.t-btn{font-size:15px;color:#555;background:none;padding:7px 20px 8px}
+.p-btn{font-size:13px;color:#555;background:none;padding:7px 0 8px;flex:1;text-align:center;letter-spacing:.3px}
+.pill-wrap.prow{display:flex;width:calc(100vw - 32px);max-width:480px}
+.t-btn.on,.p-btn.on{background:#3b82f6;color:#fff;box-shadow:0 1px 6px rgba(59,130,246,.3)}
+.t-btn:not(.on):hover,.p-btn:not(.on):hover{background:rgba(0,0,0,.07);color:#111}
+.tc{font-family:'JetBrains Mono',monospace;font-size:9px;margin-left:3px;opacity:.55}
+
+/* SEARCH */
+.sb{position:sticky;top:0;z-index:99;background:rgba(255,255,255,.95);backdrop-filter:blur(10px);border-bottom:1px solid #ebebeb;padding:10px 16px;display:flex;align-items:center;gap:8px}
+.sw{position:relative;flex:1}
+.sw svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#bbb;pointer-events:none}
+input{width:100%;border:1px solid #e0e0e0;background:#fafafa;color:#111;padding:8px 12px 8px 32px;font-family:'EB Garamond',Georgia,serif;font-size:15px;outline:none;border-radius:8px;-webkit-appearance:none}
+input:focus{border-color:#3b82f6;background:#fff}
+input::placeholder{color:#bbb}
+.ct{font-family:'JetBrains Mono',monospace;font-size:10px;color:#aaa;flex-shrink:0}
+.ct em{color:#111;font-style:normal}
+.cl{font-family:'EB Garamond',Georgia,serif;font-size:13px;color:#bbb;background:none;border:none;cursor:pointer;padding:0;flex-shrink:0;border-radius:0}
+.cl:hover{color:#3b82f6}
+
+/* LIST */
+#list{padding-bottom:60px}
+
+/* Alpha */
+.ag{margin-top:0}
+.ah{padding:14px 16px 3px;border-bottom:1px solid #111;display:flex;align-items:baseline;gap:8px}
+.al{font-size:26px;font-weight:400;line-height:1}
+.cl-list{}
+
+/* Card */
+.c{padding:9px 16px;border-bottom:1px solid #f0f0f0;display:flex;flex-direction:column;gap:3px}
+.c:active{background:#f8f8f8}
+.ct2{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.cn{font-size:15px;font-weight:500;color:#111;line-height:1.3;flex:1}
+.pts{display:flex;gap:2px;flex-wrap:wrap;justify-content:flex-end;flex-shrink:0;max-width:94px}
+.pt{font-family:'JetBrains Mono',monospace;font-size:7px;padding:2px 4px;border-radius:3px}
+.pt.BC{background:#e8f5ee;color:#1a7a45}
+.pt.AB{background:#e8f0fb;color:#1a4a8a}
+.pt.SK{background:#fdf6e0;color:#7a5c00}
+.pt.MB{background:#f4e8fc;color:#6b1a8a}
+.pt.ON{background:#fde8e8;color:#8a1a1a}
+.pt.QC{background:#fde8f5;color:#8a1a5c}
+.pt.ATL{background:#e8f8f8;color:#1a6b6b}
+.cm{display:flex;flex-direction:column;gap:2px}
+.mr{display:flex;align-items:center;gap:5px}
+.mr svg{color:#ccc;flex-shrink:0}
+.ph{font-family:'JetBrains Mono',monospace;font-size:11px;color:#666}
+.mr a{font-family:'JetBrains Mono',monospace;font-size:11px;color:#3b82f6;text-decoration:none}
+
+/* Empty */
+.em{text-align:center;padding:60px 20px}
+.em-w{font-size:28px;color:#ddd}
+.em-s{font-size:13px;color:#bbb;margin-top:6px}
+
+/* Footer */
+.ft{text-align:center;padding:20px 16px 40px;border-top:1px solid #ddd;margin:8px 16px 0}
+.ft-name{font-size:13px;color:#999;margin-bottom:6px}
+.ft a{font-family:'JetBrains Mono',monospace;font-size:11px;color:#3b82f6;text-decoration:none;display:block;margin-top:3px}
+.ft a:hover{text-decoration:underline}
+
+/* Tablet+ */
+@media(min-width:600px){
+  .hd-name{font-size:30px}
+  .cl-list{display:grid;grid-template-columns:1fr 1fr}
+  .c{padding:9px 20px}
+  .ah{padding:14px 20px 3px}
+}
+@media(min-width:960px){
+  .cl-list{grid-template-columns:1fr 1fr 1fr}
+  .hd-name{font-size:34px}
+}
+</style>
 </head>
 <body>
-<div class="wrap">
 
-  <!-- HEADER -->
-  <div class="hdr">
-    <div class="hdr-firm">Vancouver Finance Company Inc.</div>
-    <h1>CSBFP <span class="red">PRO</span><br>CALCULATOR</h1>
-    <div class="hdr-divider"></div>
-    <div class="hdr-sub">Borrower Qualification &amp; Deal Screening · SOR/99-141 · ISED Guidelines April 2024</div>
-  </div>
-
-  <!-- TABS -->
-  <div class="tab-bar">
-    <button class="tab-btn active" onclick="switchTab('borrower',this)">01 / Borrower Qualification</button>
-    <button class="tab-btn" onclick="switchTab('deal',this)">02 / Deal Screening</button>
-  </div>
-
-  <!-- ════════════════════════════════════════
-       TAB 1 — BORROWER QUALIFICATION
-  ════════════════════════════════════════ -->
-  <div class="tab-panel active" id="tab-borrower">
-    <div class="layout">
-
-      <div class="card">
-        <div class="card-head">Borrower Eligibility Inputs <span class="badge">ISED Guidelines §2</span></div>
-
-        <div class="sec">Identity &amp; Legal Structure</div>
-        <div class="row">
-          <div class="field"><label>Borrower / Client Name</label>
-            <input type="text" id="bq_name" placeholder="e.g. Singh"/></div>
-          <div class="field"><label>Business Name</label>
-            <input type="text" id="bq_bizname" placeholder="e.g. Cloverdale Fitness Inc."/></div>
-        </div>
-        <div class="field"><label>Legal Structure of Borrower</label>
-          <select id="bq_legaltype">
-            <option value="corp">Corporation (Ltd. / Inc.)</option>
-            <option value="sole">Sole Proprietorship</option>
-            <option value="partner">Partnership</option>
-            <option value="trust">Trust</option>
-            <option value="holding">Holding Company (no operating business)</option>
-            <option value="nonprofit_pre2021">Non-Profit / Charity / Religious (loan pre-June 30 2021)</option>
-            <option value="nonprofit_post2021">Non-Profit / Charity / Religious (loan on/after June 30 2021)</option>
-            <option value="foreign">Foreign-Owned Canadian Corporation</option>
-          </select>
-        </div>
-
-        <div class="sec">Business Eligibility</div>
-        <div class="row">
-          <div class="field"><label>Industry / Business Type</label>
-            <select id="bq_industry">
-              <option value="restaurant">Restaurant / Cafe / Food Service</option>
-              <option value="retail">Retail Store</option>
-              <option value="fitness">Gym / Fitness Studio</option>
-              <option value="salon">Salon / Spa / Beauty</option>
-              <option value="clinic">Health Care Services</option>
-              <option value="hospitality">Hotel / Motel / Accommodation</option>
-              <option value="storage">Mini-Storage / Warehousing</option>
-              <option value="services_agri">Agricultural Service (e.g. harvesting contractor)</option>
-              <option value="farm">Farming / Primary Agriculture (SIC Group 01)</option>
-              <option value="rental_property">Real Property Rental Only (e.g. apartment building)</option>
-              <option value="private_club">Private Club / Donation-Only Org</option>
-              <option value="franchise">Franchise Business</option>
-              <option value="other">Other Business (offering products/services to public)</option>
-            </select>
-          </div>
-          <div class="field"><label>Est. Annual Gross Revenue ($)</label>
-            <input type="number" id="bq_revenue" placeholder="e.g. 850000"/></div>
-        </div>
-        <div class="row">
-          <div class="field"><label>Business Location</label>
-            <select id="bq_location">
-              <option value="canada">Operating in Canada with Canadian place of business</option>
-              <option value="outside">Outside Canada / No Canadian place of business</option>
-            </select>
-          </div>
-          <div class="field"><label>Offers Goods / Services to the Public?</label>
-            <select id="bq_public">
-              <option value="yes">Yes — retail and/or wholesale to public</option>
-              <option value="no">No — purely internal / inter-company only</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="sec">Related Borrower Check</div>
-        <p style="font-family:'DM Mono',monospace;font-size:10px;color:var(--gray-500);margin-bottom:12px;line-height:1.65;letter-spacing:0.03em">A related borrower shares control, management, staff, premises, or revenues with another CSBFP borrower. Their outstanding loan totals are aggregated against program caps. <span class="cite">ISED Guidelines §2.4; SOR/99-141 s.1.1</span></p>
-        <div class="field"><label>Related CSBFP Borrowers?</label>
-          <select id="bq_related">
-            <option value="no">No — this borrower is independent</option>
-            <option value="yes_independent">Yes — but qualifies as independent small business</option>
-            <option value="yes_related">Yes — borrowers are related (caps aggregated)</option>
-          </select>
-        </div>
-        <div id="bq_related_fields" style="display:none">
-          <div class="row">
-            <div class="field"><label>Related Borrowers Outstanding CSBFP Term Loans ($)</label>
-              <input type="number" id="bq_related_term" placeholder="e.g. 400000"/></div>
-            <div class="field"><label>Related Borrowers Outstanding CSBFP LOC ($)</label>
-              <input type="number" id="bq_related_loc" placeholder="e.g. 0"/></div>
-          </div>
-          <div class="field"><label>Independent Small Business Test: Separate premises AND less than 25% cross-revenue?</label>
-            <select id="bq_independent_test">
-              <option value="pass">Yes — passes both conditions</option>
-              <option value="fail">No — fails one or both conditions</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="sec">Requested Financing for Cap Check</div>
-        <div class="row3">
-          <div class="field"><label>New Term Loan Requested ($)</label>
-            <input type="number" id="bq_newterm" placeholder="e.g. 350000"/></div>
-          <div class="field"><label>New LOC Requested ($)</label>
-            <input type="number" id="bq_newloc" value="0"/></div>
-          <div class="field"><label>Existing CSBFP Loans Outstanding ($)</label>
-            <input type="number" id="bq_existing" value="0"/></div>
-        </div>
-
-        <div class="sec">Additional Borrower Checks</div>
-        <div class="check-item">
-          <input type="checkbox" id="bq_canada_ops"/>
-          <div><div class="ci-text">Business carries on operations in Canada with assets held in Canada</div>
-            <div class="ci-sub">Required — ISED Guidelines §2.2</div></div>
-        </div>
-        <div class="check-item">
-          <input type="checkbox" id="bq_not_crown"/>
-          <div><div class="ci-text">Borrower is NOT a Crown entity, municipality, or public body performing government functions</div>
-            <div class="ci-sub">Required — SOR/99-141 s.1(1)</div></div>
-        </div>
-        <div class="check-item">
-          <input type="checkbox" id="bq_not_holding"/>
-          <div><div class="ci-text">Borrower is NOT a pure holding company — operates an actual small business</div>
-            <div class="ci-sub">Required — ISED Guidelines §2.3</div></div>
-        </div>
-        <div class="check-item">
-          <input type="checkbox" id="bq_not_trust"/>
-          <div><div class="ci-text">Borrower is NOT a trust — trusts are ineligible legal entities under CSBFP</div>
-            <div class="ci-sub">Required — ISED Guidelines §2.3</div></div>
-        </div>
-        <div class="check-item">
-          <input type="checkbox" id="bq_not_rental"/>
-          <div><div class="ci-text">Borrower does NOT exist solely to hold and rent real property</div>
-            <div class="ci-sub">Required — ISED Guidelines §2.3</div></div>
-        </div>
-
-        <div class="btns" style="margin-top:18px">
-          <button class="btn-calc" onclick="runBorrowerQual()">Run Borrower Qualification</button>
-          <button class="btn-sec" onclick="resetBQ()">Reset</button>
-        </div>
-        <div class="footer-note">All borrower checks reference: ISED CSBFP Guidelines April 2024 (§2.1–2.4); Canada Small Business Financing Act s.2; SOR/99-141 s.1(1), s.1.1. Financial institutions are solely responsible for final credit decisions.</div>
-      </div>
-
-      <!-- RIGHT OUTPUT -->
-      <div class="card card-r">
-        <div class="card-head">Borrower Qualification Result <span class="badge">Reg-Cited</span></div>
-
-        <div id="bq_status" class="status warn">Complete the borrower profile and click Run Borrower Qualification to generate a regulation-cited eligibility assessment.</div>
-
-        <div class="out-box" id="bq_result_box" style="display:none">
-          <div class="out-title">Eligibility Assessment</div>
-          <div id="bq_checklist_out"></div>
-        </div>
-
-        <div class="out-box" id="bq_cap_box" style="display:none">
-          <div class="out-title">Loan Cap Analysis</div>
-          <div id="bq_cap_out"></div>
-        </div>
-
-        <div class="out-box" id="bq_related_box" style="display:none">
-          <div class="out-title">Related Borrower Analysis</div>
-          <div id="bq_related_out"></div>
-        </div>
-
-        <div class="out-box" id="bq_summary_box" style="display:none">
-          <div class="out-title">Borrower Qualification Summary</div>
-          <div id="bq_summary_out"></div>
-        </div>
-
-        <div class="footer-note">Citations: ISED CSBFP Guidelines April 2024 (canada.ca/csbfp); SOR/99-141 Canada Small Business Financing Regulations (current March 2, 2026); Canada Small Business Financing Act (S.C. 1998, c.36). This tool does not constitute legal advice.</div>
-      </div>
-
+<div class="hd">
+  <div class="hd-name">Vancouver Finance Company Inc.</div>
+  <div class="hd-sub">Alternate Lender List (2025–2026)</div>
+  <div class="pills">
+    <div class="pill-wrap">
+      <button class="t-btn on" data-tab="R">Residential<span class="tc" id="rc"></span></button>
+      <button class="t-btn" data-tab="C">Commercial<span class="tc" id="cc"></span></button>
     </div>
   </div>
-
-  <!-- ════════════════════════════════════════
-       TAB 2 — DEAL SCREENING
-  ════════════════════════════════════════ -->
-  <div class="tab-panel" id="tab-deal">
-    <div class="layout">
-
-      <div class="card">
-        <div class="card-head">Deal Inputs <span class="badge">V3 Reg-Cited</span></div>
-
-        <div class="sec">Client</div>
-        <div class="row">
-          <div class="field"><label>Client Name</label><input type="text" id="d_name" placeholder="e.g. Singh"/></div>
-          <div class="field"><label>Business Name</label><input type="text" id="d_bizname" placeholder="e.g. Cloverdale Fitness Inc."/></div>
-        </div>
-
-        <div class="sec">Business Profile</div>
-        <div class="row">
-          <div class="field"><label>Business Type</label>
-            <select id="d_biztype">
-              <option value="startup">Startup / New Business</option>
-              <option value="existing">Existing Business</option>
-              <option value="acquisition">Business Acquisition (Going Concern)</option>
-              <option value="franchise">Franchise</option>
-            </select>
-          </div>
-          <div class="field"><label>Industry</label>
-            <select id="d_industry">
-              <option value="restaurant">Restaurant / Cafe</option>
-              <option value="retail">Retail</option>
-              <option value="fitness">Gym / Fitness</option>
-              <option value="salon">Salon / Beauty</option>
-              <option value="clinic">Clinic / Health Services</option>
-              <option value="hospitality">Hospitality (Hotel/Motel)</option>
-              <option value="storage">Mini-Storage</option>
-              <option value="other">Other Eligible Business</option>
-            </select>
-          </div>
-        </div>
-        <div class="row">
-          <div class="field"><label>Annual Gross Revenue ($)</label><input type="number" id="d_revenue" placeholder="e.g. 850000"/></div>
-          <div class="field"><label>Years in Business</label><input type="number" id="d_years" step="0.1" placeholder="e.g. 1.5"/></div>
-        </div>
-        <div class="row">
-          <div class="field"><label>Owner Industry Experience (yrs)</label><input type="number" id="d_exp" step="0.1" placeholder="e.g. 5"/></div>
-          <div class="field"><label>Credit Score</label><input type="number" id="d_credit" placeholder="e.g. 690"/></div>
-        </div>
-
-        <div class="sec">Project Structure</div>
-        <div class="row">
-          <div class="field"><label>Total Project Cost ($)</label><input type="number" id="d_cost" placeholder="e.g. 500000"/></div>
-          <div class="field"><label>Borrower Equity / Cash Injection ($)</label><input type="number" id="d_equity" placeholder="e.g. 100000"/></div>
-        </div>
-        <div class="row">
-          <div class="field"><label>Requested Term Loan ($)</label><input type="number" id="d_term" placeholder="e.g. 350000"/></div>
-          <div class="field"><label>Requested Line of Credit ($)</label><input type="number" id="d_loc" value="0"/></div>
-        </div>
-        <div class="row">
-          <div class="field"><label>Primary Use of Funds</label>
-            <select id="d_use">
-              <option value="equipment">Equipment (New or Used)</option>
-              <option value="leaseholds">Leasehold Improvements</option>
-              <option value="realproperty">Owner-Occupied Real Property</option>
-              <option value="intangible">Intangible Assets / Working Capital</option>
-              <option value="mixed">Mixed Eligible Uses</option>
-              <option value="inventory">Inventory Only</option>
-              <option value="refinance">Refinance Existing Debt</option>
-              <option value="buyout">Shareholder / Share Buyout</option>
-            </select>
-          </div>
-          <div class="field"><label>Requested Term (years)</label><input type="number" id="d_termyrs" step="1" placeholder="e.g. 10"/></div>
-        </div>
-
-        <div class="sec">Pricing &amp; Cash Flow</div>
-        <div class="row">
-          <div class="field"><label>Interest Rate (%)</label><input type="number" id="d_rate" step="0.01" value="9.95"/></div>
-          <div class="field"><label>Annual Net Cash Flow / NOI ($)</label><input type="number" id="d_cashflow" placeholder="e.g. 180000"/></div>
-        </div>
-        <div class="row">
-          <div class="field"><label>Override: Annual Loan Payments ($)</label><input type="number" id="d_manual" placeholder="Leave blank = auto-calculated"/></div>
-          <div class="field"><label>Deal Note (optional)</label><input type="text" id="d_note" placeholder="e.g. VTB available, franchise"/></div>
-        </div>
-
-        <div class="btns">
-          <button class="btn-calc" onclick="runDeal()">Run Deal Screening</button>
-          <button class="btn-sec" onclick="resetDeal()">Reset</button>
-        </div>
-        <div class="footer-note">Automated software output only. Not advice. Not a credit decision. Not a commitment to lend. Vancouver Finance Company Inc. expressly disclaims all liability arising from use of or reliance on this Tool. Users must independently verify all information. Final approval rests solely with the approved CSBFP lender institution.</div>
-      </div>
-
-      <!-- RIGHT OUTPUT -->
-      <div class="card card-r">
-        <div class="card-head">Deal Output <span class="badge">Reg-Cited</span></div>
-
-        <div class="metrics">
-          <div class="metric"><div class="m-lbl">Total Financing</div><div class="m-val red" id="d_m_total">$0</div></div>
-          <div class="metric"><div class="m-lbl">Est. Annual Payments</div><div class="m-val" id="d_m_pmt">$0</div></div>
-          <div class="metric"><div class="m-lbl">Equity %</div><div class="m-val" id="d_m_eq">0%</div></div>
-          <div class="metric"><div class="m-lbl">DSCR</div><div class="m-val" id="d_m_dscr">—</div></div>
-          <div class="metric"><div class="m-lbl">Approval Score</div><div class="m-val red" id="d_m_score">—</div></div>
-          <div class="metric"><div class="m-lbl">Decision</div><div class="m-val" id="d_m_dec">—</div></div>
-        </div>
-
-        <div class="score-row">
-          <span class="score-lbl">Screening Score</span>
-          <span class="score-num" id="d_scoreLabel">0 / 100</span>
-        </div>
-        <div class="track"><div class="fill" id="d_scoreFill"></div></div>
-
-        <div id="d_status" class="status warn">Enter deal inputs and click Run Deal Screening.</div>
-
-        <div class="pills">
-          <span class="pill">Revenue &lt;= $10M</span>
-          <span class="pill">Term Loan max $1M (w/ real property)</span><span class="pill">Max $500K (no real property)</span>
-          <span class="pill">LOC max $150K</span>
-          <span class="pill">Max term 15 yrs</span>
-          <span class="pill">LOC term 5 yrs</span>
-          <span class="pill">DSCR &gt;= 1.20</span>
-          <span class="pill">Equity 15-25%</span>
-          <span class="pill">Reg Fee 2%</span>
-        </div>
-
-        <div class="out-box" id="d_flagsBox" style="display:none">
-          <div class="out-title">Qualification Flags &amp; Regulatory Citations</div>
-          <div id="d_flagsList"></div>
-        </div>
-        <div class="out-box" id="d_stepsBox" style="display:none">
-          <div class="out-title">Recommended Next Steps</div>
-          <div id="d_stepsList"></div>
-        </div>
-        <div class="out-box" id="d_summaryBox" style="display:none">
-          <div class="out-title">Lender-Ready Client Summary</div>
-          <div id="d_summaryContent"></div>
-        </div>
-
-        <div class="footer-note">All citations: SOR/99-141 Canada Small Business Financing Regulations (consolidated, current March 2, 2026, last amended April 12, 2024). ISED CSBFP Guidelines April 2024. CSBFP Brochure (Iu188-107/2022E-PDF, ISED 2024).</div>
-      </div>
-
+  <div class="pills" style="padding-top:10px">
+    <div class="pill-wrap prow">
+      <button class="p-btn" data-p="BC">BC</button>
+      <button class="p-btn" data-p="AB">AB</button>
+      <button class="p-btn" data-p="SK">SK</button>
+      <button class="p-btn" data-p="MB">MB</button>
+      <button class="p-btn" data-p="ON">ON</button>
+      <button class="p-btn" data-p="QC">QC</button>
+      <button class="p-btn" data-p="ATL">ATL</button>
     </div>
   </div>
-
-  <div class="disclaimer">
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:0.14em;color:#cc0000;margin-bottom:10px">LEGAL NOTICE &amp; LIMITATION OF LIABILITY</div>
-
-    <p style="margin-bottom:8px">This automated screening tool (the &ldquo;Tool&rdquo;) is provided by Vancouver Finance Company Inc. (&ldquo;VFC&rdquo;) strictly as an internal administrative aid for preliminary deal assessment purposes only. The Tool is not a financial product, not a loan application, not a credit decision, not a commitment to lend, and not legal, regulatory, tax, or investment advice of any kind.</p>
-
-    <p style="margin-bottom:8px">All outputs, scores, flags, recommendations, and citations generated by this Tool are produced automatically by software logic and do not represent the opinion, analysis, endorsement, or professional judgment of Vancouver Finance Company Inc., its directors, officers, employees, agents, or affiliates. No employee or representative of VFC has reviewed, verified, or approved any individual output produced by this Tool.</p>
-
-    <p style="margin-bottom:8px">This Tool is not a substitute for independent professional advice. Users are solely responsible for independently verifying all regulatory information, program parameters, eligibility criteria, and applicable requirements with the relevant lender, legal counsel, and/or regulatory authority prior to making any financing decision. The Canada Small Business Financing Program is administered exclusively by Innovation, Science and Economic Development Canada (ISED) and participating financial institutions. Vancouver Finance Company Inc. has no authority over, and makes no representations regarding, any lender&#39;s credit policy, underwriting standards, or approval decisions.</p>
-
-    <p style="margin-bottom:8px">Regulatory information referenced by this Tool is drawn from publicly available sources including SOR/99-141 (Canada Small Business Financing Regulations, consolidated to March 2, 2026), the ISED CSBFP Guidelines (April 2024), and the CSBFP Program Brochure (ISED, 2024). Vancouver Finance Company Inc. does not warrant the completeness, accuracy, currency, or fitness for any particular purpose of any such information. Regulations, program parameters, and eligibility criteria are subject to change without notice. Users must confirm current requirements directly with ISED and the applicable lender.</p>
-
-    <p style="margin-bottom:8px">TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, VANCOUVER FINANCE COMPANY INC. AND ITS DIRECTORS, OFFICERS, EMPLOYEES, AND AGENTS EXPRESSLY DISCLAIM ALL WARRANTIES, REPRESENTATIONS, AND CONDITIONS OF ANY KIND, WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, ACCURACY, COMPLETENESS, OR NON-INFRINGEMENT. VANCOUVER FINANCE COMPANY INC. SHALL NOT BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, PUNITIVE, OR EXEMPLARY DAMAGES OF ANY KIND ARISING FROM OR IN CONNECTION WITH THE USE OF, OR RELIANCE ON, THIS TOOL OR ANY OUTPUT GENERATED THEREBY, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.</p>
-
-    <p>By using this Tool, the user acknowledges and agrees that: (i) the Tool is provided &ldquo;as is&rdquo; without warranty of any kind; (ii) any reliance on Tool outputs is at the user&#39;s sole risk; (iii) Vancouver Finance Company Inc. bears no responsibility or liability for any action taken, or not taken, based on Tool outputs; and (iv) the user is solely responsible for conducting their own independent due diligence and obtaining appropriate professional advice before proceeding with any transaction. This notice constitutes the entire limitation of liability of Vancouver Finance Company Inc. with respect to this Tool and supersedes any prior representations.</p>
-  </div>
-
 </div>
+
+<div class="sb">
+  <div class="sw">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input id="q" type="text" placeholder="Search lender…" autocomplete="off">
+  </div>
+  <span class="ct"><em id="n">0</em></span>
+  <button class="cl" id="clr">Clear</button>
+</div>
+
+<div id="list"></div>
 
 <script>
-  const $   = id => document.getElementById(id);
-  const flt = id => parseFloat($(id)?.value || 0);
-  const str = id => ($(id)?.value || '').trim();
-  const chk = id => $(id)?.checked;
+var R=[
+  {n:"1 City Financial Ltd.",p:"604.912.0207",w:"1city.ca",v:["BC","AB","ON"]},
+  {n:"460 Mortgage Investment Corporation",p:"250.501.4601",w:"460mic.com",v:["BC"]},
+  {n:"AAREA Private Lending Inc.",p:"855.830.7452",w:"aarea.ca",v:["BC","ON"]},
+  {n:"Accepted Financial Corporation",p:"604.937.7269",w:"acceptedmic.com",v:["BC"]},
+  {n:"Accountable Mortgage Investment Corp.",p:"778.681.1972",w:"accountablemic.com",v:["BC"]},
+  {n:"Advanced MIC",p:"613.656.0869",w:"advancedmic.com",v:["ON"]},
+  {n:"Align Mortgage Corporation",p:"888.848.1878",w:"alignmortgage.ca",v:["BC"]},
+  {n:"All Harmony Financial Services Ltd.",p:"778.829.8766",w:"",v:["BC"]},
+  {n:"All Island Equity MIC",p:"250.244.9700",w:"allislandequitymic.com",v:["BC"]},
+  {n:"ALT Mortgages",p:"778.840.7464",w:"altmortgages.ca",v:["BC","AB","MB","QC"]},
+  {n:"Alta West Capital",p:"888.554.9075",w:"awcapital.ca",v:["BC","AB","ON"]},
+  {n:"Alterman Financial Inc.",p:"778.990.5781",w:"altermanfinancial.com",v:["BC","SK"]},
+  {n:"Alternative Financing Options",p:"855.459.4061",w:"alternativefinancingoptions.ca",v:["ON","ATL"]},
+  {n:"Alternative Mortgage Solutions",p:"506.854.5626",w:"amortgages.co",v:["ATL"]},
+  {n:"Amber Financial Services Corp.",p:"778.297.4999",w:"amberfinancial.ca",v:["BC","SK"]},
+  {n:"Antrim Investments Ltd.",p:"604.530.2301",w:"antriminvestments.com",v:["BC","SK","ON"]},
+  {n:"AP Capital Mortgage Investment Corp.",p:"778.328.7401",w:"apcapital.ca",v:["BC","AB"]},
+  {n:"Armada Mortgage Corporation",p:"888.467.6449",w:"armadamortgage.com",v:["BC","AB","ON"]},
+  {n:"Aroi Mortgage Investment Corporation",p:"902.681.1100",w:"mic.aroi.ca",v:["ATL"]},
+  {n:"Astina Mortgages Group Ltd.",p:"604.726.1424",w:"astina.ca",v:["BC"]},
+  {n:"Atlantic Signature Mortgage & Loan",p:"902.406.1250",w:"atlanticsignature.com",v:["ATL"]},
+  {n:"Atrium Investment Corporation",p:"416.607.4209",w:"atriummic.com",v:["BC","SK","ON"]},
+  {n:"Aveo by CMLS Financial",p:"",w:"cmls.ca/brokers/aveo",v:["BC","AB","SK","MB","ON","QC"]},
+  {n:"B-Smart Home Loans Limited Partnership",p:"250.590.6525",w:"b-smarthomeloans.com",v:["BC","AB","ON","ATL"]},
+  {n:"B2B Bank",p:"800.263.8349",w:"b2bbank.com",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"Bancorp Financial Services Inc.",p:"888.966.2717",w:"bancorpfinancial.com",v:["BC","AB"]},
+  {n:"Bayfield Mortgage Professionals",p:"604.533.4478",w:"bayfield.ca",v:["BC","AB","SK"]},
+  {n:"BDP Capital Limited",p:"647.952.0828",w:"feintuchlaw.com",v:["ON"]},
+  {n:"Benson Capital",p:"647.505.5677",w:"bensoncapital.ca",v:["ON","QC","ATL"]},
+  {n:"Bloom Finance Company",p:"866.882.5666",w:"bloomfin.ca",v:["ON"]},
+  {n:"BlueShore Pacifica Alternative Mortgage Centre",p:"604.909.3780",w:"blueshorepacifica.com",v:["BC"]},
+  {n:"Breakwater Investments Inc.",p:"905.806.2292",w:"breakwaterinvestments.ca",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"Bridgewater Bank",p:"",w:"bwbrokermfo.ca",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"Brightpath Capital Corporation",p:"519.500.3330",w:"brightpath.ca",v:["ON"]},
+  {n:"Brilliant Phoenix Mortgage Investment Corp.",p:"778.386.2362",w:"phoenixmortgage.ca",v:["BC"]},
+  {n:"Brookstreet Mortgage Investment Corp.",p:"416.922.1200",w:"brookstreetmic.com",v:["ON"]},
+  {n:"Builder's Capital Management Corp.",p:"403.685.9888",w:"builderscapital.ca",v:["AB","SK","MB"]},
+  {n:"Burke Financial Corp.",p:"905.770.0036",w:"burkefinancial.ca",v:["ON"]},
+  {n:"Calvert Home Mortgage Investment Corp.",p:"403.278.0249",w:"chmic.ca",v:["AB","MB"]},
+  {n:"Cambridge MIC",p:"778.319.2661",w:"cambridgemic.com",v:["BC","AB","ON"]},
+  {n:"Can Terra Financial Inc.",p:"888.869.4912",w:"canterra.net",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"Canada Mortgage and Financial Group",p:"888.501.2076",w:"CMFG.ca",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"Canada Penfund Mortgage Corporation",p:"604.127.3500",w:"canadapenfund.ca",v:["BC"]},
+  {n:"Canadian Mortgage Capital Corporation",p:"416.867.1053",w:"cmcapitalcorp.com",v:["BC","ON"]},
+  {n:"Canadian Northwest Mortgage Corp.",p:"604.698.1265",w:"northwestmortgage.ca",v:["BC","AB"]},
+  {n:"Canfund Mortgages Corporation",p:"778.706.6690",w:"canfundmortgages.com",v:["BC"]},
+  {n:"Canguard Mortgage Investment Corporation",p:"604.679.7968",w:"canguard.ca",v:["BC","AB"]},
+  {n:"Capital Direct Atlantic",p:"855.571.7700",w:"capitaldirect.ca",v:["ATL"]},
+  {n:"Capital Direct Lending Corp.",p:"800.625.7747",w:"capitaldirect.ca",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"Caplink Financial Corporation",p:"888.429.0114",w:"caplink.ca",v:["BC","AB","SK","MB","ON","QC"]},
+  {n:"Cash Management Group Inc.",p:"519.640.2502",w:"cashmanagemntgroup.com",v:["ON"]},
+  {n:"Cash Loans Canada Inc.",p:"844.291.9300",w:"cashloanscanadainc.com",v:["BC","AB","ON"]},
+  {n:"Castleton Mortgages",p:"877.245.4646",w:"castletonmortgages.com",v:["ON","ATL"]},
+  {n:"Cedar Peaks Mortgage",p:"403.850.3373",w:"cedarpeaksmortgage.ca",v:["BC","AB"]},
+  {n:"Central Financial",p:"604.831.7670",w:"centrofinancial.ca",v:["BC"]},
+  {n:"Centum One Financial Group Inc.",p:"",w:"centum.ca/onefinancialgroup",v:["ON"]},
+  {n:"Centurion Mortgage Capital Corporation",p:"416.733.5600",w:"centurion.ca",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"Cherokee Financial Inc.",p:"416.262.9000",w:"",v:["ON"]},
+  {n:"CLN Finance",p:"416.494.1144",w:"clnfinance.com",v:["BC","AB","SK","MB","ON"]},
+  {n:"CMI Canadian Mortgages Inc.",p:"1.888.465.7888",w:"canadianlending.ca/brokers",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"Comat Mortgage Corporation",p:"604.558.3360",w:"comat.ca",v:["BC"]},
+  {n:"Community Trust Company",p:"800.268.1576",w:"communitytrust.ca",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"Consumers Choice Mortgages Inc.",p:"604.996.4629",w:"consumerschoicemortgages.ca",v:["BC"]},
+  {n:"Cooper Pacific MIC",p:"877.475.2669",w:"cooperpacific.ca",v:["BC"]},
+  {n:"Corwin Mortgage Capital Inc.",p:"416.727.2003",w:"corwincapital.ca",v:["ON"]},
+  {n:"Cowe Mortgage Ltd.",p:"604.929.8156",w:"cowemortgage.com",v:["BC"]},
+  {n:"CWB Optimum Mortgage",p:"437.248.6345",w:"optimummortgage.ca",v:["BC","AB","SK","MB","ON","QC"]},
+  {n:"CWB Trust Services",p:"800.663.1124",w:"cwt.ca",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"CYR Funding Inc.",p:"905.731.1111",w:"cyrfunding.com",v:["ON"]},
+  {n:"Domain Funding",p:"604.681.3000",w:"domainfunding.ca",v:["BC","AB"]},
+  {n:"Donald William Kam",p:"416.960.2236",w:"",v:["ON","ATL"]},
+  {n:"Drake Financial Ltd.",p:"604.855.6661",w:"drakefinancial.com",v:["BC","AB"]},
+  {n:"DUCA Financial Services Credit Union",p:"866.900.3822",w:"duca.com",v:["ON"]},
+  {n:"Dundarave Mortgage Investment Corporation",p:"604.985.5626",w:"dmic.ca",v:["BC"]},
+  {n:"DV Capital",p:"416.318.6850",w:"dvcapitalcorp.com",v:["ON"]},
+  {n:"East Coast Mortgage Brokers",p:"709.754.0422",w:"",v:["ATL"]},
+  {n:"Eclipse Mortgages",p:"1.866.260.3786",w:"eclipsemortgages.ca",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"Editions Mortgage",p:"866.269.3786",w:"edypsmortgages.ca",v:["BC","SK","MB","ON","QC","ATL"]},
+  {n:"Effort Trust",p:"416.924.4680",w:"efforttrust.ca",v:["ON"]},
+  {n:"Elle Mortgage Corporation",p:"416.961.0001",w:"ecmb.ca",v:["ON"]},
+  {n:"Equitable Bank",p:"866.407.0004",w:"equitablebank.ca",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"Equity Financial Trust Company",p:"855.272.0050",w:"equityfinancialtrust.com",v:["BC","ON"]},
+  {n:"Farm Lending Canada",p:"844.833.2276",w:"farmlending.ca/mortgage-brokers",v:["BC","AB","SK","MB","ON","ATL"]},
+  {n:"Fast Access Financial",p:"855.367.9101",w:"fastaccess.ca",v:["ON"]},
+  {n:"FC Mortgage",p:"833.FC.LENDS",w:"fcmortgages.ca",v:["ON"]},
+  {n:"Finn Larsen Mortgage Services",p:"250.809.9999",w:"",v:["BC","SK"]},
+  {n:"Firm Capital Corporation",p:"416.635.0221",w:"firmcapital.com",v:["BC","SK","MB","ON","QC","ATL"]},
+  {n:"First Capital Corp.",p:"416.456.2588",w:"firstcapitalcorp.com",v:["ON"]},
+  {n:"First Circle Financial Services Ltd.",p:"604.986.3200",w:"firstcircle.ca",v:["BC"]},
+  {n:"First Island Financial Services Ltd.",p:"250.388.5441",w:"firstisland.com",v:["BC","SK"]},
+  {n:"First National Financial LP",p:"800.465.0039",w:"firstnational.ca",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"First Source Mortgage Corporation",p:"416.221.2238",w:"firstsourcemortgage.ca",v:["ON"]},
+  {n:"First West Credit Union",p:"844.223.0931",w:"firstwestcu.ca",v:["BC"]},
+  {n:"Fisgard Asset Management",p:"888.382.9256",w:"fisgard.com",v:["BC","AB","SK","MB","ON"]},
+  {n:"Foremost Financial",p:"416.488.5300",w:"foremostfinancial.com",v:["ON"]},
+  {n:"Freedom Capital",p:"866.944.7778",w:"freedomcapital.com",v:["BC","SK","ON"]},
+  {n:"Funding Centre",p:"604.830.7080",w:"fundingcentre.ca",v:["BC","SK"]},
+  {n:"Funds2Go Inc.",p:"416.444.4252",w:"Funds2Go.ca",v:["ON"]},
+  {n:"Gentai Capital Corporation",p:"604.638.1580",w:"GentaiCapital.com",v:["BC","AB","ON","QC","ATL"]},
+  {n:"Ginko Mortgage Investment Corporation",p:"855.901.5133",w:"gnkogmic.com",v:["BC","SK","ON","QC"]},
+  {n:"Glengarry Farm Finance",p:"1.844.458.3276",w:"glengarry.ca",v:["BC","AB","SK","MB","ON","QC"]},
+  {n:"GNE Mortgages Inc.",p:"905.757.1900",w:"gnemortgages.com",v:["ON"]},
+  {n:"Gold Capital Corp.",p:"778.386.7264",w:"GoldCapital.ca",v:["BC"]},
+  {n:"Graysbrook Capital Ltd.",p:"902.222.2670",w:"graysbrookcapital.ca",v:["ON","ATL"]},
+  {n:"Great Pacific Mortgage & Investments Ltd.",p:"800.667.0440",w:"greatpacificmortgage.com",v:["BC"]},
+  {n:"HarbourEdge Mortgage Investment Corporation",p:"705.443.8156",w:"harbouedge.com",v:["ON"]},
+  {n:"Haventree Bank",p:"855.272.0058",w:"haventreebank.com",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"Hera Investment Funds Inc.",p:"604.339.4422",w:"herafunds.com",v:["BC"]},
+  {n:"Hi-Rise Capital",p:"416.865.3398",w:"hntscapital.com",v:["BC"]},
+  {n:"Highland Mortgage Investment Corp.",p:"604.986.1002",w:"highlandmortgages.ca",v:["BC"]},
+  {n:"Hillmount Capital Inc.",p:"416.849.0322",w:"hillmount.ca",v:["ON"]},
+  {n:"Home Trust",p:"855.270.3630",w:"hometrust.ca",v:["BC","SK","MB","ON","QC"]},
+  {n:"HomeEquity Bank (CHIP)",p:"855.925.2447",w:"chipadviser.ca",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"Hosper Mortgage Investment Corp.",p:"888.495.4906",w:"hospermortgage.com",v:["ON"]},
+  {n:"IC Savings",p:"647.668.2907",w:"icssmb.ca",v:["ON","QC","ATL"]},
+  {n:"ICICI Bank Canada",p:"844.484.8497",w:"icicibank.ca",v:["BC","SK","ON"]},
+  {n:"IEC - Interior Equities Corp.",p:"800.663.1575",w:"interiorequities.com",v:["ON"]},
+  {n:"iMortgage Canada",p:"604.649.0419",w:"iMortgagecanada.com",v:["BC"]},
+  {n:"Indigoblue Mortgage Investment Corporation",p:"416.400.3977",w:"ibmic.ca",v:["ON","ATL"]},
+  {n:"Indocan (Ontario) Investment Corporation",p:"416.918.4751",w:"",v:["ON"]},
+  {n:"Infinity Mortgage Fund Ltd.",p:"250.878.0445",w:"infinitylending.ca",v:["BC"]},
+  {n:"InstaFund Financial Services Ltd.",p:"604.687.2020",w:"instafund.com",v:["ON"]},
+  {n:"Integrity Mortgage Inc.",p:"848.399.8890",w:"kimstrynaika.ca",v:["BC","SK"]},
+  {n:"Interfinance Mortgage Corporation",p:"416.445.4890",w:"interfinance.ca",v:["ON"]},
+  {n:"Invis-Mortgage Network",p:"604.868.0902",w:"mortgagenetworkcanada.com",v:["BC"]},
+  {n:"Jaycap Financial Ltd.",p:"780.641.0555",w:"jaycapfinancial.com",v:["AB","SK","MB"]},
+  {n:"Jin-Ocean Mortgage Investment Corporation",p:"778.384.0930",w:"jin-oceanmic.com",v:["BC"]},
+  {n:"JV Capital",p:"416.572.7337",w:"jvcapital.ca",v:["ON"]},
+  {n:"JW Capital Inc.",p:"902.456.6525",w:"jwcapital.ca",v:["ATL"]},
+  {n:"King Capital Mortgage Investment Corporation",p:"888.341.5464",w:"kingcapitalmic.ca",v:["BC","AB","ON"]},
+  {n:"Kingsmen Capital Investments",p:"800.822.3998",w:"kingsmen-capital.com",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"Kokanee Mortgage MIC Ltd.",p:"250.628.2849",w:"kokaneemortgagemic.com",v:["BC","ATL"]},
+  {n:"KV Capital Inc.",p:"780.433.1222",w:"kvcapital.ca",v:["AB"]},
+  {n:"Lanyard Financial Corporation",p:"778.227.9434",w:"lanyardgroup.com",v:["BC","AB","ON","QC"]},
+  {n:"Liahona Mortgage Investment Corp.",p:"905.588.2749",w:"liahona.ca",v:["ON"]},
+  {n:"Lisbona Mortgage Investment Corp.",p:"905.588.2749",w:"liahona.ca",v:["ON"]},
+  {n:"M12 Capital MIC",p:"416.778.1914",w:"m12mic.com",v:["ON"]},
+  {n:"Macquarie Financial Ltd.",p:"604.605.3944",w:"macquariefinancial.com",v:["BC","AB","SK","ON"]},
+  {n:"Magenta Capital Corporation",p:"888.267.1744",w:"magentainvestment.ca",v:["BC","AB","SK","MB","ON"]},
+  {n:"Magnum Mortgage & Realty Corp.",p:"780.467.6393",w:"mmrc.ca",v:["AB"]},
+  {n:"Mandate Management Corporation",p:"604.813.7532",w:"mandatemortgage.com",v:["BC","AB","SK","MB","ON","QC"]},
+  {n:"MCAP",p:"",w:"MCAP.com",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"MCF Mortgages",p:"416.272.0494",w:"mcfmortgages.com",v:["ON"]},
+  {n:"Mercury Mortgages",p:"905.273.4234",w:"kothargroup.com",v:["ON","AB"]},
+  {n:"Meridian Credit Union",p:"866.592.2100",w:"meridiancu.ca",v:["ON"]},
+  {n:"Merit Valor Asset Management Corp",p:"416.283.2377",w:"mertivaor.com",v:["BC","AB","MB","ON"]},
+  {n:"MERIX Financial",p:"888.637.4920",w:"merixfinancial.com",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"MIP Mortgage and Investment Professionals Inc.",p:"403.253.2022",w:"MIPMortgage.com",v:["BC","AB"]},
+  {n:"Morrison Financial Mortgage Corporation",p:"",w:"morrisonfinancial.com",v:["BC","ON"]},
+  {n:"Mortgage Alliance Mortgage Solutions",p:"416.617.7300",w:"",v:["ON"]},
+  {n:"Mortgage Broker Store",p:"416.499.2122",w:"mortgagebrokerstore.com",v:["ON"]},
+  {n:"Mortgage Power Canada",p:"647.647.2424",w:"mortgagepower.ca",v:["ON"]},
+  {n:"MortgageMaster.com Ltd.",p:"416.635.1010",w:"mortgagemaster.com",v:["ON"]},
+  {n:"MortgagePRO Ltd.",p:"403.253.2022",w:"mymortgagepros.com",v:["ON"]},
+  {n:"Moskowtz Capital",p:"",w:"moskowitzcapital.com",v:["BC","SK","MB","ON","QC","ATL"]},
+  {n:"Mountain Investment Corp.",p:"403.764.0517",w:"micorp.ca",v:["BC","AB","ON"]},
+  {n:"Nation Capital Corp.",p:"604.681.7772",w:"nationcapital.ca",v:["BC"]},
+  {n:"National Equity Lending Corp.",p:"604.800.1660",w:"nationalending.ca",v:["BC","AB"]},
+  {n:"Neighbourhood Holdings",p:"604.731.3899",w:"neighbourhoodholdings.com",v:["BC","AB","SK","MB","QC","ATL"]},
+  {n:"Neufeld Capital Inc.",p:"403.531.2513",w:"neufelcapital.com",v:["AB"]},
+  {n:"New City Financial Corp.",p:"778.308.5422",w:"newcityfinancialgroup.com",v:["BC"]},
+  {n:"New Haven Mortgage Corporation",p:"416.636.0000",w:"newhavenmortgage.com",v:["ON"]},
+  {n:"Ninth Avenue Capital Ltd.",p:"833.527.4153",w:"ninthavenuecapital.ca",v:["AB"]},
+  {n:"Northland Mortgage & Investment Corp.",p:"250.923.0719",w:"northlandmortgage.ca",v:["BC","MB"]},
+  {n:"Novus Investment Corp.",p:"604.464.7075",w:"noussinvestment.ca",v:["BC"]},
+  {n:"NPX (a product of MERIX Financial)",p:"647.355.0794",w:"merixfinancial.com",v:["BC","SK","ON","QC"]},
+  {n:"Olympia Trust Company",p:"403.261.0900",w:"olympiatrust.com",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"Ontario Wealth Management Corporation",p:"866.901.1555",w:"owmanco.com",v:["ON"]},
+  {n:"Oppono Lending Company",p:"416.669.9274",w:"oppono.com",v:["BC"]},
+  {n:"Overland Capital Canada Inc.",p:"604.343.3711",w:"overlandcapital.ca",v:["BC"]},
+  {n:"OZ Capital",p:"905.532.9288",w:"ozcapital.ca",v:["BC","ON"]},
+  {n:"Peet & Cowan Financial Services",p:"604.684.6420",w:"peetcowan.com",v:["BC","SK"]},
+  {n:"Peoples Group",p:"647.214.1934",w:"peoplesgroup.com",v:["BC","ON","QC"]},
+  {n:"Peoples Trust Company",p:"855.683.2881",w:"peoplestrust.com",v:["BC"]},
+  {n:"PHL",p:"604.579.0847",w:"phlcapital.com",v:["BC","AB","ON"]},
+  {n:"Phoenix Financial Inc.",p:"902.406.7616",w:"phoenixfinancialinc.net",v:["ATL"]},
+  {n:"Pillar Financial Services Inc.",p:"877.279.2116",w:"pillarfinancial.ca",v:["ON"]},
+  {n:"Pineapple",p:"833.347.7799",w:"gopineapple.ca",v:["BC","SK","MB","ON","QC","ATL"]},
+  {n:"Pioneer West Acceptance Corp.",p:"604.679.9447",w:"pioneerwest.com",v:["BC","SK"]},
+  {n:"PMB Professional Mortgage Brokers Inc.",p:"905.985.4029",w:"pmbmortgages.ca",v:["ON"]},
+  {n:"Premiera Mortgage Inc.",p:"866.460.4409",w:"mortgagecanada.net",v:["BC","MB"]},
+  {n:"Private Lending Hub",p:"855.553.8637",w:"privatelendinhghub.com",v:["BC","SK","MB","ON","QC","ATL"]},
+  {n:"Prospera Credit Union",p:"888.440.4480",w:"prospera.ca",v:["BC"]},
+  {n:"Providus Mortgage Investment Corporation",p:"604.662.8003",w:"providus.ca",v:["BC"]},
+  {n:"Qualhold Corporation",p:"416.214.1114",w:"qualhold.ca",v:["ON"]},
+  {n:"Radius Financial Inc.",p:"877.369.6308",w:"radiusfinancial.ca",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"Rala Investments Ltd.",p:"866.732.5865",w:"ralainvestments.com",v:["BC"]},
+  {n:"Raven Financial Services",p:"905.361.7122",w:"ravenfinancialservices.ca",v:["ON"]},
+  {n:"REA Lending Corp.",p:"905.856.4220",w:"REAlending.ca",v:["ON"]},
+  {n:"Ready Capital Mortgage Investment Trust",p:"905.305.8499",w:"readycapital.ca",v:["BC","AB","ON"]},
+  {n:"Real Capital Corp.",p:"587.430.0658",w:"realfastcapital.com",v:["SK"]},
+  {n:"Reciprocal Opportunities Inc.",p:"519.755.6252",w:"roigroup.ca",v:["ON"]},
+  {n:"Reliable Mortgages Ltd.",p:"778.293.1912",w:"reliablemortgages.ca",v:["BC","ON"]},
+  {n:"RESCO Mortgage Investment Corporation",p:"905.886.8786",w:"rescomic.ca",v:["BC","ON","QC"]},
+  {n:"RFA Bank of Canada",p:"647.259.7873",w:"rfa.ca",v:["BC","SK","MB","ON","QC","ATL"]},
+  {n:"Richview Capital MIC Inc.",p:"416.307.2336",w:"richviewcapitalmic.com",v:["BC","ON"]},
+  {n:"RiverRock Mortgage Investment Corporation",p:"416.504.1886",w:"rveinrockmic.com",v:["BC"]},
+  {n:"RMG Mortgages",p:"",w:"RMGMortgages.ca",v:["BC","MB","ON","QC","ATL"]},
+  {n:"Rompas Investment Corporation",p:"800.494.0389",w:"rompas.com",v:["BC","SK","ON"]},
+  {n:"Royal Canadian Asset Management Inc.",p:"289.264.2473",w:"royalcanadianmortgage.com",v:["ON"]},
+  {n:"Rydan Private Lending",p:"416.453.7826",w:"rydanprivatelending.com",v:["ON"]},
+  {n:"Secure Capital MIC Inc.",p:"905.709.8633",w:"securecapitalmic.com",v:["SK","ON","QC","ATL"]},
+  {n:"Sequence Capital Inc.",p:"888.228.3834",w:"sequencecapital.ca",v:["BC","AB","ON","QC"]},
+  {n:"Seven Lending",p:"604.260.6900",w:"sevenlending.ca",v:["BC"]},
+  {n:"Shelter Lending Corporation",p:"866.777.9567",w:"shelterlending.ca",v:["BC","SK","MB"]},
+  {n:"Shorkey Mortgage Corp.",p:"250.818.0894",w:"shorkey.ca",v:["BC"]},
+  {n:"Sierra Mortgage Fund Ltd.",p:"250.558.1111",w:"sierramortgage.ca",v:["BC","SK"]},
+  {n:"Spectrum Canada Mortgage Services Inc.",p:"877.253.4377",w:"spectrum.canada.com",v:["BC","SK","ON"]},
+  {n:"Sterling Bridge Mortgage Corp.",p:"403.298.0638",w:"sterlingbridge.ca",v:["SK"]},
+  {n:"Stewart Mortgage Corp.",p:"250.372.1995",w:"stewartmortgage.ca",v:["BC"]},
+  {n:"Strive Capital",p:"403.633.7340",w:"strivecapital.ca",v:["BC","AB","SK","MB","QC","ATL"]},
+  {n:"Sun Micro Financial - The Mortgage Centre",p:"905.212.1099",w:"sunmicrofinancial.ca",v:["BC","AB","ON"]},
+  {n:"Three Point Capital",p:"778.215.2056",w:"threepointcapital.ca",v:["BC","AB","ON"]},
+  {n:"Vanmortgage Capital Management Corp.",p:"778.713.5993",w:"vanmortgage.ca",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"VWR Capital Corp.",p:"604.803.7430",w:"vwrcapital.ca",v:["BC","AB","SK","MB","ON"]},
+  {n:"WestCan Mortgage Solutions Inc.",p:"250.434.2321",w:"westcanmortgage.ca",v:["BC","AB"]}
+];
 
-  function money(n){ if(!isFinite(n)||n===0) return '$0'; return '$'+Math.round(n).toLocaleString('en-CA'); }
-  function pmt(P,r,y){ if(!P||P<=0||!y||y<=0) return 0; if(!r||r<=0) return P/y; const rr=r/100; return P*(rr/(1-Math.pow(1+rr,-y))); }
-  function cite(r){ return `<span class="cite">${r}</span>`; }
+var C=[
+  {n:"All Harmony Financial Services Ltd.",p:"778.829.8766",w:"",v:["BC"]},
+  {n:"Benson Capital",p:"647.505.5677",w:"bensoncapital.ca",v:["ON"]},
+  {n:"BT Advisory / Briez Taylor Investments Ltd.",p:"416.830.9167",w:"btinvest.ca",v:["ON"]},
+  {n:"Cedar Peaks Mortgage Services Ltd.",p:"403.850.3373",w:"cedarpeaksmortgage.ca",v:["BC","AB"]},
+  {n:"Centurion Mortgage Capital Corporation",p:"416.733.5600",w:"centurion.ca",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"City Mortgage Investment Corporation",p:"604.763.3346",w:"citymortgage.ca",v:["BC"]},
+  {n:"Community Trust Company",p:"800.268.1576",w:"communitytrust.ca",v:["BC","AB","ON"]},
+  {n:"Domain Funding",p:"604.681.0000",w:"domainfunding.ca",v:["BC","AB"]},
+  {n:"East Coast Mortgage Brokers",p:"709.754.0422",w:"ecmb.ca",v:["ATL"]},
+  {n:"Fisgard Capital Corporation",p:"866.382.9255",w:"fisgard.com",v:["BC","AB"]},
+  {n:"Force 10 Capital Management Inc.",p:"905.815.9062",w:"force10capital.com",v:["ON"]},
+  {n:"Foremost Financial Corporation",p:"416.488.5300",w:"foremostfinancial.com",v:["ON"]},
+  {n:"First Capital Corp.",p:"416.456.2588",w:"firstcapitalcorp.com",v:["ON"]},
+  {n:"First Source Mortgage Corp",p:"416.221.2238",w:"firstsourcemortgage.ca",v:["ON"]},
+  {n:"Funds2Go Inc.",p:"416.444.4252",w:"Funds2Go.ca",v:["ON"]},
+  {n:"Gentai Capital Corporation",p:"604.638.1580",w:"gentaicapital.com",v:["BC","AB","ON"]},
+  {n:"Gold Capital Corp.",p:"778.386.7264",w:"GoldCapital.ca",v:["BC"]},
+  {n:"IC Funding Financial Corporation",p:"855.673.3528",w:"lcfunding.com",v:["BC","AB","ON"]},
+  {n:"InstaFund Financial Services Ltd.",p:"604.687.2020",w:"instafund.com",v:["BC"]},
+  {n:"JW Capital Inc.",p:"902.456.6525",w:"jwcapital.ca",v:["ATL"]},
+  {n:"Lanyard Financial Corporation",p:"604.658.5388",w:"lanyardgroup.com",v:["BC"]},
+  {n:"Mandate Management Corporation",p:"604.813.7532",w:"mandatemortgage.com",v:["BC"]},
+  {n:"Monfund Financial Inc.",p:"800.966.6680",w:"monfund.com",v:["BC","AB"]},
+  {n:"Morrison Financial Mortgage Corporation",p:"416.391.3535",w:"morrisonfinancial.com",v:["BC","AB","ON"]},
+  {n:"Nexus Investment Corp.",p:"604.664.7075",w:"nexusinvestment.ca",v:["BC"]},
+  {n:"Optimum Mortgage",p:"866.441.3775",w:"optimummortgage.ca",v:["ON"]},
+  {n:"Pioneer West Acceptance Corp.",p:"604.987.1420",w:"pioneerwest.com",v:["BC","AB"]},
+  {n:"Reliable Mortgages Inc.",p:"778.293.1912",w:"reliablemortgages.ca",v:["BC"]},
+  {n:"Rompas Investment Corporation",p:"800.494.0389",w:"rompas.com",v:["BC","AB","ON"]},
+  {n:"Rydan Private Lending",p:"416.453.7826",w:"rydanprivatelending.com",v:["ON"]},
+  {n:"Shinhan Bank Canada",p:"416.260.3620",w:"shinhan.ca",v:["BC","ON"]},
+  {n:"Sun Micro Financial - The Mortgage Centre",p:"905.212.1099",w:"sunmicrofinancial.ca",v:["ON"]},
+  {n:"The Financing Hub",p:"905.507.8383",w:"thefinancinghub.com",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"Tri City Group Monthly Income Mortgage Trust",p:"604.569.2015",w:"tricitygroup.ca",v:["BC","AB","ON"]}
+];
 
-  const iOK  =`<svg class="ni" width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#00b046" stroke-width="1.5"/><path d="M5 8l2 2 4-4" stroke="#55dd88" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-  const iWARN=`<svg class="ni" width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2L14 13H2L8 2Z" stroke="#aa7700" stroke-width="1.4"/><line x1="8" y1="7" x2="8" y2="10" stroke="#ddaa33" stroke-width="1.4" stroke-linecap="round"/><circle cx="8" cy="12" r=".7" fill="#ddaa33"/></svg>`;
-  const iBAD =`<svg class="ni" width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#cc0000" stroke-width="1.5"/><path d="M5.5 5.5l5 5M10.5 5.5l-5 5" stroke="#ff6666" stroke-width="1.5" stroke-linecap="round"/></svg>`;
-  const iINFO=`<svg class="ni" width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#444" stroke-width="1.4"/><circle cx="8" cy="5.5" r=".8" fill="#888"/><line x1="8" y1="7.5" x2="8" y2="11.5" stroke="#888" stroke-width="1.5" stroke-linecap="round"/></svg>`;
+// Deduplicate by name (case-insensitive)
+function dedup(arr){
+  var seen={};
+  return arr.filter(function(l){
+    var k=l.n.toLowerCase().trim();
+    if(seen[k])return false;
+    seen[k]=true;return true;
+  });
+}
+R=dedup(R); C=dedup(C);
+R.sort(function(a,b){return a.n.localeCompare(b.n)});
+C.sort(function(a,b){return a.n.localeCompare(b.n)});
 
-  function noteRow(icon, text){ return `<div class="note-item">${icon}<div>${text}</div></div>`; }
+document.getElementById('rc').textContent=' '+R.length;
+document.getElementById('cc').textContent=' '+C.length;
 
-  function switchTab(name, btn){
-    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-    $('tab-'+name).classList.add('active');
-    btn.classList.add('active');
-  }
+var tab='R', provs=[], q='';
 
-  $('bq_related').addEventListener('change', function(){
-    $('bq_related_fields').style.display = this.value !== 'no' ? 'block' : 'none';
+function idx(el){ return el.getAttribute('data-tab')||el.getAttribute('data-p'); }
+
+function draw(){
+  var data=tab==='R'?R:C;
+  var res=data.filter(function(l){
+    var mq=!q||l.n.toLowerCase().indexOf(q)>-1||l.p.indexOf(q)>-1||l.w.toLowerCase().indexOf(q)>-1;
+    var mp=provs.length===0||provs.every(function(p){return l.v.indexOf(p)>-1});
+    return mq&&mp;
   });
 
-  /* ═══════════════════════════════════════
-     BORROWER QUALIFICATION
-  ═══════════════════════════════════════ */
-  function resetBQ(){
-    ['bq_name','bq_bizname','bq_revenue','bq_newterm','bq_related_term','bq_related_loc'].forEach(id=>{ if($(id)) $(id).value=''; });
-    $('bq_newloc').value='0'; $('bq_existing').value='0';
-    ['bq_canada_ops','bq_not_crown','bq_not_holding','bq_not_trust','bq_not_rental'].forEach(id=>$(id).checked=false);
-    $('bq_legaltype').value='corp'; $('bq_industry').value='restaurant';
-    $('bq_location').value='canada'; $('bq_public').value='yes';
-    $('bq_related').value='no'; $('bq_related_fields').style.display='none';
-    $('bq_status').className='status warn';
-    $('bq_status').textContent='Complete the borrower profile and click Run Borrower Qualification.';
-    ['bq_result_box','bq_cap_box','bq_related_box','bq_summary_box'].forEach(id=>$(id).style.display='none');
+  document.getElementById('n').textContent=res.length;
+  var el=document.getElementById('list');
+  el.innerHTML='';
+
+  if(!res.length){
+    el.innerHTML='<div class="em"><div class="em-w">No results</div><div class="em-s">Try adjusting filters</div></div>';
+    return;
   }
 
-  function runBorrowerQual(){
-    const name      = str('bq_name')||'Borrower';
-    const bizname   = str('bq_bizname')||'Business';
-    const legaltype = str('bq_legaltype');
-    const industry  = str('bq_industry');
-    const revenue   = flt('bq_revenue');
-    const location  = str('bq_location');
-    const pub       = str('bq_public');
-    const related   = str('bq_related');
-    const indTest   = str('bq_independent_test');
-    const relTerm   = flt('bq_related_term');
-    const relLoc    = flt('bq_related_loc');
-    const newTerm   = flt('bq_newterm');
-    const newLoc    = flt('bq_newloc');
-    const existing  = flt('bq_existing');
-    const totalNew  = newTerm + existing;
+  // Group by letter
+  var g={};
+  res.forEach(function(l){
+    var k=l.n[0].toUpperCase();
+    if(!g[k])g[k]=[];
+    g[k].push(l);
+  });
 
-    const checks = [];
-    let hardFail = false, warnings = 0;
+  var PH='<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.41 2 2 0 0 1 3.61 1.21h3a2 2 0 0 1 2 1.72c.1.93.37 1.84.7 2.81a2 2 0 0 1-.45 2.11L8.09 8.91a16 16 0 0 0 6 6l.77-.77a2 2 0 0 1 2.11-.45c.97.33 1.88.6 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
+  var WB='<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>';
 
-    // Legal type
-    if(legaltype==='trust'){
-      hardFail=true;
-      checks.push({cls:'bq-fail',icon:iBAD,text:`INELIGIBLE: A trust is not a legal entity and does not qualify as a borrower. CSBFP requires a physical person (individual) or legal person (corporation) carrying on a small business.${cite('ISED Guidelines §2.3')}`});
-    } else if(legaltype==='holding'){
-      hardFail=true;
-      checks.push({cls:'bq-fail',icon:iBAD,text:`INELIGIBLE: A pure holding company does not operate a business and is not an eligible borrower. Assets held by a holding corporation are owned by a legal entity that is not the borrower carrying on the business.${cite('ISED Guidelines §2.3')}`});
-    } else if(legaltype==='nonprofit_pre2021'){
-      hardFail=true;
-      checks.push({cls:'bq-fail',icon:iBAD,text:`INELIGIBLE: For loans made prior to June 30, 2021, non-profit, charitable, and religious organizations were not eligible borrowers as their preponderant purpose was not profit or material gain.${cite('ISED Guidelines §2.2')}`});
-    } else if(legaltype==='nonprofit_post2021'){
-      checks.push({cls:'bq-pass',icon:iOK,text:`Not-for-profit, charitable, and religious organizations that carry on a business became eligible effective June 30, 2021. Confirm the organization actively carries on a business offering goods or services to the public.${cite('ISED Guidelines §2.2')}`});
-    } else if(legaltype==='foreign'){
-      checks.push({cls:'bq-pass',icon:iOK,text:`Foreign-owned Canadian corporations are eligible. There are no restrictions as to the principal of a small business — an incorporated small business operating in Canada can be owned by foreign citizens.${cite('ISED Guidelines §2.2')}`});
-    } else {
-      const lt = legaltype==='corp'?'Corporation':legaltype==='sole'?'Sole Proprietorship':'Partnership';
-      checks.push({cls:'bq-pass',icon:iOK,text:`Legal structure (${lt}) is an eligible borrower type. A borrower must be a physical person or legal person carrying on or about to carry on a small business.${cite('ISED Guidelines §2.1; SOR/99-141 s.1(1)')}`});
-    }
-
-    // Industry
-    if(industry==='farm'){
-      hardFail=true;
-      checks.push({cls:'bq-fail',icon:iBAD,text:`INELIGIBLE: Businesses engaged in farming (SIC Major Group 01 — Agricultural Industries) are explicitly ineligible. Redirect to the Canadian Agricultural Loans Act Program.${cite('ISED Guidelines §2.3; CSBFP Brochure')}`});
-    } else if(industry==='rental_property'){
-      hardFail=true;
-      checks.push({cls:'bq-fail',icon:iBAD,text:`INELIGIBLE: An individual or corporation purchasing real property solely for rental purposes (apartment building, commercial building for leasing) is not an eligible borrower. See CMHC for alternatives.${cite('ISED Guidelines §2.3')}`});
-    } else if(industry==='private_club'){
-      hardFail=true;
-      checks.push({cls:'bq-fail',icon:iBAD,text:`INELIGIBLE: Organizations that do not operate a business (e.g. private clubs whose only purpose is collecting donations) are not eligible for CSBFP financing.${cite('ISED Guidelines §2.3')}`});
-    } else if(industry==='services_agri'){
-      checks.push({cls:'bq-pass',icon:iOK,text:`Eligible: A borrower in a service industry incidental to agriculture (SIC Group 02 — e.g. harvesting contractor providing services to farmers) is eligible. Distinguished from farming itself.${cite('ISED Guidelines §2.2')}`});
-    } else {
-      const special = industry==='hospitality'||industry==='storage'||industry==='clinic';
-      checks.push({cls:'bq-pass',icon:iOK,text:`Industry is eligible for CSBFP.${special?` Note: ${industry==='hospitality'?'Accommodation/hospitality':industry==='storage'?'Mini-storage':'Health care'} businesses have additional real property leasing permissions under regulations.${cite('SOR/99-141 s.5(2)(b)(ii), s.5(4)')}`:cite('ISED Guidelines §2.2')}`});
-    }
-
-    // Location
-    if(location==='outside'){
-      hardFail=true;
-      checks.push({cls:'bq-fail',icon:iBAD,text:`INELIGIBLE: The business must be carried on in Canada with a place of business in Canada and assets held in Canada for the purpose of operating the business.${cite('ISED Guidelines §2.2')}`});
-    } else {
-      checks.push({cls:'bq-pass',icon:iOK,text:`Business operates in Canada with a Canadian place of business and assets held in Canada.${cite('ISED Guidelines §2.2')}`});
-    }
-
-    // Public offering
-    if(pub==='no'){
-      warnings++;
-      checks.push({cls:'bq-warn',icon:iWARN,text:`Caution: The business must offer services or products to the public (retail and wholesale). A purely inter-company entity may not satisfy this requirement.${cite('ISED Guidelines §2.2')}`});
-    } else {
-      checks.push({cls:'bq-pass',icon:iOK,text:`Business offers goods or services to the public (retail and/or wholesale).${cite('ISED Guidelines §2.2')}`});
-    }
-
-    // Revenue
-    if(revenue>10000000){
-      hardFail=true;
-      checks.push({cls:'bq-fail',icon:iBAD,text:`INELIGIBLE: Estimated annual gross revenue of ${money(revenue)} exceeds the $10,000,000 ceiling. For existing businesses: assessed during fiscal year of loan approval. For new businesses: estimated revenues during first 52 weeks must not exceed $10M.${cite('ISED Guidelines §2.2; CSBFP Brochure')}`});
-    } else if(revenue>0){
-      checks.push({cls:'bq-pass',icon:iOK,text:`Annual gross revenue of ${money(revenue)} is within the $10,000,000 eligibility ceiling.${cite('ISED Guidelines §2.2')}`});
-    } else {
-      warnings++;
-      checks.push({cls:'bq-warn',icon:iWARN,text:`Revenue not entered. Confirm gross annual revenues will not exceed $10,000,000 in the fiscal year of loan approval (or first 52 weeks for new businesses).${cite('ISED Guidelines §2.2')}`});
-    }
-
-    // Checkboxes
-    const cbChecks = [
-      {id:'bq_canada_ops', pass:'Business carries on operations in Canada with assets held in Canada.',         fail:'Confirm the business operates in Canada with a Canadian place of business and assets in Canada.',                  ref:'ISED Guidelines §2.2'},
-      {id:'bq_not_crown',  pass:'Borrower is not a Crown entity, municipality, or public body.',               fail:'Crown entities, municipalities, and public bodies performing government functions are excluded from the borrower definition.', ref:'SOR/99-141 s.1(1)'},
-      {id:'bq_not_holding',pass:'Borrower operates an active business — not a pure holding company.',          fail:'A pure holding company that does not itself carry on a business is ineligible.',                               ref:'ISED Guidelines §2.3'},
-      {id:'bq_not_trust',  pass:'Borrower is not a trust.',                                                    fail:'Trusts are not legal entities under CSBFP and cannot be borrowers.',                                          ref:'ISED Guidelines §2.3'},
-      {id:'bq_not_rental', pass:'Business does not exist solely to hold and rent real property.',              fail:'Entities purchasing real property solely for rental income are not eligible borrowers (see CMHC for alternatives).', ref:'ISED Guidelines §2.3'},
-    ];
-
-    cbChecks.forEach(c=>{
-      if(chk(c.id)){
-        checks.push({cls:'bq-pass',icon:iOK,text:`${c.pass}${cite(c.ref)}`});
-      } else {
-        warnings++;
-        checks.push({cls:'bq-warn',icon:iWARN,text:`Not confirmed: ${c.fail}${cite(c.ref)}`});
-      }
+  var html='';
+  Object.keys(g).sort().forEach(function(letter){
+    html+='<div class="ag"><div class="ah"><span class="al">'+letter+'</span></div><div class="cl-list">';
+    g[letter].forEach(function(l){
+      var pts=l.v.map(function(p){return'<span class="pt '+p+'">'+p+'</span>';}).join('');
+      var ph=l.p?'<div class="mr">'+PH+'<span class="ph">'+l.p+'</span></div>':'';
+      var wb=l.w?'<div class="mr">'+WB+'<a href="https://'+l.w+'" target="_blank">'+l.w+'</a></div>':'';
+      html+='<div class="c"><div class="ct2"><div class="cn">'+l.n+'</div><div class="pts">'+pts+'</div></div>';
+      if(ph||wb)html+='<div class="cm">'+ph+wb+'</div>';
+      html+='</div>';
     });
+    html+='</div></div>';
+  });
+  html+='<div class="ft"><div class="ft-name">Vancouver Finance Company Inc. · 2025–2026</div><a href="https://www.vancouverfinancecompany.com" target="_blank">www.vancouverfinancecompany.com</a><a href="mailto:vancouverfinancecompany@gmail.com">vancouverfinancecompany@gmail.com</a></div>';
+  el.innerHTML=html;
+}
 
-    // Cap analysis
-    let capHTML = '';
-    if(related==='no'){
-      capHTML += noteRow(iOK, `No related borrowers. Standalone caps apply: Term loans up to $500,000 for deals WITHOUT real property (equipment, leaseholds, intangibles, WC); up to $1,000,000 ONLY when owner-occupied real property is included (of which max $500,000 for non-real-property components, max $150,000 for intangibles/WC); Line of credit up to $150,000.${cite('ISED Guidelines §3.1–3.2; SOR/99-141 s.6.1')}`);
-      if(newTerm>1000000){
-        capHTML+=noteRow(iBAD,`Requested term loan ${money(newTerm)} exceeds the $1,000,000 absolute maximum under any circumstance.${cite('SOR/99-141 s.6.1(a)')}`);hardFail=true;
-      } else if(newTerm>500000){
-        capHTML+=noteRow(iWARN,`Requested term loan of ${money(newTerm)} exceeds the $500,000 cap that applies when no real property is involved. If this deal includes owner-occupied real property, the cap rises to $1,000,000. Confirm use of funds with the client before proceeding.${cite('SOR/99-141 s.6.1(a); ISED Guidelines §3.1')}`);
-      } else if(newTerm>0){
-        capHTML+=noteRow(iOK,`Term loan of ${money(newTerm)} (+ ${money(existing)} existing = ${money(totalNew)}) is within the applicable cap. Note: cap is $500,000 for non-real-property deals, $1,000,000 when real property is included.${cite('SOR/99-141 s.6.1(a)')}`);
-      }
-      if(newLoc>150000){capHTML+=noteRow(iBAD,`LOC ${money(newLoc)} exceeds $150,000 cap.${cite('SOR/99-141 s.6.1(b)')}`);hardFail=true;}
-      else if(newLoc>0) capHTML+=noteRow(iOK,`LOC ${money(newLoc)} within $150,000 limit. Proceeds must be used for working capital costs only.${cite('SOR/99-141 s.5(1)(e)')}`);
-      if(newTerm>0) capHTML+=noteRow(iINFO,`If 2% registration fee is financed (est. ${money(newTerm*0.02)}), total rises to ~${money(totalNew+newTerm*0.02)}, which counts against the $1M cap.${cite('ISED Guidelines §3.1; SOR/99-141 s.5(1)(f)')}`);
-    } else if(related==='yes_related'){
-      const aggTerm = totalNew+relTerm, aggLoc = newLoc+relLoc;
-      capHTML+=noteRow(iINFO,`Related borrowers. Aggregate term loans = ${money(aggTerm)}; Aggregate LOC = ${money(aggLoc)}. Must not exceed $1,000,000 (term) and $150,000 (LOC) across all related borrowers.${cite('ISED Guidelines §2.4, §3.1; SOR/99-141 s.1.1')}`);
-      if(aggTerm>1000000){capHTML+=noteRow(iBAD,`Combined term loan exposure ${money(aggTerm)} exceeds the applicable cap. Cap is $500,000 for non-real-property deals and $1,000,000 where real property is included.${cite('SOR/99-141 s.6.1')}`);hardFail=true;}
-      else capHTML+=noteRow(iOK,`Combined term loan exposure ${money(aggTerm)} is within the applicable limit ($500K non-real-property; $1M with real property).${cite('SOR/99-141 s.6.1')}`);
-      if(aggLoc>150000){capHTML+=noteRow(iBAD,`Combined LOC ${money(aggLoc)} exceeds $150,000 aggregate cap.${cite('SOR/99-141 s.6.1(b)')}`);hardFail=true;}
-      else if(aggLoc>0) capHTML+=noteRow(iOK,`Combined LOC ${money(aggLoc)} within $150,000 aggregate limit.${cite('SOR/99-141 s.6.1(b)')}`);
-    } else if(related==='yes_independent'){
-      if(indTest==='pass'){
-        capHTML+=noteRow(iOK,`Related borrowers qualify as independent small businesses: (1) separate legal entities at different premises AND (2) neither derives more than 25% of revenues from the other. Each is eligible for full standalone caps: $500,000 for non-real-property deals, $1,000,000 when real property is included.${cite('ISED Guidelines §2.4; SOR/99-141 s.1.1(4)')}`);
-        if(newTerm>1000000){capHTML+=noteRow(iBAD,`Term loan ${money(newTerm)} still exceeds $1,000,000. Reduce amount.${cite('SOR/99-141 s.6.1')}`);hardFail=true;}
-        if(newLoc>150000){capHTML+=noteRow(iBAD,`LOC ${money(newLoc)} exceeds $150,000 limit.${cite('SOR/99-141 s.6.1(b)')}`);hardFail=true;}
-      } else {
-        warnings++;
-        capHTML+=noteRow(iWARN,`Related borrowers do NOT pass the independent small business test. Their aggregate outstanding loans must stay within the shared $1,000,000 (term) and $150,000 (LOC) caps.${cite('ISED Guidelines §2.4; SOR/99-141 s.1.1(4)')}`);
-      }
-    }
+// Tab clicks
+document.querySelectorAll('.t-btn').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    document.querySelectorAll('.t-btn').forEach(function(b){b.classList.remove('on')});
+    btn.classList.add('on');
+    tab=btn.getAttribute('data-tab');
+    document.getElementById('q').value='';
+    q='';
+    draw();
+  });
+});
 
-    // Related borrower description
-    const relDesc = {
-      'no':'No related borrowers identified for this application.',
-      'yes_independent':'Related borrowers identified but claimed to pass the independent small business test (separate premises, less than 25% cross-revenue). Each qualifies for standalone program caps if the test is verified.',
-      'yes_related':'Related borrowers confirmed. All outstanding CSBFP balances across related entities are aggregated for cap compliance.',
-    };
-    let relatedHTML = noteRow(iINFO, `${relDesc[related]} Definition: A related borrower is one who controls or is controlled by the other, carries on business in partnership with the other, or shares management, admin services, equipment, facilities, employees, or overhead with the other.${cite('SOR/99-141 s.1.1(1); ISED Guidelines §2.4')}`);
-    if(related!=='no'){
-      relatedHTML+=noteRow(iINFO,`Control is defined as holding more than 50% of the voting shares in a corporation. The Income Tax Act s.251 framework applies to determine arm's-length relationships.${cite('SOR/99-141 s.1.1(3), s.1(2); ISED Guidelines §2.4')}`);
-      relatedHTML+=noteRow(iINFO,`Exception: Borrowers at different premises where neither derives more than 25% of revenues from the other are deemed not related and each is eligible for full standalone caps.${cite('SOR/99-141 s.1.1(4)')}`);
-    }
+// Province clicks
+document.querySelectorAll('.p-btn').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    var p=btn.getAttribute('data-p');
+    var i=provs.indexOf(p);
+    if(i>-1){provs.splice(i,1);btn.classList.remove('on');}
+    else{provs.push(p);btn.classList.add('on');}
+    draw();
+  });
+});
 
-    // Status
-    let statusText, statusClass;
-    if(hardFail){ statusText=`BORROWER INELIGIBLE — ${name} (${bizname}) does not meet one or more mandatory eligibility requirements. Review flags. Deal cannot proceed.`; statusClass='bad'; }
-    else if(warnings>0){ statusText=`CONDITIONALLY ELIGIBLE — ${warnings} item(s) require confirmation. ${name} appears potentially eligible but several conditions need verification before submission.`; statusClass='warn'; }
-    else{ statusText=`BORROWER ELIGIBLE — ${name} (${bizname}) meets all entered eligibility criteria. Proceed to Deal Screening (Tab 02).`; statusClass='good'; }
+// Search
+document.getElementById('q').addEventListener('input',function(e){
+  q=e.target.value.toLowerCase();
+  draw();
+});
 
-    $('bq_status').className='status '+statusClass;
-    $('bq_status').textContent=statusText;
+// Clear
+document.getElementById('clr').addEventListener('click',function(){
+  provs=[];
+  document.querySelectorAll('.p-btn').forEach(function(b){b.classList.remove('on')});
+  document.getElementById('q').value='';
+  q='';
+  draw();
+});
 
-    $('bq_checklist_out').innerHTML=checks.map(c=>`<div class="bq-check-row ${c.cls}">${c.icon}<div>${c.text}</div></div>`).join('');
-    $('bq_result_box').style.display='block';
-    $('bq_cap_out').innerHTML=capHTML;
-    $('bq_cap_box').style.display='block';
-    $('bq_related_out').innerHTML=relatedHTML;
-    $('bq_related_box').style.display='block';
-
-    const dec=hardFail?'Ineligible':warnings>0?'Conditional':'Eligible';
-    const dCls=hardFail?'bad':warnings>0?'warn':'good';
-    $('bq_summary_out').innerHTML=`
-      <div class="s-line"><span class="s-lbl">Borrower</span><span class="s-val">${name}</span></div>
-      <div class="s-line"><span class="s-lbl">Business</span><span class="s-val">${bizname}</span></div>
-      <div class="s-line"><span class="s-lbl">Legal Structure</span><span class="s-val" style="font-size:14px;font-family:'Mulish',sans-serif">${$('bq_legaltype').options[$('bq_legaltype').selectedIndex].text}</span></div>
-      <div class="s-line"><span class="s-lbl">Industry</span><span class="s-val" style="font-size:14px;font-family:'Mulish',sans-serif">${$('bq_industry').options[$('bq_industry').selectedIndex].text}</span></div>
-      <div class="s-line"><span class="s-lbl">Annual Revenue</span><span class="s-val">${revenue>0?money(revenue):'Not entered'}</span></div>
-      <div class="s-line"><span class="s-lbl">Related Borrower Status</span><span class="s-val" style="font-size:13px;font-family:'Mulish',sans-serif">${$('bq_related').options[$('bq_related').selectedIndex].text}</span></div>
-      <div class="s-line"><span class="s-lbl">Requested Term Loan</span><span class="s-val">${money(newTerm)}</span></div>
-      <div class="s-line"><span class="s-lbl">Requested LOC</span><span class="s-val">${money(flt('bq_newloc'))}</span></div>
-      <div class="s-line"><span class="s-lbl">Qualification Result</span><span class="s-val ${dCls}">${dec}</span></div>
-    `;
-    $('bq_summary_box').style.display='block';
-  }
-
-  /* ═══════════════════════════════════════
-     DEAL SCREENING
-  ═══════════════════════════════════════ */
-  function resetDeal(){
-    ['d_name','d_bizname','d_revenue','d_years','d_exp','d_credit','d_cost','d_equity','d_term','d_termyrs','d_cashflow','d_manual','d_note'].forEach(id=>$(id).value='');
-    $('d_loc').value='0'; $('d_rate').value='9.95';
-    $('d_biztype').value='startup'; $('d_industry').value='restaurant'; $('d_use').value='equipment';
-    $('d_m_total').textContent='$0'; $('d_m_pmt').textContent='$0'; $('d_m_eq').textContent='0%';
-    $('d_m_dscr').textContent='—'; $('d_m_score').textContent='—'; $('d_m_dec').textContent='—';
-    $('d_scoreLabel').textContent='0 / 100'; $('d_scoreFill').style.width='0%';
-    $('d_status').className='status warn'; $('d_status').textContent='Enter deal inputs and click Run Deal Screening.';
-    ['d_flagsBox','d_stepsBox','d_summaryBox'].forEach(id=>$(id).style.display='none');
-  }
-
-  function runDeal(){
-    const name=str('d_name')||'Client', biz=str('d_bizname')||'Business';
-    const biztype=str('d_biztype'), ind=str('d_industry'), use=str('d_use'), note=str('d_note');
-    const revenue=flt('d_revenue'), yrs=flt('d_years'), exp=flt('d_exp'), credit=flt('d_credit');
-    const cost=flt('d_cost'), equity=flt('d_equity'), tl=flt('d_term'), loc=flt('d_loc');
-    const tyrs=flt('d_termyrs'), rate=flt('d_rate'), cf=flt('d_cashflow'), manual=flt('d_manual');
-
-    const total=tl+loc;
-    const eqPct=cost>0?(equity/cost)*100:0;
-    const autoPmt=pmt(tl,rate,tyrs), autoLoc=loc>0?(loc*rate/100):0;
-    const annPmt=manual>0?manual:(autoPmt+autoLoc);
-    const dscr=annPmt>0&&cf>0?cf/annPmt:0;
-
-    let score=0, hardDecline=false;
-    const flags=[], steps=[];
-
-    $('d_m_total').textContent=money(total);
-    $('d_m_pmt').textContent=money(annPmt);
-    $('d_m_eq').textContent=eqPct.toFixed(1)+'%';
-    $('d_m_dscr').textContent=dscr>0?dscr.toFixed(2):'—';
-
-    // Revenue
-    if(revenue>10000000){hardDecline=true;flags.push({i:iBAD,t:`Revenue ${money(revenue)} exceeds the $10M eligibility ceiling.${cite('ISED Guidelines §2.2')}`});}
-    else if(revenue>0){score+=15;flags.push({i:iOK,t:`Revenue ${money(revenue)} within the $10M ceiling.${cite('ISED Guidelines §2.2')}`});}
-    else flags.push({i:iINFO,t:`Revenue not entered. Must be $10M or less gross annually.${cite('ISED Guidelines §2.2')}`});
-
-    // Term loan cap
-    const isRealProp = (use === 'realproperty' || use === 'mixed');
-    const effectiveCap = isRealProp ? 1000000 : 500000;
-    const effectiveCapLabel = isRealProp ? '$1,000,000 (includes real property)' : '$500,000 (no real property in this deal)';
-    if(tl > 1000000){
-      hardDecline=true;
-      flags.push({i:iBAD,t:`Term loan ${money(tl)} exceeds the absolute $1,000,000 maximum under any circumstance.${cite('SOR/99-141 s.6.1(a)')}`});
-    } else if(tl > 500000 && !isRealProp){
-      hardDecline=true;
-      flags.push({i:iBAD,t:`Term loan of ${money(tl)} exceeds the $500,000 cap that applies when no real property is being financed. The $1,000,000 maximum only applies when real property (owner-occupied land or building) is included. For equipment, leaseholds, intangibles, and working capital only, the hard cap is $500,000.${cite('SOR/99-141 s.6.1(a); ISED Guidelines §3.1')}`});
-    } else if(tl > 0){
-      score+=10;
-      flags.push({i:iOK,t:`Term loan of ${money(tl)} is within the applicable ${effectiveCapLabel} cap.${cite('SOR/99-141 s.6.1(a)')}`});
-    }
-
-    // Sub-caps — $500K non-real-property hard decline already handled above
-    // Only need the intangibles/WC sub-cap check here
-    if(use==='intangible'&&tl>150000)
-      flags.push({i:iWARN,t:`Intangible assets/WC term loan sub-cap is $150,000. Review with lender.${cite('SOR/99-141 s.6.1(a)')}`});
-
-    // LOC cap
-    if(loc>150000){hardDecline=true;flags.push({i:iBAD,t:`LOC ${money(loc)} exceeds the $150,000 cap.${cite('SOR/99-141 s.6.1(b)')}`});}
-    else if(loc>0){score+=5;flags.push({i:iOK,t:`LOC ${money(loc)} within $150,000 limit. Proceeds must be used for working capital costs only.${cite('SOR/99-141 s.5(1)(e); ISED Guidelines §4.2')}`});}
-
-    // Use of funds
-    if(use==='inventory'){hardDecline=true;flags.push({i:iBAD,t:`Inventory is not an eligible standalone asset class for term loans. Note: inventory IS an eligible working capital cost under the LOC or intangible/WC term loan category.${cite('ISED Guidelines §4.1.4, §4.2; SOR/99-141 s.1(1)')}`});}
-    else if(use==='refinance'){hardDecline=true;flags.push({i:iBAD,t:`Refinancing of an existing conventional term loan from the same lender is ineligible. CSBFP cannot be used to repay a pre-existing conventional loan or LOC with the same lender.${cite('SOR/99-141 s.6(1)(b); ISED Guidelines §5.2')}`});}
-    else if(use==='buyout'){hardDecline=true;flags.push({i:iBAD,t:`Share buyouts are ineligible. The loan is advanced to a shareholder to acquire shares, not to a small business for eligible assets. Acquisition of shares is not eligible for CSBFP financing.${cite('ISED Guidelines §5.2')}`});}
-    else{
-      score+=10;
-      const ul={
-        equipment:`Equipment financing is a core eligible class. Includes new/used equipment, capitalized installation, computer software, and websites developed by specialized contractors.${cite('SOR/99-141 s.5(1)(c); ISED Guidelines §4.1.3')}`,
-        leaseholds:`Leasehold improvements are eligible when the borrower is or will be the tenant. Must be necessary for business operation. 3-year rule applies for sub-leasing (exceptions: hospitality, health care, mini-storage).${cite('SOR/99-141 s.5(1)(b); ISED Guidelines §4.1.2')}`,
-        realproperty:`Owner-occupied real property is eligible. At least 50% of area must be used for the business within 90 days of final disbursement. 3-year rule: cannot be intended for resale/leasing within 3 years (exceptions: hospitality, health care, mini-storage).${cite('SOR/99-141 s.5(2); ISED Guidelines §4.1.1')}`,
-        intangible:`Intangible assets (franchise fees, goodwill, permits, capitalized R&D) and working capital costs eligible via term loan, subject to $150,000 sub-cap within $500,000. Thorough documentation required.${cite('SOR/99-141 s.5(1)(d); ISED Guidelines §4.1.4')}`,
-        mixed:`Mixed uses acceptable. Confirm each component stays within its sub-cap: $500,000 for non-real-property; $150,000 for intangibles/WC.${cite('SOR/99-141 s.6.1(a); ISED Guidelines §3.1')}`
-      };
-      flags.push({i:iOK,t:ul[use]||`Use of funds appears eligible under CSBFP.`});
-    }
-
-    // Term
-    if(tl>0&&tyrs>15){hardDecline=true;flags.push({i:iBAD,t:`Term of ${tyrs} years exceeds the 15-year maximum. Note: amortization can exceed 15 years but CSBFP coverage ends at year 15 — balance must convert to conventional at that point.${cite('SOR/99-141 s.6(2)(a); ISED Guidelines §6.1')}`});}
-    else if(tl>0&&tyrs>0){score+=5;flags.push({i:iOK,t:`Term of ${tyrs} years is within the 15-year maximum. Minimum one principal and one interest payment per year required; first payment within 1 year of first disbursement.${cite('SOR/99-141 s.10(5); ISED Guidelines §6.1')}`});}
-    if(loc>0&&tl===0&&tyrs>5) flags.push({i:iWARN,t:`Standalone LOC maximum term is 5 years from opening. Renewal for additional 5 years or conversion to a term loan (max 10 yrs) available before expiry.${cite('SOR/99-141 s.6(2)(b); ISED Guidelines §6.1, §11.2')}`});
-
-    // Equity
-    if(eqPct>=25){score+=15;flags.push({i:iOK,t:`Excellent equity injection of ${eqPct.toFixed(1)}% (${money(equity)}). Well above the 15-25% target. Strongly supports the lender's repayment ability assessment.${cite('SOR/99-141 s.8(b); ISED Guidelines §1')}`});}
-    else if(eqPct>=20){score+=13;flags.push({i:iOK,t:`Good equity injection of ${eqPct.toFixed(1)}% (${money(equity)}). Within the preferred range.${cite('SOR/99-141 s.8(b)')}`});}
-    else if(eqPct>=15){score+=9;flags.push({i:iWARN,t:`Equity injection of ${eqPct.toFixed(1)}% (${money(equity)}) meets minimum threshold but is on the lower side. Lenders may request more, especially for startups.${cite('SOR/99-141 s.8(b)')}`});}
-    else if(eqPct>=10){score+=4;flags.push({i:iWARN,t:`Equity injection of ${eqPct.toFixed(1)}% (${money(equity)}) is below the 15% soft floor. Requires very strong cash flow and business plan to compensate.${cite('SOR/99-141 s.8(b)')}`});steps.push(`Increase equity injection to at least 15-20% of total project cost. Current: ${money(equity)} (${eqPct.toFixed(1)}%).`);}
-    else if(cost>0){flags.push({i:iBAD,t:`Equity injection of ${eqPct.toFixed(1)}% is very thin. Most CSBFP lenders require meaningful borrower contribution.${cite('SOR/99-141 s.8(b)')}`});steps.push(`Significantly increase equity injection before submission.`);}
-
-    // Credit
-    if(credit>=720){score+=12;flags.push({i:iOK,t:`Credit score of ${credit} is strong. Lender credit check on borrower and all persons financially responsible should proceed smoothly.${cite('SOR/99-141 s.8(a); ISED Guidelines §1')}`});}
-    else if(credit>=680){score+=9;flags.push({i:iOK,t:`Credit score of ${credit} is acceptable. Lender must conduct credit checks on borrower and principals.${cite('SOR/99-141 s.8(a)')}`});}
-    else if(credit>=640){score+=5;flags.push({i:iWARN,t:`Credit score of ${credit} is below optimal. Additional security or guarantees may be requested. For newly incorporated borrowers, lender should check principals' credit.${cite('SOR/99-141 s.8(a); ISED Guidelines §1')}`});}
-    else if(credit>0){score+=1;flags.push({i:iBAD,t:`Credit score of ${credit} is weak. Lender is required to assess repayment ability across all financial obligations.${cite('SOR/99-141 s.8(a),(b)')}`});steps.push(`Address credit issues or identify a guarantor/co-borrower with a stronger credit profile.`);}
-    else flags.push({i:iINFO,t:`Credit score not entered. Lender must obtain credit references or conduct a credit check before making a CSBFP loan.${cite('SOR/99-141 s.8(a)')}`});
-
-    // Experience
-    if(exp>=5){score+=10;flags.push({i:iOK,t:`${exp} years of direct industry experience strongly supports the repayment ability assessment.${cite('SOR/99-141 s.8(b)')}`});}
-    else if(exp>=2){score+=7;flags.push({i:iOK,t:`${exp} years of experience is adequate. Document clearly in lender package.${cite('SOR/99-141 s.8(b)')}`});}
-    else if(exp>0){score+=3;flags.push({i:iWARN,t:`Limited experience (${exp} years). For startups, lender's repayment ability assessment will rely heavily on projections and owner qualifications.${cite('SOR/99-141 s.8(b); ISED Guidelines §1')}`});}
-    else flags.push({i:iINFO,t:`Experience not entered. Key input to repayment ability assessment — especially for startups.${cite('SOR/99-141 s.8(b)')}`});
-
-    // DSCR
-    if(annPmt<=0) flags.push({i:iINFO,t:`No payment calculated. Enter term, rate, and loan amount to compute DSCR.${cite('SOR/99-141 s.8(b)')}`});
-    else if(cf<=0) flags.push({i:iINFO,t:`NOI not entered. DSCR cannot be calculated. Required for repayment ability assessment.${cite('SOR/99-141 s.8(b)')}`});
-    else if(dscr>=1.50){score+=18;flags.push({i:iOK,t:`Excellent DSCR of ${dscr.toFixed(2)}x. Strong cash flow coverage with significant headroom.${cite('SOR/99-141 s.8(b)')}`});}
-    else if(dscr>=1.35){score+=14;flags.push({i:iOK,t:`Strong DSCR of ${dscr.toFixed(2)}x. Well above the 1.20x guidance threshold.${cite('SOR/99-141 s.8(b)')}`});}
-    else if(dscr>=1.20){score+=10;flags.push({i:iOK,t:`Acceptable DSCR of ${dscr.toFixed(2)}x. Meets the common 1.20x lender threshold.${cite('SOR/99-141 s.8(b)')}`});}
-    else if(dscr>=1.00){score+=4;flags.push({i:iWARN,t:`DSCR of ${dscr.toFixed(2)}x is below the preferred 1.20x threshold. Tight coverage — lender may require restructuring.${cite('SOR/99-141 s.8(b)')}`});steps.push(`Improve DSCR to 1.20x or better by reducing loan amount, increasing equity, or extending amortization (max 15 yrs per s.6(2)(a)).`);}
-    else{hardDecline=true;flags.push({i:iBAD,t:`DSCR of ${dscr.toFixed(2)}x — cash flow does not cover debt service. Lender cannot support a positive repayment ability assessment.${cite('SOR/99-141 s.8(b)')}`});steps.push(`DSCR below 1.00x — major restructuring required before submission.`);}
-
-    // Business type
-    if(biztype==='franchise'){score+=5;flags.push({i:iOK,t:`Franchise: franchise fees and goodwill are eligible intangible assets. Going-concern franchise purchases may trigger appraisal requirements.${cite('ISED Guidelines §4.1.4; SOR/99-141 s.9(1)(b)')}`});}
-    if(biztype==='acquisition'){score+=3;flags.push({i:iINFO,t:`Business acquisition (going concern): formal appraisal from a qualified arm's-length appraiser required before disbursement. A going concern is defined as a business that operated within 60 days prior to purchase. Purchase and Sale Agreement should allocate price by asset class.${cite('SOR/99-141 s.9(1)(b); SOR/99-141 s.1(1); ISED Guidelines §5.5')}`});steps.push(`Obtain a formal arm's-length appraisal for going-concern assets before first disbursement. Required by SOR/99-141 s.9(1)(b).`);}
-
-    // Startup
-    if(biztype==='startup'||yrs<2){
-      flags.push({i:iWARN,t:`Startup or business under 2 years old. Program explicitly allows start-ups but lender scrutiny increases. Focus on: owner experience, equity, realistic projections, market analysis, and management capability.${cite('CSBFP Brochure; SOR/99-141 s.8(b); ISED Guidelines §1')}`});
-      steps.push(`Prepare comprehensive startup package: (a) 3-year projections with clearly stated assumptions, (b) owner resume and industry credentials, (c) market analysis with pricing/capacity support, (d) signed lease or letter of intent, (e) any supplier/customer letters of intent. Lender's repayment ability assessment will rely on this documentation per SOR/99-141 s.8.`);
-      if(exp>=2)score+=2; else score=Math.max(0,score-4);
-    } else if(yrs>=2){score+=3;flags.push({i:iOK,t:`${yrs} years of operating history strengthens the repayment ability assessment. Historical financials (T1 Generals or corporate returns) should be included.${cite('SOR/99-141 s.8(b)')}`});}
-
-    // Reg fee
-    if(total>0) flags.push({i:iINFO,t:`2% registration fee: estimated ${money(total*0.02)} on ${money(total)}. Payable by borrower to lender; may be financed as a separate loan class (counts against $1M cap if financed). Annual administration fee of 1.25% on outstanding balances also applies.${cite('SOR/99-141 s.4(1); s.5(1)(f); ISED Guidelines §10.1, §10.2')}`});
-
-    // Interest rate
-    flags.push({i:iINFO,t:`Rate entered: ${rate}%. Regulatory maxima — Term loan floating: prime +3%; Term loan fixed: residential mortgage rate +3%; LOC: prime +5%. These caps include the 1.25% annual administration fee passed to borrower.${cite('SOR/99-141 s.12(1),(2); ISED Guidelines §6.2')}`});
-
-    // Security
-    const sn={
-      equipment:`First-ranking security on financed equipment required. Computer software uses general security agreement on business assets.${cite('SOR/99-141 s.14(1); ISED Guidelines §7.1')}`,
-      realproperty:`First mortgage on real property required. 50% occupancy rule must be met within 90 days of final disbursement.${cite('SOR/99-141 s.14(1); s.5(2)(a); ISED Guidelines §7.1')}`,
-      leaseholds:`General security on any business assets required (alternate security). Must take security on any other assets of the small business.${cite('SOR/99-141 s.14(3); ISED Guidelines §7.1')}`,
-      intangible:`General Security Agreement on any business assets required. Intangible/WC security can be problematic — lender must take security on other available business assets.${cite('SOR/99-141 s.14(3); ISED Guidelines §7.1')}`,
-      mixed:`Security requirements vary by asset class. Ensure each class is properly secured per s.14.${cite('SOR/99-141 s.14; ISED Guidelines §7.1')}`
-    };
-    if(sn[use]) flags.push({i:iINFO,t:`Security: ${sn[use]} Unsecured personal guarantees (up to 100% of original disbursed amount for loans post-March 31, 2014) optionally available.${cite('SOR/99-141 s.19(1)(a); ISED Guidelines §7.3')}`});
-
-    // Standard steps
-    steps.push(`Prepare complete lender package: (a) signed loan application, (b) business plan with 3-year projections, (c) owner resume, (d) lease or purchase agreement, (e) use-of-funds cost breakdown with quotes/contracts (invoices must be in borrower's name), (f) last 2 years T1 Generals or corporate financials, (g) 3-6 months bank statements. Lender must complete due diligence per SOR/99-141 s.8.`);
-    steps.push(`Invoices must be dated within 365 days before the loan approval date. Costs must be reduced by any grants, discounts, or refundable taxes (GST/HST must be excluded from eligible amount).${cite('SOR/99-141 s.6(1); ISED Guidelines §5.1')}`);
-
-    if(score>100)score=100; if(score<0)score=0;
-
-    let decision, sc, st;
-    if(hardDecline){ decision='DECLINE'; sc='bad'; st='OUTSIDE CSBFP PARAMETERS — One or more hard eligibility rules triggered. Deal cannot be submitted as structured. See flags for specific citations.'; }
-    else if(score>=82){ decision='STRONG'; sc='good'; st='STRONG SCREENING RESULT — Deal appears well-structured for CSBFP submission. Prepare lender package and proceed. Financial institution makes final decision.'; }
-    else if(score>=62){ decision='POSSIBLE'; sc='warn'; st='POSSIBLE APPROVAL — Some qualifying elements present but areas need attention. Address flagged items before lender submission.'; }
-    else{ decision='WEAK'; sc='bad'; st='WEAK SCREENING RESULT — Significant issues in equity, cash flow, or borrower profile. Restructure before submitting.'; }
-
-    $('d_m_score').textContent=$('d_scoreLabel').textContent=`${score}/100`;
-    $('d_m_dec').textContent=decision;
-    $('d_scoreFill').style.width=`${score}%`;
-    $('d_status').className='status '+sc;
-    $('d_status').textContent=st;
-
-    $('d_flagsList').innerHTML=flags.map(f=>noteRow(f.i,f.t)).join('');
-    $('d_flagsBox').style.display='block';
-    $('d_stepsList').innerHTML=steps.map(s=>`<div class="note-item">${iINFO}<div style="font-size:12px;color:#cccccc">${s}</div></div>`).join('');
-    $('d_stepsBox').style.display='block';
-
-    const rf=total>0?money(total*0.02):'—';
-    const dCls=decision==='STRONG'?'good':decision==='DECLINE'||decision==='WEAK'?'bad':'warn';
-    const eqCls=eqPct>=20?'good':eqPct>=15?'':'warn';
-    const dscrCls=dscr>=1.35?'good':dscr>=1.20?'':dscr>0?'warn':'warn';
-
-    $('d_summaryContent').innerHTML=`
-      <div class="s-line"><span class="s-lbl">Borrower</span><span class="s-val">${name}</span></div>
-      <div class="s-line"><span class="s-lbl">Business</span><span class="s-val">${biz}</span></div>
-      <div class="s-line"><span class="s-lbl">Total Financing</span><span class="s-val red">${money(total)}</span></div>
-      ${tl>0?`<div class="s-line"><span class="s-lbl">Term Loan</span><span class="s-val">${money(tl)}</span></div>`:''}
-      ${loc>0?`<div class="s-line"><span class="s-lbl">Line of Credit</span><span class="s-val">${money(loc)}</span></div>`:''}
-      <div class="s-line"><span class="s-lbl">Est. Annual Payments</span><span class="s-val">${money(annPmt)}</span></div>
-      <div class="s-line"><span class="s-lbl">Equity Injection</span><span class="s-val ${eqCls}">${money(equity)} (${eqPct.toFixed(1)}%)</span></div>
-      <div class="s-line"><span class="s-lbl">DSCR</span><span class="s-val ${dscrCls}">${dscr>0?dscr.toFixed(2)+'x':'Not calculated'}</span></div>
-      <div class="s-line"><span class="s-lbl">Est. Registration Fee (2%)</span><span class="s-val">${rf}</span></div>
-      <div class="s-line"><span class="s-lbl">Use of Funds</span><span class="s-val" style="font-size:13px;font-family:'Mulish',sans-serif">${$('d_use').options[$('d_use').selectedIndex].text}</span></div>
-      <div class="s-line"><span class="s-lbl">Screening Decision</span><span class="s-val ${dCls}">${decision}</span></div>
-      ${note?`<div class="s-line"><span class="s-lbl">Deal Note</span><span class="s-val" style="font-size:13px;font-family:'Mulish',sans-serif">${note}</span></div>`:''}
-    `;
-    $('d_summaryBox').style.display='block';
-  }
-
-  /* ═══════════════════════════════════════
-     PDF / PRINT EXPORT
-  ═══════════════════════════════════════ */
-  function buildPrintReport() {
-    const now = new Date();
-    const dateStr = now.toLocaleDateString('en-CA', {year:'numeric',month:'long',day:'numeric'});
-    const timeStr = now.toLocaleTimeString('en-CA', {hour:'2-digit',minute:'2-digit'});
-
-    const borrowerDone = $('bq_summary_box').style.display !== 'none';
-    const dealDone     = $('d_summaryBox').style.display   !== 'none';
-
-    if (!borrowerDone && !dealDone) {
-      alert('Run at least one screening before exporting.');
-      return false;
-    }
-
-    const clientName = str('bq_name') || str('d_name') || 'Client';
-    const bizName    = str('bq_bizname') || str('d_bizname') || 'Business';
-
-    function san(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-    let html = '<div class="pr-redbar"></div>';
-
-    html += `<div class="pr-header">
-      <div>
-        <div class="pr-firm">Vancouver Finance Company Inc.</div>
-        <div class="pr-title">CSBFP <span class="pr-red">PRO</span> SCREENING REPORT</div>
-      </div>
-      <div class="pr-meta">${dateStr} / ${timeStr}<br>SOR/99-141 · ISED Guidelines April 2024<br>Prepared for: ${san(clientName)} — ${san(bizName)}</div>
-    </div>`;
-
-    // ── BORROWER ──
-    if (borrowerDone) {
-      const bqStatusEl = $('bq_status');
-      const bqClass = bqStatusEl.className.replace('status ','');
-      html += `<div class="pr-section-title">01 / Borrower Qualification</div>`;
-      html += `<div class="pr-status ${bqClass}">${san(bqStatusEl.textContent)}</div>`;
-
-      const checkRows = $('bq_checklist_out').querySelectorAll('.bq-check-row');
-      if (checkRows.length) {
-        checkRows.forEach(row => {
-          const cls = row.classList.contains('bq-pass')?'pass': row.classList.contains('bq-fail')?'fail':'warn';
-          html += `<div class="pr-bq-row"><div class="pr-bq-dot ${cls}"></div><div>${san(row.textContent.replace(/\s+/g,' ').trim())}</div></div>`;
-        });
-      }
-
-      const capNotes = $('bq_cap_out').querySelectorAll('.note-item');
-      if (capNotes.length) {
-        html += `<div class="pr-section-title" style="font-size:10pt">Loan Cap Analysis</div>`;
-        capNotes.forEach(n => {
-          const txt = n.textContent.replace(/\s+/g,' ').trim();
-          const dc = (txt.includes('exceeds')||txt.includes('INELIGIBLE'))?'bad':'info';
-          html += `<div class="pr-flag"><div class="pr-flag-dot ${dc}"></div><div>${san(txt)}</div></div>`;
-        });
-      }
-
-      const bqSum = $('bq_summary_out').querySelectorAll('.s-line');
-      if (bqSum.length) {
-        html += `<div class="pr-section-title" style="font-size:10pt">Borrower Summary</div>`;
-        bqSum.forEach(line => {
-          const lbl = line.querySelector('.s-lbl')?.textContent||'';
-          const val = line.querySelector('.s-val')?.textContent||'';
-          const ve  = line.querySelector('.s-val');
-          const vc  = ve?.classList.contains('good')?'good': ve?.classList.contains('bad')?'bad': ve?.classList.contains('warn')?'warn':'';
-          html += `<div class="pr-summary-line"><span class="pr-summary-lbl">${san(lbl)}</span><span class="pr-summary-val ${vc} small">${san(val)}</span></div>`;
-        });
-      }
-    }
-
-    // ── PAGE BREAK ──
-    if (borrowerDone && dealDone) {
-      html += `<div style="page-break-before:always"></div><div class="pr-redbar"></div>`;
-      html += `<div class="pr-header">
-        <div><div class="pr-firm">Vancouver Finance Company Inc.</div><div class="pr-title">CSBFP <span class="pr-red">PRO</span> SCREENING REPORT</div></div>
-        <div class="pr-meta">${dateStr} / ${timeStr}<br>Continued — Deal Screening<br>${san(clientName)} — ${san(bizName)}</div>
-      </div>`;
-    }
-
-    // ── DEAL ──
-    if (dealDone) {
-      const dStatusEl = $('d_status');
-      const dClass = dStatusEl.className.replace('status ','');
-      const mDec   = $('d_m_dec').textContent;
-      const mScore = $('d_m_score').textContent;
-      const scoreVal = parseInt(mScore)||0;
-      const decCol = mDec==='STRONG'?'pr-green': mDec==='POSSIBLE'?'pr-amber':'pr-red';
-
-      html += `<div class="pr-section-title">02 / Deal Screening</div>`;
-      html += `<div class="pr-grid-3">
-        <div class="pr-metric"><div class="pr-metric-lbl">Total Financing</div><div class="pr-metric-val pr-red">${san($('d_m_total').textContent)}</div></div>
-        <div class="pr-metric"><div class="pr-metric-lbl">Est. Annual Payments</div><div class="pr-metric-val">${san($('d_m_pmt').textContent)}</div></div>
-        <div class="pr-metric"><div class="pr-metric-lbl">Equity %</div><div class="pr-metric-val">${san($('d_m_eq').textContent)}</div></div>
-        <div class="pr-metric"><div class="pr-metric-lbl">DSCR</div><div class="pr-metric-val">${san($('d_m_dscr').textContent)}</div></div>
-        <div class="pr-metric"><div class="pr-metric-lbl">Approval Score</div><div class="pr-metric-val pr-red">${san(mScore)}</div></div>
-        <div class="pr-metric"><div class="pr-metric-lbl">Decision</div><div class="pr-metric-val ${decCol}">${san(mDec)}</div></div>
-      </div>`;
-
-      html += `<div style="margin-bottom:10pt">
-        <div style="display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:7pt;color:#888;margin-bottom:3pt;letter-spacing:.1em;text-transform:uppercase"><span>Screening Score</span><span>${san(mScore)}</span></div>
-        <div class="pr-score-bar"><div class="pr-score-fill" style="width:${scoreVal}%"></div></div>
-      </div>`;
-
-      html += `<div class="pr-status ${dClass}">${san(dStatusEl.textContent)}</div>`;
-
-      const flagItems = $('d_flagsList').querySelectorAll('.note-item');
-      if (flagItems.length) {
-        html += `<div class="pr-section-title" style="font-size:10pt">Qualification Flags &amp; Regulatory Citations</div>`;
-        flagItems.forEach(item => {
-          const txt = item.textContent.replace(/\s+/g,' ').trim();
-          const svgHtml = item.querySelector('svg')?.outerHTML||'';
-          const hasBad  = svgHtml.includes('#cc0000')||svgHtml.includes('#ff6666');
-          const hasWarn = svgHtml.includes('#aa7700');
-          const hasOK   = svgHtml.includes('#00b046');
-          const dc = hasBad?'bad': hasWarn?'warn': hasOK?'ok':'info';
-          html += `<div class="pr-flag"><div class="pr-flag-dot ${dc}"></div><div>${san(txt)}</div></div>`;
-        });
-      }
-
-      const stepItems = $('d_stepsList').querySelectorAll('.note-item');
-      if (stepItems.length) {
-        html += `<div class="pr-section-title" style="font-size:10pt">Recommended Next Steps</div>`;
-        let n=1;
-        stepItems.forEach(item => {
-          html += `<div class="pr-step"><div class="pr-step-num">${n++}.</div><div>${san(item.textContent.replace(/\s+/g,' ').trim())}</div></div>`;
-        });
-      }
-
-      const sumLines = $('d_summaryContent').querySelectorAll('.s-line');
-      if (sumLines.length) {
-        html += `<div class="pr-section-title" style="font-size:10pt">Client Summary</div>`;
-        sumLines.forEach(line => {
-          const lbl = line.querySelector('.s-lbl')?.textContent||'';
-          const val = line.querySelector('.s-val')?.textContent||'';
-          const ve  = line.querySelector('.s-val');
-          const vc  = ve?.classList.contains('good')?'good': ve?.classList.contains('bad')?'bad': ve?.classList.contains('warn')?'warn':'';
-          html += `<div class="pr-summary-line"><span class="pr-summary-lbl">${san(lbl)}</span><span class="pr-summary-val ${vc} small">${san(val)}</span></div>`;
-        });
-      }
-    }
-
-    html += `<div class="pr-footer">LEGAL NOTICE: This report is generated automatically by software and is provided by Vancouver Finance Company Inc. (VFC) strictly as an internal administrative aid for preliminary deal assessment only. It is not a financial product, credit decision, loan application, commitment to lend, or legal, regulatory, tax, or investment advice. All outputs are produced by automated logic and do not represent the professional judgment of VFC, its directors, officers, employees, or agents. No VFC representative has reviewed or approved this output. Users are solely responsible for independently verifying all information with the applicable lender, legal counsel, and ISED prior to any transaction. To the maximum extent permitted by law, VFC expressly disclaims all warranties and liability of any kind arising from reliance on this Tool or its outputs. Use of this Tool constitutes acceptance of these terms. Regulatory references: SOR/99-141 (current March 2, 2026); ISED CSBFP Guidelines April 2024. Vancouver Finance Company Inc. · ${dateStr}</div>`;
-
-    $('print-report').innerHTML = html;
-    return true;
-  }
-
-  function exportPDF() {
-    if (buildPrintReport()) {
-      setTimeout(() => window.print(), 120);
-    }
-  }
+draw();
 </script>
-
-<!-- FLOATING EXPORT BUTTON -->
-<div class="export-fab">
-  <button class="export-btn" onclick="exportPDF()">
-    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" style="display:inline-block;vertical-align:middle;margin-right:6px;margin-top:-2px">
-      <path d="M8 2v8M5 7l3 3 3-3" stroke="#cc0000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M2 12v1a1 1 0 001 1h10a1 1 0 001-1v-1" stroke="#cc0000" stroke-width="1.5" stroke-linecap="round"/>
-    </svg>
-    Export PDF
-  </button>
-</div>
-
-<!-- HIDDEN PRINT REPORT — built and shown only at print time -->
-<div id="print-report"></div>
-
 </body>
 </html>
