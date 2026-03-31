@@ -78,6 +78,25 @@ input::placeholder{color:#bbb}
 .ft a{font-family:'JetBrains Mono',monospace;font-size:11px;color:#3b82f6;text-decoration:none;display:block;margin-top:3px}
 .ft a:hover{text-decoration:underline}
 
+
+
+/* ACCESS GATE */
+.gate{position:fixed;inset:0;z-index:200;background:linear-gradient(135deg,#f8fbff 0%,#eef4ff 50%,#ffffff 100%);display:flex;align-items:center;justify-content:center;padding:20px}
+.gate.hide{display:none}
+.g-card{width:min(560px,100%);background:#fff;border:1px solid #e6ebf5;border-radius:18px;box-shadow:0 18px 55px rgba(17,24,39,.08);padding:26px 22px;display:flex;flex-direction:column;gap:14px}
+.g-k{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.45px;color:#6b7280;text-transform:uppercase}
+.g-title{font-size:30px;line-height:1.08;letter-spacing:-.3px}
+.g-sub{font-size:15px;color:#4b5563}
+.gf{display:grid;gap:10px;margin-top:4px}
+.gl{font-size:13px;color:#374151;margin-bottom:3px;display:block}
+.gi{width:100%;border:1px solid #d9e2f2;background:#f8faff;padding:11px 12px;border-radius:10px;font-size:15px;font-family:'JetBrains Mono',monospace;outline:none}
+.gi:focus{border-color:#3b82f6;background:#fff;box-shadow:0 0 0 3px rgba(59,130,246,.14)}
+.g-actions{display:flex;align-items:center;gap:12px;justify-content:space-between;margin-top:6px}
+.g-note{font-size:12px;color:#6b7280}
+.g-btn{background:#3b82f6;color:#fff;border:none;border-radius:999px;padding:10px 16px;font-size:15px}
+.g-btn:hover{background:#2563eb}
+.g-err{font-size:12px;color:#b91c1c;min-height:16px}
+
 /* Tablet+ */
 @media(min-width:600px){
   .hd-name{font-size:30px}
@@ -92,6 +111,34 @@ input::placeholder{color:#bbb}
 </style>
 </head>
 <body>
+
+<div class="gate" id="gate">
+  <div class="g-card">
+    <div class="g-k">Secure Access</div>
+    <div class="g-title">Alternate Lender Directory</div>
+    <div class="g-sub">Please provide your contact details to access the list.</div>
+    <form id="gateForm" class="gf">
+      <div>
+        <label for="gName" class="gl">Full Name</label>
+        <input id="gName" name="name" class="gi" type="text" autocomplete="name" required>
+      </div>
+      <div>
+        <label for="gEmail" class="gl">Email</label>
+        <input id="gEmail" name="email" class="gi" type="email" autocomplete="email" required>
+      </div>
+      <div>
+        <label for="gPhone" class="gl">Phone</label>
+        <input id="gPhone" name="phone" class="gi" type="tel" autocomplete="tel" required>
+      </div>
+      <div class="g-actions">
+        <div class="g-note">One-time unlock on this browser.</div>
+        <button class="g-btn" type="submit">Access List</button>
+      </div>
+      <div class="g-err" id="gErr"></div>
+    </form>
+  </div>
+</div>
+
 
 <div class="hd">
   <div class="hd-name">Vancouver Finance Company Inc.</div>
@@ -510,7 +557,44 @@ document.getElementById('clr').addEventListener('click',function(){
   draw();
 });
 
-draw();
+function showGate(){
+  document.getElementById('gate').classList.remove('hide');
+}
+
+function unlockList(payload){
+  try{localStorage.setItem('vfcl_access',JSON.stringify(payload));}catch(e){}
+  document.getElementById('gate').classList.add('hide');
+  draw();
+}
+
+(function initGate(){
+  var saved=null;
+  try{saved=JSON.parse(localStorage.getItem('vfcl_access')||'null');}catch(e){saved=null;}
+  if(saved&&saved.name&&saved.email&&saved.phone){
+    document.getElementById('gate').classList.add('hide');
+    draw();
+    return;
+  }
+
+  showGate();
+  document.getElementById('gateForm').addEventListener('submit',function(e){
+    e.preventDefault();
+    var name=document.getElementById('gName').value.trim();
+    var email=document.getElementById('gEmail').value.trim();
+    var phone=document.getElementById('gPhone').value.trim();
+    var digits=phone.replace(/\D/g,'');
+    var err='';
+
+    if(name.length<2) err='Please enter your full name.';
+    else if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) err='Please enter a valid email address.';
+    else if(digits.length<10) err='Please enter a valid phone number.';
+
+    document.getElementById('gErr').textContent=err;
+    if(err) return;
+
+    unlockList({name:name,email:email,phone:phone,grantedAt:new Date().toISOString()});
+  });
+})();
 </script>
 </body>
 </html>
