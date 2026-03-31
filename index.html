@@ -472,8 +472,8 @@ document.getElementById('cc').textContent=' '+C.length;
 
 var tab='R', provs=[], q='';
 
-// Google Apps Script endpoint that writes leads to your existing Google Sheet
-var LEAD_SHEET_URL='https://script.google.com/macros/s/AKfycbxqvRdFTUynTIhWn0h2aU5W1jouIs369XrmkZGGKBPkeursr4_UBIrlwtmdzsdBjStO/exec';
+// Existing Google Apps Script endpoint used for lead capture
+var scriptURL='https://script.google.com/macros/s/AKfycbxqvRdFTUynTIhWn0h2aU5W1jouIs369XrmkZGGKBPkeursr4_UBIrlwtmdzsdBjStO/exec';
 
 function saveLeadLocal(lead){
   try{
@@ -485,62 +485,27 @@ function saveLeadLocal(lead){
 }
 
 function saveLeadRemote(lead){
-  if(!LEAD_SHEET_URL) return Promise.resolve(false);
+  if(!scriptURL) return Promise.resolve(false);
 
-  return new Promise(function(resolve){
-    try{
-      var frameId='lead-post-target';
-      var frame=document.getElementById(frameId);
-      if(!frame){
-        frame=document.createElement('iframe');
-        frame.id=frameId;
-        frame.name=frameId;
-        frame.style.display='none';
-        document.body.appendChild(frame);
-      }
+  var data=new URLSearchParams({
+    business:'Alternate Lender Directory',
+    name:lead.name||'',
+    phone:lead.phone||'',
+    email:lead.email||'',
+    tier:'LOGIN',
+    score:lead.grantedAt||''
+  });
 
-      var form=document.createElement('form');
-      form.method='POST';
-      form.action=LEAD_SHEET_URL;
-      form.target=frameId;
-      form.style.display='none';
-
-      var fields={
-        business:'Alternate Lender Directory',
-        name:lead.name||'',
-        phone:lead.phone||'',
-        email:lead.email||'',
-        tier:lead.source||'',
-        score:lead.grantedAt||''
-      };
-
-      Object.keys(fields).forEach(function(key){
-        var input=document.createElement('input');
-        input.type='hidden';
-        input.name=key;
-        input.value=fields[key];
-        form.appendChild(input);
-      });
-
-      var done=false;
-      var cleanup=function(ok){
-        if(done) return;
-        done=true;
-        frame.removeEventListener('load',onLoad);
-        form.remove();
-        resolve(ok);
-      };
-      var onLoad=function(){cleanup(true);};
-
-      frame.addEventListener('load',onLoad,{once:true});
-      document.body.appendChild(form);
-      form.submit();
-      setTimeout(function(){cleanup(true);},2500);
-    }catch(e){
-      resolve(false);
-    }
+  return fetch(scriptURL,{
+    method:'POST',
+    body:data
+  }).then(function(r){
+    return r.ok;
+  }).catch(function(){
+    return false;
   });
 }
+
 
 
 function idx(el){ return el.getAttribute('data-tab')||el.getAttribute('data-p'); }
