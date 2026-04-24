@@ -535,7 +535,8 @@ var noteKey='vfcl_member_notes';
 var adminSessionKey='vfcl_admin_unlocked';
 var pendingOpsKey='vfcl_note_pending_ops';
 var ADMIN_PASSWORD='VFC2026!';
-var notesURL='https://script.google.com/macros/s/AKfycbxqvRdFTUynTIhWn0h2aU5W1jouIs369XrmkZGGKBPkeursr4_UBIrlwtmdzsdBjStO/exec';
+// Paste your dedicated Apps Script "member notes" Web App URL here.
+var notesURL='https://script.google.com/macros/s/AKfycbyJOgH0XmP766SW8_KMqEXf2gKOWm8lZH9O0WaBQQS-icM9g9OwxhXC9KdmevDV-7dH/exec';
 var memberNotes=(function(){
   try{return JSON.parse(localStorage.getItem(noteKey)||'{}')||{};}catch(e){return {};}
 })();
