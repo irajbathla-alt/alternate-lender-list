@@ -103,6 +103,7 @@ input::placeholder{color:#bbb}
 .ad-auth-row{display:flex;gap:8px;align-items:center}
 .ad-auth-btn{font-size:12px;padding:7px 12px;background:#111827;color:#fff}
 .ad-auth-state{font-size:12px;color:#475569}
+.ad-sync{font-size:12px;color:#64748b}
 
 
 /* ACCESS GATE */
@@ -214,6 +215,7 @@ input::placeholder{color:#bbb}
         <button id="adminUnlock" class="ad-auth-btn">Unlock</button>
       </div>
       <div id="adminAuthState" class="ad-auth-state">Locked (view only).</div>
+      <div id="adminSyncStatus" class="ad-sync">Sync status: checking…</div>
     </div>
     <label class="ad-label" for="adminMember">Member</label>
     <select id="adminMember" class="ad-select"></select>
@@ -531,12 +533,15 @@ document.getElementById('cc').textContent=' '+C.length;
 var tab='R', provs=[], q='';
 var noteKey='vfcl_member_notes';
 var adminSessionKey='vfcl_admin_unlocked';
+var pendingOpsKey='vfcl_note_pending_ops';
 var ADMIN_PASSWORD='VFC2026!';
 var notesURL='https://script.google.com/macros/s/AKfycbxqvRdFTUynTIhWn0h2aU5W1jouIs369XrmkZGGKBPkeursr4_UBIrlwtmdzsdBjStO/exec';
 var memberNotes=(function(){
   try{return JSON.parse(localStorage.getItem(noteKey)||'{}')||{};}catch(e){return {};}
 })();
 var adminUnlocked=(function(){try{return localStorage.getItem(adminSessionKey)==='1';}catch(e){return false;}})();
+var pendingOps=(function(){try{return JSON.parse(localStorage.getItem(pendingOpsKey)||'[]')||[];}catch(e){return [];}})();
+var syncVerified=false;
 
 // Existing Google Apps Script endpoint used for lead capture
 var scriptURL='https://script.google.com/macros/s/AKfycbxqvRdFTUynTIhWn0h2aU5W1jouIs369XrmkZGGKBPkeursr4_UBIrlwtmdzsdBjStO/exec';
@@ -584,23 +589,63 @@ function esc(s){
 }
 function noteId(name,t){return t+'::'+name.toLowerCase().trim();}
 function saveNotes(){try{localStorage.setItem(noteKey,JSON.stringify(memberNotes));}catch(e){}}
-function saveNotesRemote(action,name,note){
+function savePendingOps(){try{localStorage.setItem(pendingOpsKey,JSON.stringify(pendingOps));}catch(e){}}
+function setSyncStatus(msg){
+  var el=document.getElementById('adminSyncStatus');
+  if(el) el.textContent='Sync status: '+msg;
+}
+function verifyNotesEndpoint(){
   if(!notesURL) return Promise.resolve(false);
+  return fetch(notesURL+'?resource=member_notes&check=1&t='+(Date.now()),{method:'GET'})
+    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); })
+    .then(function(){
+      syncVerified=true;
+      setSyncStatus('connected');
+      return true;
+    })
+    .catch(function(){
+      syncVerified=false;
+      setSyncStatus('offline (changes queued locally)');
+      return false;
+    });
+}
+function postNoteOp(op){
   var data=new URLSearchParams({
     resource:'member_notes',
-    action:action||'upsert',
-    tab:tab,
-    member:name||'',
-    note:note||'',
-    updatedAt:new Date().toISOString()
+    action:op.action||'upsert',
+    tab:op.tab||'R',
+    member:op.member||'',
+    note:op.note||'',
+    updatedAt:op.updatedAt||new Date().toISOString()
   });
-  return fetch(notesURL,{method:'POST',mode:'no-cors',keepalive:true,body:data})
-    .then(function(){return true;})
-    .catch(function(){return false;});
+  return fetch(notesURL,{method:'POST',body:data}).then(function(r){
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    return true;
+  });
+}
+function queueNoteOp(action,name,note){
+  pendingOps.push({action:action,tab:tab,member:name,note:note,updatedAt:new Date().toISOString()});
+  savePendingOps();
+}
+function flushPendingOps(){
+  if(!pendingOps.length) return Promise.resolve(true);
+  if(!syncVerified) return Promise.resolve(false);
+  var ops=pendingOps.slice();
+  return ops.reduce(function(p,op){
+    return p.then(function(){ return postNoteOp(op); });
+  },Promise.resolve()).then(function(){
+    pendingOps=[];
+    savePendingOps();
+    setSyncStatus('connected');
+    return true;
+  }).catch(function(){
+    setSyncStatus('offline (changes queued locally)');
+    return false;
+  });
 }
 function loadNotesRemote(){
   if(!notesURL) return Promise.resolve(false);
-  return fetch(notesURL+'?resource=member_notes',{method:'GET'})
+  return fetch(notesURL+'?resource=member_notes&t='+(Date.now()),{method:'GET'})
     .then(function(r){if(!r.ok)return null;return r.json();})
     .then(function(data){
       if(!data) return false;
@@ -611,6 +656,7 @@ function loadNotesRemote(){
         memberNotes=obj;
         saveNotes();
         draw();
+        setSyncStatus('connected');
         return true;
       }
       return false;
@@ -754,7 +800,8 @@ document.getElementById('adminSave').addEventListener('click',function(){
   var note=document.getElementById('adminNote').value.trim();
   memberNotes[noteId(name,tab)]=note;
   saveNotes();
-  saveNotesRemote('upsert',name,note);
+  queueNoteOp('upsert',name,note);
+  flushPendingOps();
   document.getElementById('adminMsg').textContent='Note saved for '+name+'.';
   draw();
 });
@@ -764,7 +811,8 @@ document.getElementById('adminDelete').addEventListener('click',function(){
   if(!name)return;
   delete memberNotes[noteId(name,tab)];
   saveNotes();
-  saveNotesRemote('delete',name,'');
+  queueNoteOp('delete',name,'');
+  flushPendingOps();
   document.getElementById('adminNote').value='';
   document.getElementById('adminMsg').textContent='Note deleted for '+name+'.';
   draw();
@@ -781,7 +829,19 @@ function unlockList(){
 
 (function initGate(){
   showGate();
-  loadNotesRemote();
+  setSyncStatus('checking…');
+  verifyNotesEndpoint().then(function(ok){
+    if(ok){
+      loadNotesRemote().then(function(){
+        flushPendingOps();
+      });
+    }
+  });
+  window.setInterval(function(){
+    verifyNotesEndpoint().then(function(ok){
+      if(ok) flushPendingOps();
+    });
+  },20000);
   document.getElementById('gateForm').addEventListener('submit',function(e){
     e.preventDefault();
     var name=document.getElementById('gName').value.trim();
