@@ -541,7 +541,6 @@ var memberNotes=(function(){
 })();
 var adminUnlocked=(function(){try{return localStorage.getItem(adminSessionKey)==='1';}catch(e){return false;}})();
 var pendingOps=(function(){try{return JSON.parse(localStorage.getItem(pendingOpsKey)||'[]')||[];}catch(e){return [];}})();
-var syncVerified=false;
 
 // Existing Google Apps Script endpoint used for lead capture
 var scriptURL='https://script.google.com/macros/s/AKfycbxqvRdFTUynTIhWn0h2aU5W1jouIs369XrmkZGGKBPkeursr4_UBIrlwtmdzsdBjStO/exec';
@@ -599,13 +598,11 @@ function verifyNotesEndpoint(){
   return fetch(notesURL+'?resource=member_notes&check=1&t='+(Date.now()),{method:'GET'})
     .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); })
     .then(function(){
-      syncVerified=true;
       setSyncStatus('connected');
       return true;
     })
     .catch(function(){
-      syncVerified=false;
-      setSyncStatus('offline (changes queued locally)');
+      setSyncStatus('write-only (endpoint blocks browser checks)');
       return false;
     });
 }
@@ -618,8 +615,11 @@ function postNoteOp(op){
     note:op.note||'',
     updatedAt:op.updatedAt||new Date().toISOString()
   });
-  return fetch(notesURL,{method:'POST',body:data}).then(function(r){
-    if(!r.ok) throw new Error('HTTP '+r.status);
+  if(navigator.sendBeacon){
+    var ok=navigator.sendBeacon(notesURL,data);
+    if(ok) return Promise.resolve(true);
+  }
+  return fetch(notesURL,{method:'POST',mode:'no-cors',keepalive:true,body:data}).then(function(){
     return true;
   });
 }
@@ -629,7 +629,6 @@ function queueNoteOp(action,name,note){
 }
 function flushPendingOps(){
   if(!pendingOps.length) return Promise.resolve(true);
-  if(!syncVerified) return Promise.resolve(false);
   var ops=pendingOps.slice();
   return ops.reduce(function(p,op){
     return p.then(function(){ return postNoteOp(op); });
@@ -660,7 +659,10 @@ function loadNotesRemote(){
         return true;
       }
       return false;
-    }).catch(function(){return false;});
+    }).catch(function(){
+      setSyncStatus('write-only (saved locally, remote read blocked)');
+      return false;
+    });
 }
 function setAuthUI(){
   var state=document.getElementById('adminAuthState');
@@ -802,6 +804,7 @@ document.getElementById('adminSave').addEventListener('click',function(){
   saveNotes();
   queueNoteOp('upsert',name,note);
   flushPendingOps();
+  loadNotesRemote();
   document.getElementById('adminMsg').textContent='Note saved for '+name+'.';
   draw();
 });
@@ -813,6 +816,7 @@ document.getElementById('adminDelete').addEventListener('click',function(){
   saveNotes();
   queueNoteOp('delete',name,'');
   flushPendingOps();
+  loadNotesRemote();
   document.getElementById('adminNote').value='';
   document.getElementById('adminMsg').textContent='Note deleted for '+name+'.';
   draw();
@@ -830,16 +834,14 @@ function unlockList(){
 (function initGate(){
   showGate();
   setSyncStatus('checking…');
-  verifyNotesEndpoint().then(function(ok){
-    if(ok){
-      loadNotesRemote().then(function(){
-        flushPendingOps();
-      });
-    }
+  verifyNotesEndpoint().then(function(){
+    flushPendingOps();
+    loadNotesRemote();
   });
   window.setInterval(function(){
-    verifyNotesEndpoint().then(function(ok){
-      if(ok) flushPendingOps();
+    verifyNotesEndpoint().then(function(){
+      flushPendingOps();
+      loadNotesRemote();
     });
   },20000);
   document.getElementById('gateForm').addEventListener('submit',function(e){
