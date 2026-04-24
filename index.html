@@ -78,6 +78,32 @@ input::placeholder{color:#bbb}
 .ft a{font-family:'JetBrains Mono',monospace;font-size:11px;color:#3b82f6;text-decoration:none;display:block;margin-top:3px}
 .ft a:hover{text-decoration:underline}
 
+/* Notes + admin */
+.admin-wrap{display:flex;justify-content:center;padding:10px 16px 0}
+.admin-btn{font-size:13px;color:#2563eb;background:#eef4ff;border:1px solid #cfe0ff;padding:7px 14px}
+.admin-btn:hover{background:#dceaff}
+.cnote{margin-top:2px;padding:6px 8px;background:#f8fafc;border:1px dashed #d6dee9;border-radius:6px;font-size:12px;color:#334155;line-height:1.35}
+.ad{position:fixed;inset:0;z-index:220;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;padding:16px}
+.ad.show{display:flex}
+.ad-card{width:min(640px,100%);background:#fff;border:1px solid #dbe3f2;border-radius:16px;padding:18px;box-shadow:0 20px 55px rgba(2,6,23,.22);display:flex;flex-direction:column;gap:10px}
+.ad-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.ad-title{font-size:24px}
+.ad-x{font-size:13px;color:#6b7280;background:#f3f4f6;padding:6px 10px}
+.ad-x:hover{background:#e5e7eb}
+.ad-help{font-size:13px;color:#475569}
+.ad-label{font-size:13px;color:#334155}
+.ad-select,.ad-note{width:100%;border:1px solid #d5deec;border-radius:10px;padding:9px 10px;font-family:'JetBrains Mono',monospace;font-size:12px}
+.ad-note{min-height:140px;resize:vertical}
+.ad-actions{display:flex;flex-wrap:wrap;gap:8px}
+.ad-save{background:#3b82f6;color:#fff;padding:8px 14px;font-size:13px}
+.ad-del{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;padding:8px 14px;font-size:13px}
+.ad-save[disabled],.ad-del[disabled]{opacity:.45;cursor:not-allowed}
+.ad-msg{font-size:12px;color:#64748b;min-height:16px}
+.ad-auth{display:grid;gap:6px;padding:8px;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc}
+.ad-auth-row{display:flex;gap:8px;align-items:center}
+.ad-auth-btn{font-size:12px;padding:7px 12px;background:#111827;color:#fff}
+.ad-auth-state{font-size:12px;color:#475569}
+.ad-sync{font-size:12px;color:#64748b}
 
 
 /* ACCESS GATE */
@@ -160,6 +186,9 @@ input::placeholder{color:#bbb}
       <button class="p-btn" data-p="ATL">ATL</button>
     </div>
   </div>
+  <div class="admin-wrap">
+    <button class="admin-btn" id="adminOpen">Admin Portal</button>
+  </div>
 </div>
 
 <div class="sb">
@@ -172,6 +201,33 @@ input::placeholder{color:#bbb}
 </div>
 
 <div id="list"></div>
+<div class="ad" id="adminModal">
+  <div class="ad-card">
+    <div class="ad-top">
+      <div class="ad-title">Admin Portal</div>
+      <button class="ad-x" id="adminClose">Close</button>
+    </div>
+    <div class="ad-help">Add internal deal notes for each member. Notes are visible to all users and will sync online when the configured endpoint is available.</div>
+    <div class="ad-auth">
+      <div class="ad-label">Admin password required to edit notes</div>
+      <div class="ad-auth-row">
+        <input id="adminPassword" class="ad-select" type="password" placeholder="Enter admin password">
+        <button id="adminUnlock" class="ad-auth-btn">Unlock</button>
+      </div>
+      <div id="adminAuthState" class="ad-auth-state">Locked (view only).</div>
+      <div id="adminSyncStatus" class="ad-sync">Sync status: checking…</div>
+    </div>
+    <label class="ad-label" for="adminMember">Member</label>
+    <select id="adminMember" class="ad-select"></select>
+    <label class="ad-label" for="adminNote">Notes</label>
+    <textarea id="adminNote" class="ad-note" placeholder="Add your deal experience, strengths, red flags, and contact preferences..."></textarea>
+    <div class="ad-actions">
+      <button class="ad-save" id="adminSave">Save note</button>
+      <button class="ad-del" id="adminDelete">Delete note</button>
+    </div>
+    <div class="ad-msg" id="adminMsg"></div>
+  </div>
+</div>
 
 <script>
 var R=[
@@ -352,7 +408,9 @@ var R=[
   {n:"PHL",p:"604.579.0847",w:"phlcapital.com",v:["BC","AB","ON"]},
   {n:"Phoenix Financial Inc.",p:"902.406.7616",w:"phoenixfinancialinc.net",v:["ATL"]},
   {n:"Pillar Financial Services Inc.",p:"877.279.2116",w:"pillarfinancial.ca",v:["ON"]},
+  {n:"Premiere Home Mortgage Ltd.",p:"",w:"premierecanadian.ca",v:["BC","AB","ON"]},
   {n:"Pineapple",p:"833.347.7799",w:"gopineapple.ca",v:["BC","SK","MB","ON","QC","ATL"]},
+  {n:"Pacifica Mortgage Investment Corp.",p:"",w:"pacificamortgage.ca",v:["BC"]},
   {n:"Pioneer West Acceptance Corp.",p:"604.679.9447",w:"pioneerwest.com",v:["BC","SK"]},
   {n:"PMB Professional Mortgage Brokers Inc.",p:"905.985.4029",w:"pmbmortgages.ca",v:["ON"]},
   {n:"Pocmit Realty Advisors Inc.",p:"905.522.7936",w:"pracommercial.com",v:["ON"]},
@@ -386,6 +444,7 @@ var R=[
   {n:"Spectrum Canada Mortgage Services Inc.",p:"877.253.4377",w:"spectrum.canada.com",v:["BC","SK","ON"]},
   {n:"Sterling Bridge Mortgage Corp.",p:"403.298.0638",w:"sterlingbridge.ca",v:["SK"]},
   {n:"Stewart Mortgage Corp.",p:"250.372.1995",w:"stewartmortgage.ca",v:["BC"]},
+  {n:"Tekamar Mortgage Fund Ltd.",p:"",w:"tekfund.ca",v:["BC"]},
   {n:"Strive Capital",p:"403.633.7340",w:"strivecapital.ca",v:["BC","AB","SK","MB","QC","ATL"]},
   {n:"Sun Micro Financial - The Mortgage Centre",p:"905.212.1099",w:"sunmicrofinancial.ca",v:["BC","AB","ON"]},
   {n:"Syndicate Lending Corporation",p:"604.829.7007",w:"syndicatelending.com",v:["BC"]},
@@ -424,6 +483,7 @@ var C=[
   {n:"Cedar Peaks Mortgage Services Ltd.",p:"403.850.3373",w:"cedarpeaksmortgage.ca",v:["BC","AB"]},
   {n:"Centurion Mortgage Capital Corporation",p:"416.733.5600",w:"centurion.ca",v:["BC","AB","SK","MB","ON","QC","ATL"]},
   {n:"City Mortgage Investment Corporation",p:"604.763.3346",w:"citymortgage.ca",v:["BC"]},
+  {n:"Cove Mortgage Ltd.",p:"",w:"covemortgage.com",v:["BC"]},
   {n:"Community Trust Company",p:"800.268.1576",w:"communitytrust.ca",v:["BC","AB","ON"]},
   {n:"Domain Funding",p:"604.681.0000",w:"domainfunding.ca",v:["BC","AB"]},
   {n:"East Coast Mortgage Brokers",p:"709.754.0422",w:"ecmb.ca",v:["ATL"]},
@@ -471,6 +531,17 @@ document.getElementById('rc').textContent=' '+R.length;
 document.getElementById('cc').textContent=' '+C.length;
 
 var tab='R', provs=[], q='';
+var noteKey='vfcl_member_notes';
+var adminSessionKey='vfcl_admin_unlocked';
+var pendingOpsKey='vfcl_note_pending_ops';
+var ADMIN_PASSWORD='VFC2026!';
+var notesURL='https://script.google.com/macros/s/AKfycbxqvRdFTUynTIhWn0h2aU5W1jouIs369XrmkZGGKBPkeursr4_UBIrlwtmdzsdBjStO/exec';
+var memberNotes=(function(){
+  try{return JSON.parse(localStorage.getItem(noteKey)||'{}')||{};}catch(e){return {};}
+})();
+var adminUnlocked=(function(){try{return localStorage.getItem(adminSessionKey)==='1';}catch(e){return false;}})();
+var pendingOps=(function(){try{return JSON.parse(localStorage.getItem(pendingOpsKey)||'[]')||[];}catch(e){return [];}})();
+var syncVerified=false;
 
 // Existing Google Apps Script endpoint used for lead capture
 var scriptURL='https://script.google.com/macros/s/AKfycbxqvRdFTUynTIhWn0h2aU5W1jouIs369XrmkZGGKBPkeursr4_UBIrlwtmdzsdBjStO/exec';
@@ -511,9 +582,108 @@ function saveLeadRemote(lead){
 
 
 function idx(el){ return el.getAttribute('data-tab')||el.getAttribute('data-p'); }
+function esc(s){
+  return String(s||'').replace(/[&<>"']/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+function noteId(name,t){return t+'::'+name.toLowerCase().trim();}
+function saveNotes(){try{localStorage.setItem(noteKey,JSON.stringify(memberNotes));}catch(e){}}
+function savePendingOps(){try{localStorage.setItem(pendingOpsKey,JSON.stringify(pendingOps));}catch(e){}}
+function setSyncStatus(msg){
+  var el=document.getElementById('adminSyncStatus');
+  if(el) el.textContent='Sync status: '+msg;
+}
+function verifyNotesEndpoint(){
+  if(!notesURL) return Promise.resolve(false);
+  return fetch(notesURL+'?resource=member_notes&check=1&t='+(Date.now()),{method:'GET'})
+    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); })
+    .then(function(){
+      syncVerified=true;
+      setSyncStatus('connected');
+      return true;
+    })
+    .catch(function(){
+      syncVerified=false;
+      setSyncStatus('offline (changes queued locally)');
+      return false;
+    });
+}
+function postNoteOp(op){
+  var data=new URLSearchParams({
+    resource:'member_notes',
+    action:op.action||'upsert',
+    tab:op.tab||'R',
+    member:op.member||'',
+    note:op.note||'',
+    updatedAt:op.updatedAt||new Date().toISOString()
+  });
+  return fetch(notesURL,{method:'POST',body:data}).then(function(r){
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    return true;
+  });
+}
+function queueNoteOp(action,name,note){
+  pendingOps.push({action:action,tab:tab,member:name,note:note,updatedAt:new Date().toISOString()});
+  savePendingOps();
+}
+function flushPendingOps(){
+  if(!pendingOps.length) return Promise.resolve(true);
+  if(!syncVerified) return Promise.resolve(false);
+  var ops=pendingOps.slice();
+  return ops.reduce(function(p,op){
+    return p.then(function(){ return postNoteOp(op); });
+  },Promise.resolve()).then(function(){
+    pendingOps=[];
+    savePendingOps();
+    setSyncStatus('connected');
+    return true;
+  }).catch(function(){
+    setSyncStatus('offline (changes queued locally)');
+    return false;
+  });
+}
+function loadNotesRemote(){
+  if(!notesURL) return Promise.resolve(false);
+  return fetch(notesURL+'?resource=member_notes&t='+(Date.now()),{method:'GET'})
+    .then(function(r){if(!r.ok)return null;return r.json();})
+    .then(function(data){
+      if(!data) return false;
+      var obj=(Array.isArray(data)?data.reduce(function(acc,row){
+        if(row&&row.key)acc[row.key]=row.note||''; return acc;
+      },{}):data.notes)||data;
+      if(obj&&typeof obj==='object'){
+        memberNotes=obj;
+        saveNotes();
+        draw();
+        setSyncStatus('connected');
+        return true;
+      }
+      return false;
+    }).catch(function(){return false;});
+}
+function setAuthUI(){
+  var state=document.getElementById('adminAuthState');
+  var canEdit=adminUnlocked;
+  document.getElementById('adminSave').disabled=!canEdit;
+  document.getElementById('adminDelete').disabled=!canEdit;
+  state.textContent=canEdit?'Unlocked: edit enabled.':'Locked (view only).';
+}
+function currentData(){return tab==='R'?R:C;}
+function updateAdminList(){
+  var sel=document.getElementById('adminMember');
+  var data=currentData();
+  sel.innerHTML=data.map(function(m){return '<option value="'+esc(m.n)+'">'+esc(m.n)+'</option>';}).join('');
+  onAdminPick();
+}
+function onAdminPick(){
+  var name=document.getElementById('adminMember').value||'';
+  document.getElementById('adminNote').value=memberNotes[noteId(name,tab)]||'';
+  document.getElementById('adminMsg').textContent='';
+}
 
 function draw(){
-  var data=tab==='R'?R:C;
+  var data=currentData();
   var res=data.filter(function(l){
     var mq=!q||l.n.toLowerCase().indexOf(q)>-1||l.p.indexOf(q)>-1||l.w.toLowerCase().indexOf(q)>-1;
     var mp=provs.length===0||provs.every(function(p){return l.v.indexOf(p)>-1});
@@ -547,8 +717,11 @@ function draw(){
       var pts=l.v.map(function(p){return'<span class="pt '+p+'">'+p+'</span>';}).join('');
       var ph=l.p?'<div class="mr">'+PH+'<span class="ph">'+l.p+'</span></div>':'';
       var wb=l.w?'<div class="mr">'+WB+'<a href="https://'+l.w+'" target="_blank">'+l.w+'</a></div>':'';
+      var note=memberNotes[noteId(l.n,tab)]||'';
+      var noteHtml=note?'<div class="cnote"><strong>Notes:</strong> '+esc(note)+'</div>':'';
       html+='<div class="c"><div class="ct2"><div class="cn">'+l.n+'</div><div class="pts">'+pts+'</div></div>';
       if(ph||wb)html+='<div class="cm">'+ph+wb+'</div>';
+      html+=noteHtml;
       html+='</div>';
     });
     html+='</div></div>';
@@ -565,6 +738,7 @@ document.querySelectorAll('.t-btn').forEach(function(btn){
     tab=btn.getAttribute('data-tab');
     document.getElementById('q').value='';
     q='';
+    if(document.getElementById('adminModal').classList.contains('show')) updateAdminList();
     draw();
   });
 });
@@ -595,6 +769,55 @@ document.getElementById('clr').addEventListener('click',function(){
   draw();
 });
 
+document.getElementById('adminOpen').addEventListener('click',function(){
+  updateAdminList();
+  setAuthUI();
+  document.getElementById('adminModal').classList.add('show');
+});
+document.getElementById('adminClose').addEventListener('click',function(){
+  document.getElementById('adminModal').classList.remove('show');
+});
+document.getElementById('adminMember').addEventListener('change',onAdminPick);
+document.getElementById('adminUnlock').addEventListener('click',function(){
+  var entered=(document.getElementById('adminPassword').value||'').trim();
+  if(entered===ADMIN_PASSWORD){
+    adminUnlocked=true;
+    try{localStorage.setItem(adminSessionKey,'1');}catch(e){}
+    document.getElementById('adminPassword').value='';
+    setAuthUI();
+    document.getElementById('adminMsg').textContent='Admin access granted.';
+  }else{
+    adminUnlocked=false;
+    try{localStorage.removeItem(adminSessionKey);}catch(e){}
+    setAuthUI();
+    document.getElementById('adminMsg').textContent='Incorrect password.';
+  }
+});
+document.getElementById('adminSave').addEventListener('click',function(){
+  if(!adminUnlocked){document.getElementById('adminMsg').textContent='Password required to edit notes.';return;}
+  var name=document.getElementById('adminMember').value||'';
+  if(!name)return;
+  var note=document.getElementById('adminNote').value.trim();
+  memberNotes[noteId(name,tab)]=note;
+  saveNotes();
+  queueNoteOp('upsert',name,note);
+  flushPendingOps();
+  document.getElementById('adminMsg').textContent='Note saved for '+name+'.';
+  draw();
+});
+document.getElementById('adminDelete').addEventListener('click',function(){
+  if(!adminUnlocked){document.getElementById('adminMsg').textContent='Password required to edit notes.';return;}
+  var name=document.getElementById('adminMember').value||'';
+  if(!name)return;
+  delete memberNotes[noteId(name,tab)];
+  saveNotes();
+  queueNoteOp('delete',name,'');
+  flushPendingOps();
+  document.getElementById('adminNote').value='';
+  document.getElementById('adminMsg').textContent='Note deleted for '+name+'.';
+  draw();
+});
+
 function showGate(){
   document.getElementById('gate').classList.remove('hide');
 }
@@ -606,6 +829,19 @@ function unlockList(){
 
 (function initGate(){
   showGate();
+  setSyncStatus('checking…');
+  verifyNotesEndpoint().then(function(ok){
+    if(ok){
+      loadNotesRemote().then(function(){
+        flushPendingOps();
+      });
+    }
+  });
+  window.setInterval(function(){
+    verifyNotesEndpoint().then(function(ok){
+      if(ok) flushPendingOps();
+    });
+  },20000);
   document.getElementById('gateForm').addEventListener('submit',function(e){
     e.preventDefault();
     var name=document.getElementById('gName').value.trim();
