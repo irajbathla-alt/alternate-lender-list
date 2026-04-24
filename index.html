@@ -97,7 +97,12 @@ input::placeholder{color:#bbb}
 .ad-actions{display:flex;flex-wrap:wrap;gap:8px}
 .ad-save{background:#3b82f6;color:#fff;padding:8px 14px;font-size:13px}
 .ad-del{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;padding:8px 14px;font-size:13px}
+.ad-save[disabled],.ad-del[disabled]{opacity:.45;cursor:not-allowed}
 .ad-msg{font-size:12px;color:#64748b;min-height:16px}
+.ad-auth{display:grid;gap:6px;padding:8px;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc}
+.ad-auth-row{display:flex;gap:8px;align-items:center}
+.ad-auth-btn{font-size:12px;padding:7px 12px;background:#111827;color:#fff}
+.ad-auth-state{font-size:12px;color:#475569}
 
 
 /* ACCESS GATE */
@@ -201,7 +206,15 @@ input::placeholder{color:#bbb}
       <div class="ad-title">Admin Portal</div>
       <button class="ad-x" id="adminClose">Close</button>
     </div>
-    <div class="ad-help">Add internal deal notes for each member. Notes are stored locally in this browser.</div>
+    <div class="ad-help">Add internal deal notes for each member. Notes are visible to all users and will sync online when the configured endpoint is available.</div>
+    <div class="ad-auth">
+      <div class="ad-label">Admin password required to edit notes</div>
+      <div class="ad-auth-row">
+        <input id="adminPassword" class="ad-select" type="password" placeholder="Enter admin password">
+        <button id="adminUnlock" class="ad-auth-btn">Unlock</button>
+      </div>
+      <div id="adminAuthState" class="ad-auth-state">Locked (view only).</div>
+    </div>
     <label class="ad-label" for="adminMember">Member</label>
     <select id="adminMember" class="ad-select"></select>
     <label class="ad-label" for="adminNote">Notes</label>
@@ -517,9 +530,13 @@ document.getElementById('cc').textContent=' '+C.length;
 
 var tab='R', provs=[], q='';
 var noteKey='vfcl_member_notes';
+var adminSessionKey='vfcl_admin_unlocked';
+var ADMIN_PASSWORD='VFC2026!';
+var notesURL='https://script.google.com/macros/s/AKfycbxqvRdFTUynTIhWn0h2aU5W1jouIs369XrmkZGGKBPkeursr4_UBIrlwtmdzsdBjStO/exec';
 var memberNotes=(function(){
   try{return JSON.parse(localStorage.getItem(noteKey)||'{}')||{};}catch(e){return {};}
 })();
+var adminUnlocked=(function(){try{return localStorage.getItem(adminSessionKey)==='1';}catch(e){return false;}})();
 
 // Existing Google Apps Script endpoint used for lead capture
 var scriptURL='https://script.google.com/macros/s/AKfycbxqvRdFTUynTIhWn0h2aU5W1jouIs369XrmkZGGKBPkeursr4_UBIrlwtmdzsdBjStO/exec';
@@ -567,6 +584,45 @@ function esc(s){
 }
 function noteId(name,t){return t+'::'+name.toLowerCase().trim();}
 function saveNotes(){try{localStorage.setItem(noteKey,JSON.stringify(memberNotes));}catch(e){}}
+function saveNotesRemote(action,name,note){
+  if(!notesURL) return Promise.resolve(false);
+  var data=new URLSearchParams({
+    resource:'member_notes',
+    action:action||'upsert',
+    tab:tab,
+    member:name||'',
+    note:note||'',
+    updatedAt:new Date().toISOString()
+  });
+  return fetch(notesURL,{method:'POST',mode:'no-cors',keepalive:true,body:data})
+    .then(function(){return true;})
+    .catch(function(){return false;});
+}
+function loadNotesRemote(){
+  if(!notesURL) return Promise.resolve(false);
+  return fetch(notesURL+'?resource=member_notes',{method:'GET'})
+    .then(function(r){if(!r.ok)return null;return r.json();})
+    .then(function(data){
+      if(!data) return false;
+      var obj=(Array.isArray(data)?data.reduce(function(acc,row){
+        if(row&&row.key)acc[row.key]=row.note||''; return acc;
+      },{}):data.notes)||data;
+      if(obj&&typeof obj==='object'){
+        memberNotes=obj;
+        saveNotes();
+        draw();
+        return true;
+      }
+      return false;
+    }).catch(function(){return false;});
+}
+function setAuthUI(){
+  var state=document.getElementById('adminAuthState');
+  var canEdit=adminUnlocked;
+  document.getElementById('adminSave').disabled=!canEdit;
+  document.getElementById('adminDelete').disabled=!canEdit;
+  state.textContent=canEdit?'Unlocked: edit enabled.':'Locked (view only).';
+}
 function currentData(){return tab==='R'?R:C;}
 function updateAdminList(){
   var sel=document.getElementById('adminMember');
@@ -669,25 +725,46 @@ document.getElementById('clr').addEventListener('click',function(){
 
 document.getElementById('adminOpen').addEventListener('click',function(){
   updateAdminList();
+  setAuthUI();
   document.getElementById('adminModal').classList.add('show');
 });
 document.getElementById('adminClose').addEventListener('click',function(){
   document.getElementById('adminModal').classList.remove('show');
 });
 document.getElementById('adminMember').addEventListener('change',onAdminPick);
+document.getElementById('adminUnlock').addEventListener('click',function(){
+  var entered=(document.getElementById('adminPassword').value||'').trim();
+  if(entered===ADMIN_PASSWORD){
+    adminUnlocked=true;
+    try{localStorage.setItem(adminSessionKey,'1');}catch(e){}
+    document.getElementById('adminPassword').value='';
+    setAuthUI();
+    document.getElementById('adminMsg').textContent='Admin access granted.';
+  }else{
+    adminUnlocked=false;
+    try{localStorage.removeItem(adminSessionKey);}catch(e){}
+    setAuthUI();
+    document.getElementById('adminMsg').textContent='Incorrect password.';
+  }
+});
 document.getElementById('adminSave').addEventListener('click',function(){
+  if(!adminUnlocked){document.getElementById('adminMsg').textContent='Password required to edit notes.';return;}
   var name=document.getElementById('adminMember').value||'';
   if(!name)return;
-  memberNotes[noteId(name,tab)]=document.getElementById('adminNote').value.trim();
+  var note=document.getElementById('adminNote').value.trim();
+  memberNotes[noteId(name,tab)]=note;
   saveNotes();
+  saveNotesRemote('upsert',name,note);
   document.getElementById('adminMsg').textContent='Note saved for '+name+'.';
   draw();
 });
 document.getElementById('adminDelete').addEventListener('click',function(){
+  if(!adminUnlocked){document.getElementById('adminMsg').textContent='Password required to edit notes.';return;}
   var name=document.getElementById('adminMember').value||'';
   if(!name)return;
   delete memberNotes[noteId(name,tab)];
   saveNotes();
+  saveNotesRemote('delete',name,'');
   document.getElementById('adminNote').value='';
   document.getElementById('adminMsg').textContent='Note deleted for '+name+'.';
   draw();
@@ -704,6 +781,7 @@ function unlockList(){
 
 (function initGate(){
   showGate();
+  loadNotesRemote();
   document.getElementById('gateForm').addEventListener('submit',function(e){
     e.preventDefault();
     var name=document.getElementById('gName').value.trim();
