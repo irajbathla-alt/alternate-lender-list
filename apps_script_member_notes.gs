@@ -13,10 +13,25 @@
 
 var SHEET_NAME = 'member_notes';
 var HEADERS = ['key', 'tab', 'member', 'note', 'updatedAt'];
+var THREAD_SHEET = 'deal_threads';
+var THREAD_HEADERS = ['id', 'requester', 'contact', 'requirement', 'status', 'createdAt', 'updatedAt'];
+var THREAD_MSG_SHEET = 'deal_thread_messages';
+var THREAD_MSG_HEADERS = ['threadId', 'fromName', 'fromContact', 'message', 'createdAt'];
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
   var resource = String(p.resource || '');
+  if (resource === 'deal_threads') {
+    var ts = getSheetBySchema_(THREAD_SHEET, THREAD_HEADERS);
+    var ms = getSheetBySchema_(THREAD_MSG_SHEET, THREAD_MSG_HEADERS);
+    var threads = getRowsByHeaders_(ts, THREAD_HEADERS).sort(function (a, b) {
+      return String(b.createdAt || '').localeCompare(String(a.createdAt || ''));
+    });
+    var messages = getRowsByHeaders_(ms, THREAD_MSG_HEADERS).sort(function (a, b) {
+      return String(a.createdAt || '').localeCompare(String(b.createdAt || ''));
+    });
+    return json_({ ok: true, threads: threads, messages: messages });
+  }
   if (resource !== 'member_notes') return json_({ ok: false, error: 'Unknown resource' });
 
   var sh = getSheet_();
@@ -37,8 +52,11 @@ function doGet(e) {
 }
 
 function doPost(e) {
-  var p = (e && e.parameter) || {};
+  var p = getParams_(e);
   var resource = String(p.resource || '');
+  if (resource === 'deal_threads') {
+    return handleThreadPost_(p);
+  }
   if (resource !== 'member_notes') return json_({ ok: false, error: 'Unknown resource' });
 
   var action = String(p.action || 'upsert').toLowerCase();
@@ -67,31 +85,94 @@ function doPost(e) {
   return json_({ ok: true, action: 'upsert', key: key });
 }
 
-function getSheet_() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sh = ss.getSheetByName(SHEET_NAME);
-  if (!sh) sh = ss.insertSheet(SHEET_NAME);
+function handleThreadPost_(p) {
+  var action = String(p.action || '').toLowerCase();
+  var now = String(p.createdAt || new Date().toISOString());
+  var ts = getSheetBySchema_(THREAD_SHEET, THREAD_HEADERS);
+  var ms = getSheetBySchema_(THREAD_MSG_SHEET, THREAD_MSG_HEADERS);
 
-  var firstRow = sh.getLastRow() >= 1 ? sh.getRange(1, 1, 1, HEADERS.length).getValues()[0] : [];
-  var missingHeaders = HEADERS.some(function (h, i) { return firstRow[i] !== h; });
-  if (missingHeaders) {
-    sh.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
+  if (action === 'create') {
+    var requester = String(p.requester || '').trim();
+    var contact = String(p.contact || '').trim();
+    var requirement = String(p.requirement || '').trim();
+    if (!requester || !contact || !requirement) return json_({ ok: false, error: 'Missing create fields' });
+    var id = 'D' + new Date().getTime().toString(36).toUpperCase();
+    ts.appendRow([id, requester, contact, requirement, 'OPEN', now, now]);
+    return json_({ ok: true, action: 'create', id: id });
   }
+
+  if (action === 'reply') {
+    var threadId = String(p.threadId || '').trim();
+    var fromName = String(p.fromName || '').trim();
+    var fromContact = String(p.fromContact || '').trim();
+    var message = String(p.message || '').trim();
+    if (!threadId || !fromName || !fromContact || !message) return json_({ ok: false, error: 'Missing reply fields' });
+    ms.appendRow([threadId, fromName, fromContact, message, now]);
+    touchThread_(ts, threadId, now);
+    return json_({ ok: true, action: 'reply', threadId: threadId });
+  }
+
+  return json_({ ok: false, error: 'Unknown thread action' });
+}
+
+function touchThread_(threadSheet, threadId, nowIso) {
+  var rows = threadSheet.getLastRow();
+  if (rows < 2) return;
+  var values = threadSheet.getRange(2, 1, rows - 1, THREAD_HEADERS.length).getValues();
+  for (var i = 0; i < values.length; i++) {
+    if (String(values[i][0] || '') === threadId) {
+      threadSheet.getRange(i + 2, 7).setValue(nowIso);
+      return;
+    }
+  }
+}
+
+function getParams_(e) {
+  var out = {};
+  if (e && e.parameter) {
+    Object.keys(e.parameter).forEach(function (k) { out[k] = String(e.parameter[k] || ''); });
+  }
+  // In some browser no-cors POST cases, Apps Script may not populate e.parameter.
+  // Parse raw body as query-string fallback.
+  var raw = e && e.postData && e.postData.contents ? String(e.postData.contents) : '';
+  if (raw && Object.keys(out).length === 0) {
+    raw.split('&').forEach(function (pair) {
+      if (!pair) return;
+      var parts = pair.split('=');
+      var k = decodeURIComponent((parts[0] || '').replace(/\+/g, ' '));
+      var v = decodeURIComponent((parts.slice(1).join('=') || '').replace(/\+/g, ' '));
+      out[k] = v;
+    });
+  }
+  return out;
+}
+
+function getSheet_() {
+  return getSheetBySchema_(SHEET_NAME, HEADERS);
+}
+
+function getSheetBySchema_(name, headers) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName(name);
+  if (!sh) sh = ss.insertSheet(name);
+  var firstRow = sh.getLastRow() >= 1 ? sh.getRange(1, 1, 1, headers.length).getValues()[0] : [];
+  var missingHeaders = headers.some(function (h, i) { return firstRow[i] !== h; });
+  if (missingHeaders) sh.getRange(1, 1, 1, headers.length).setValues([headers]);
   return sh;
 }
 
 function getRows_(sh) {
+  return getRowsByHeaders_(sh, HEADERS);
+}
+
+function getRowsByHeaders_(sh, headers) {
   var lastRow = sh.getLastRow();
   if (lastRow < 2) return [];
-  var values = sh.getRange(2, 1, lastRow - 1, HEADERS.length).getValues();
+  var values = sh.getRange(2, 1, lastRow - 1, headers.length).getValues();
   return values.map(function (r) {
-    return {
-      key: String(r[0] || ''),
-      tab: String(r[1] || ''),
-      member: String(r[2] || ''),
-      note: String(r[3] || ''),
-      updatedAt: String(r[4] || '')
-    };
+    var o = {};
+    headers.forEach(function (h, idx) { o[h] = String(r[idx] || ''); });
+    return o;
   });
 }
 
