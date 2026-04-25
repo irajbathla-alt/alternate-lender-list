@@ -606,6 +606,8 @@ var pendingOps=(function(){try{return JSON.parse(localStorage.getItem(pendingOps
 var localThreads=(function(){try{return JSON.parse(localStorage.getItem(localThreadKey)||'[]')||[];}catch(e){return [];}})();
 var localThreadMsgs=(function(){try{return JSON.parse(localStorage.getItem(localThreadMsgKey)||'[]')||[];}catch(e){return [];}})();
 var investorProfile=(function(){try{return JSON.parse(localStorage.getItem(investorProfileKey)||'{}')||{};}catch(e){return {};}})();
+var gateSessionKey='vfcl_gate_session';
+var gateHours=8; // keep access for 8 hours before requiring a new login
 
 // Existing Google Apps Script endpoint used for lead capture
 var scriptURL='https://script.google.com/macros/s/AKfycbxqvRdFTUynTIhWn0h2aU5W1jouIs369XrmkZGGKBPkeursr4_UBIrlwtmdzsdBjStO/exec';
@@ -1099,7 +1101,32 @@ function unlockList(){
   draw();
 }
 
+function hasActiveGateSession(){
+  try{
+    var session=JSON.parse(localStorage.getItem(gateSessionKey)||'{}');
+    if(!session || !session.expiresAt) return false;
+    return new Date(session.expiresAt).getTime()>Date.now();
+  }catch(e){return false;}
+}
+
+function persistGateSession(lead){
+  var expiresAt=new Date(Date.now()+gateHours*60*60*1000).toISOString();
+  try{
+    localStorage.setItem(gateSessionKey,JSON.stringify({
+      name:lead.name||'',
+      email:lead.email||'',
+      phone:lead.phone||'',
+      grantedAt:lead.grantedAt||new Date().toISOString(),
+      expiresAt:expiresAt
+    }));
+  }catch(e){}
+}
+
 (function initGate(){
+  if(hasActiveGateSession()){
+    unlockList();
+    return;
+  }
   showGate();
   setSyncStatus('checking…');
   verifyNotesEndpoint().then(function(){
@@ -1136,6 +1163,7 @@ function unlockList(){
     };
 
     saveLeadLocal(lead);
+    persistGateSession(lead);
     saveLeadRemote(lead).finally(function(){
       unlockList();
     });
