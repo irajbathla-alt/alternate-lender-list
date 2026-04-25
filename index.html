@@ -597,7 +597,7 @@ var localThreadMsgKey='vfcl_deal_thread_messages_local';
 var investorProfileKey='vfcl_investor_profile';
 var ADMIN_PASSWORD='VFC2026!';
 // Paste your dedicated Apps Script "member notes" Web App URL here.
-var notesURL='https://script.google.com/macros/s/AKfycby6xscCnpBY9dIbqdyIuRV6sLwbr6nWEI5y2pld5_oLu8wTQ0qzVaN3WZhvGOSs30Gn/exec';
+var notesURL='https://script.google.com/macros/s/AKfycbykTVuI9xN6RdfZbBB3mBsq19WsXmdiwSP219jQxAvEm_I5bnToZWvwgHen62TTaH5_/exec';
 var memberNotes=(function(){
   try{return JSON.parse(localStorage.getItem(noteKey)||'{}')||{};}catch(e){return {};}
 })();
@@ -606,6 +606,7 @@ var pendingOps=(function(){try{return JSON.parse(localStorage.getItem(pendingOps
 var localThreads=(function(){try{return JSON.parse(localStorage.getItem(localThreadKey)||'[]')||[];}catch(e){return [];}})();
 var localThreadMsgs=(function(){try{return JSON.parse(localStorage.getItem(localThreadMsgKey)||'[]')||[];}catch(e){return [];}})();
 var investorProfile=(function(){try{return JSON.parse(localStorage.getItem(investorProfileKey)||'{}')||{};}catch(e){return {};}})();
+var threadPollTimer=null;
 
 // Existing Google Apps Script endpoint used for lead capture
 var scriptURL='https://script.google.com/macros/s/AKfycbxqvRdFTUynTIhWn0h2aU5W1jouIs369XrmkZGGKBPkeursr4_UBIrlwtmdzsdBjStO/exec';
@@ -810,7 +811,12 @@ function loadThreads(){
       msgByThread[m.threadId].push(m);
     });
     wrap.innerHTML=openThreads.map(function(t){
-      var rows=(msgByThread[t.id]||[]).map(function(x){
+      var uniqueMsg={}, rows=(msgByThread[t.id]||[]).filter(function(x){
+        var mk=[x.fromName||'',x.fromContact||'',x.message||''].join('|').toLowerCase();
+        if(uniqueMsg[mk]) return false;
+        uniqueMsg[mk]=true;
+        return true;
+      }).map(function(x){
         return '<tr><td>'+esc(x.fromName||'Investor')+'</td><td>'+esc(x.fromContact||'')+'</td><td>'+esc(x.message||'')+'</td><td>'+esc(fmtDate(x.createdAt))+'</td></tr>';
       }).join('');
       if(!rows) rows='<tr><td colspan="4" class="th-meta">No investor replies yet.</td></tr>';
@@ -844,20 +850,20 @@ function loadThreads(){
       var remoteMsgs=(data&&data.messages)||[];
       var tSeen={};
       remoteThreads.forEach(function(t){
-        var k=[t.requester,t.contact,t.propertyLocation,t.requestedAmount,t.requestedLtv,t.requirement,t.createdAt].join('|');
+        var k=[t.requester,t.contact,t.propertyLocation,t.requestedAmount,t.requestedLtv,t.requirement].join('|');
         tSeen[k]=true;
       });
       var mSeen={};
       remoteMsgs.forEach(function(m){
-        var k=[m.threadId,m.fromName,m.fromContact,m.message,m.createdAt].join('|');
+        var k=[m.threadId,m.fromName,m.fromContact,m.message].join('|');
         mSeen[k]=true;
       });
       localThreads=localThreads.filter(function(t){
-        var k=[t.requester,t.contact,t.propertyLocation,t.requestedAmount,t.requestedLtv,t.requirement,t.createdAt].join('|');
+        var k=[t.requester,t.contact,t.propertyLocation,t.requestedAmount,t.requestedLtv,t.requirement].join('|');
         return !tSeen[k];
       });
       localThreadMsgs=localThreadMsgs.filter(function(m){
-        var k=[m.threadId,m.fromName,m.fromContact,m.message,m.createdAt].join('|');
+        var k=[m.threadId,m.fromName,m.fromContact,m.message].join('|');
         return !mSeen[k];
       });
       saveLocalThreads();
@@ -1024,9 +1030,12 @@ document.getElementById('threadOpen').addEventListener('click',function(){
   document.getElementById('threadModal').classList.add('show');
   prefillThreadContact();
   loadThreads();
+  if(threadPollTimer) clearInterval(threadPollTimer);
+  threadPollTimer=setInterval(loadThreads,5000);
 });
 document.getElementById('threadClose').addEventListener('click',function(){
   document.getElementById('threadModal').classList.remove('show');
+  if(threadPollTimer){ clearInterval(threadPollTimer); threadPollTimer=null; }
 });
 document.getElementById('thCreate').addEventListener('click',postThreadCreate);
 document.getElementById('threadsList').addEventListener('click',function(e){
