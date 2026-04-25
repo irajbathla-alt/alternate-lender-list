@@ -594,9 +594,10 @@ var adminSessionKey='vfcl_admin_unlocked';
 var pendingOpsKey='vfcl_note_pending_ops';
 var localThreadKey='vfcl_deal_threads_local';
 var localThreadMsgKey='vfcl_deal_thread_messages_local';
+var investorProfileKey='vfcl_investor_profile';
 var ADMIN_PASSWORD='VFC2026!';
 // Paste your dedicated Apps Script "member notes" Web App URL here.
-var notesURL='https://script.google.com/macros/s/AKfycbxW7E56HBLPyWT033D76nYP5N9PNnfka9Ek_0EeKVdkyTBKwV9GUrzw-OdWxrX-v0N-/exec';
+var notesURL='https://script.google.com/macros/s/AKfycby6xscCnpBY9dIbqdyIuRV6sLwbr6nWEI5y2pld5_oLu8wTQ0qzVaN3WZhvGOSs30Gn/exec';
 var memberNotes=(function(){
   try{return JSON.parse(localStorage.getItem(noteKey)||'{}')||{};}catch(e){return {};}
 })();
@@ -604,6 +605,7 @@ var adminUnlocked=(function(){try{return localStorage.getItem(adminSessionKey)==
 var pendingOps=(function(){try{return JSON.parse(localStorage.getItem(pendingOpsKey)||'[]')||[];}catch(e){return [];}})();
 var localThreads=(function(){try{return JSON.parse(localStorage.getItem(localThreadKey)||'[]')||[];}catch(e){return [];}})();
 var localThreadMsgs=(function(){try{return JSON.parse(localStorage.getItem(localThreadMsgKey)||'[]')||[];}catch(e){return [];}})();
+var investorProfile=(function(){try{return JSON.parse(localStorage.getItem(investorProfileKey)||'{}')||{};}catch(e){return {};}})();
 
 // Existing Google Apps Script endpoint used for lead capture
 var scriptURL='https://script.google.com/macros/s/AKfycbxqvRdFTUynTIhWn0h2aU5W1jouIs369XrmkZGGKBPkeursr4_UBIrlwtmdzsdBjStO/exec';
@@ -681,13 +683,17 @@ function saveLocalThreads(){
   try{localStorage.setItem(localThreadKey,JSON.stringify(localThreads));}catch(e){}
   try{localStorage.setItem(localThreadMsgKey,JSON.stringify(localThreadMsgs));}catch(e){}
 }
+function saveInvestorProfile(){ try{localStorage.setItem(investorProfileKey,JSON.stringify(investorProfile));}catch(e){} }
 function setSyncStatus(msg){
   var el=document.getElementById('adminSyncStatus');
   if(el) el.textContent='Sync status: '+msg;
 }
 function verifyNotesEndpoint(){
   if(!notesURL) return Promise.resolve(false);
-  return jsonpFetch({resource:'member_notes',check:1})
+  return jsonpFetch({resource:'member_notes',check:1}).catch(function(){
+    return fetch(notesURL+'?resource=member_notes&check=1&t='+(Date.now()),{method:'GET'})
+      .then(function(r){ if(!r.ok) throw new Error('offline'); return r.json(); });
+  })
     .then(function(){
       setSyncStatus('connected');
       return true;
@@ -738,7 +744,10 @@ function flushPendingOps(){
 }
 function loadNotesRemote(){
   if(!notesURL) return Promise.resolve(false);
-  return jsonpFetch({resource:'member_notes'})
+  return jsonpFetch({resource:'member_notes'}).catch(function(){
+    return fetch(notesURL+'?resource=member_notes&t='+(Date.now()),{method:'GET'})
+      .then(function(r){ if(!r.ok) throw new Error('offline'); return r.json(); });
+  })
     .then(function(data){
       if(!data) return false;
       var obj=(Array.isArray(data)?data.reduce(function(acc,row){
@@ -818,7 +827,7 @@ function loadThreads(){
           '<div class="th-meta" style="margin-top:8px">Conversation (Investor questions + follow-ups)</div>'+
           '<div class="msg-wrap"><table class="rep-table"><thead><tr><th>Investor</th><th>Contact</th><th>Question / Reply</th><th>Time</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
           '<div class="th-reply">'+
-            '<div class="tm-grid"><input class="tm-input rep-name" placeholder="Investor name"><input class="tm-input rep-contact" placeholder="Email or phone"></div>'+
+            '<div class="tm-grid"><input class="tm-input rep-name" placeholder="Investor name" value="'+esc(investorProfile.name||'')+'"><input class="tm-input rep-contact" placeholder="Email or phone" value="'+esc(investorProfile.contact||'')+'"></div>'+
             '<textarea class="tm-area rep-msg" placeholder="Question / reply for this deal"></textarea>'+
             '<button class="tm-submit rep-send">Send Reply</button>'+
           '</div>'+
@@ -826,7 +835,10 @@ function loadThreads(){
       '</div>';
     }).join('');
   }
-  return jsonpFetch({resource:'deal_threads'})
+  return jsonpFetch({resource:'deal_threads'}).catch(function(){
+    return fetch(notesURL+'?resource=deal_threads&t='+(Date.now()),{method:'GET'})
+      .then(function(r){ if(!r.ok) throw new Error('offline'); return r.json(); });
+  })
     .then(function(data){
       var remoteThreads=(data&&data.threads)||[];
       var remoteMsgs=(data&&data.messages)||[];
@@ -886,7 +898,12 @@ function postThreadReply(threadId,card){
   var name=(card.querySelector('.rep-name').value||'').trim();
   var contact=(card.querySelector('.rep-contact').value||'').trim();
   var text=(card.querySelector('.rep-msg').value||'').trim();
-  if(name.length<2||contact.length<3||text.length<2) return;
+  if(name.length<2||contact.length<3||text.length<2){
+    alert('Please enter investor name, contact, and reply.');
+    return;
+  }
+  investorProfile={name:name,contact:contact};
+  saveInvestorProfile();
   localThreadMsgs.push({threadId:threadId,fromName:name,fromContact:contact,message:text,createdAt:new Date().toISOString()});
   saveLocalThreads();
   loadThreads();
