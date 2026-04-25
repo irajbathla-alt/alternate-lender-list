@@ -606,7 +606,6 @@ var pendingOps=(function(){try{return JSON.parse(localStorage.getItem(pendingOps
 var localThreads=(function(){try{return JSON.parse(localStorage.getItem(localThreadKey)||'[]')||[];}catch(e){return [];}})();
 var localThreadMsgs=(function(){try{return JSON.parse(localStorage.getItem(localThreadMsgKey)||'[]')||[];}catch(e){return [];}})();
 var investorProfile=(function(){try{return JSON.parse(localStorage.getItem(investorProfileKey)||'{}')||{};}catch(e){return {};}})();
-var threadPollTimer=null;
 
 // Existing Google Apps Script endpoint used for lead capture
 var scriptURL='https://script.google.com/macros/s/AKfycbxqvRdFTUynTIhWn0h2aU5W1jouIs369XrmkZGGKBPkeursr4_UBIrlwtmdzsdBjStO/exec';
@@ -1030,12 +1029,9 @@ document.getElementById('threadOpen').addEventListener('click',function(){
   document.getElementById('threadModal').classList.add('show');
   prefillThreadContact();
   loadThreads();
-  if(threadPollTimer) clearInterval(threadPollTimer);
-  threadPollTimer=setInterval(loadThreads,5000);
 });
 document.getElementById('threadClose').addEventListener('click',function(){
   document.getElementById('threadModal').classList.remove('show');
-  if(threadPollTimer){ clearInterval(threadPollTimer); threadPollTimer=null; }
 });
 document.getElementById('thCreate').addEventListener('click',postThreadCreate);
 document.getElementById('threadsList').addEventListener('click',function(e){
