@@ -577,14 +577,18 @@ var tab='R', provs=[], q='';
 var noteKey='vfcl_member_notes';
 var adminSessionKey='vfcl_admin_unlocked';
 var pendingOpsKey='vfcl_note_pending_ops';
+var localThreadKey='vfcl_deal_threads_local';
+var localThreadMsgKey='vfcl_deal_thread_messages_local';
 var ADMIN_PASSWORD='VFC2026!';
 // Paste your dedicated Apps Script "member notes" Web App URL here.
-var notesURL='https://script.google.com/macros/s/AKfycbyJOgH0XmP766SW8_KMqEXf2gKOWm8lZH9O0WaBQQS-icM9g9OwxhXC9KdmevDV-7dH/exec';
+var notesURL='https://script.google.com/macros/s/AKfycbxW7E56HBLPyWT033D76nYP5N9PNnfka9Ek_0EeKVdkyTBKwV9GUrzw-OdWxrX-v0N-/exec';
 var memberNotes=(function(){
   try{return JSON.parse(localStorage.getItem(noteKey)||'{}')||{};}catch(e){return {};}
 })();
 var adminUnlocked=(function(){try{return localStorage.getItem(adminSessionKey)==='1';}catch(e){return false;}})();
 var pendingOps=(function(){try{return JSON.parse(localStorage.getItem(pendingOpsKey)||'[]')||[];}catch(e){return [];}})();
+var localThreads=(function(){try{return JSON.parse(localStorage.getItem(localThreadKey)||'[]')||[];}catch(e){return [];}})();
+var localThreadMsgs=(function(){try{return JSON.parse(localStorage.getItem(localThreadMsgKey)||'[]')||[];}catch(e){return [];}})();
 
 // Existing Google Apps Script endpoint used for lead capture
 var scriptURL='https://script.google.com/macros/s/AKfycbxqvRdFTUynTIhWn0h2aU5W1jouIs369XrmkZGGKBPkeursr4_UBIrlwtmdzsdBjStO/exec';
@@ -633,6 +637,10 @@ function esc(s){
 function noteId(name,t){return t+'::'+name.toLowerCase().trim();}
 function saveNotes(){try{localStorage.setItem(noteKey,JSON.stringify(memberNotes));}catch(e){}}
 function savePendingOps(){try{localStorage.setItem(pendingOpsKey,JSON.stringify(pendingOps));}catch(e){}}
+function saveLocalThreads(){
+  try{localStorage.setItem(localThreadKey,JSON.stringify(localThreads));}catch(e){}
+  try{localStorage.setItem(localThreadMsgKey,JSON.stringify(localThreadMsgs));}catch(e){}
+}
 function setSyncStatus(msg){
   var el=document.getElementById('adminSyncStatus');
   if(el) el.textContent='Sync status: '+msg;
@@ -724,50 +732,73 @@ function fmtDate(iso){
   if(isNaN(d.getTime())) return iso;
   return d.toLocaleString();
 }
+function getLatestLead(){
+  try{
+    var leads=JSON.parse(localStorage.getItem('vfcl_leads')||'[]');
+    if(!leads.length) return null;
+    return leads[leads.length-1];
+  }catch(e){return null;}
+}
+function prefillThreadContact(){
+  var lead=getLatestLead();
+  if(!lead) return;
+  var n=document.getElementById('thName');
+  var c=document.getElementById('thContact');
+  if(n && !n.value.trim()) n.value=(lead.name||'').trim();
+  if(c && !c.value.trim()) c.value=(lead.email||lead.phone||'').trim();
+}
 function loadThreads(){
   var wrap=document.getElementById('threadsList');
   wrap.innerHTML='Loading threads...';
+  function renderThreads(threads,msgs){
+    if(!threads.length){wrap.innerHTML='<div class="em-s">No threads yet.</div>';return;}
+    var msgByThread={};
+    msgs.forEach(function(m){
+      if(!msgByThread[m.threadId]) msgByThread[m.threadId]=[];
+      msgByThread[m.threadId].push(m);
+    });
+    wrap.innerHTML=threads.map(function(t){
+      var m=(msgByThread[t.id]||[]).map(function(x){
+        return '<div class="msg"><div class="msg-meta">'+esc(x.fromName||'Investor')+' · '+esc(fmtDate(x.createdAt))+'</div><div class="msg-body">'+esc(x.message||'')+'</div></div>';
+      }).join('');
+      return '<div class="th" data-thread="'+esc(t.id)+'">'+
+        '<div class="th-h"><div><div class="th-title">#'+esc(t.id)+'</div><div class="th-meta">'+esc(t.requester||'')+' · '+esc(t.contact||'')+' · '+esc(fmtDate(t.createdAt))+'</div></div><div class="th-meta">'+esc(t.status||'OPEN')+'</div></div>'+
+        '<div class="th-req">'+esc(t.requirement||'')+'</div>'+
+        '<div class="msg-wrap">'+m+'</div>'+
+        '<div class="th-reply">'+
+          '<div class="tm-grid"><input class="tm-input rep-name" placeholder="Investor name"><input class="tm-input rep-contact" placeholder="Email or phone"></div>'+
+          '<textarea class="tm-area rep-msg" placeholder="Reply to this deal"></textarea>'+
+          '<button class="tm-submit rep-send">Send Reply</button>'+
+        '</div>'+
+      '</div>';
+    }).join('');
+  }
   return fetch(notesURL+'?resource=deal_threads&t='+(Date.now()),{method:'GET'})
     .then(function(r){if(!r.ok) return null; return r.json();})
     .then(function(data){
-      var threads=(data&&data.threads)||[];
-      var msgs=(data&&data.messages)||[];
-      if(!threads.length){wrap.innerHTML='<div class="em-s">No threads yet.</div>';return;}
-      var msgByThread={};
-      msgs.forEach(function(m){
-        if(!msgByThread[m.threadId]) msgByThread[m.threadId]=[];
-        msgByThread[m.threadId].push(m);
-      });
-      wrap.innerHTML=threads.map(function(t){
-        var m=(msgByThread[t.id]||[]).map(function(x){
-          return '<div class="msg"><div class="msg-meta">'+esc(x.fromName||'Investor')+' · '+esc(fmtDate(x.createdAt))+'</div><div class="msg-body">'+esc(x.message||'')+'</div></div>';
-        }).join('');
-        return '<div class="th" data-thread="'+esc(t.id)+'">'+
-          '<div class="th-h"><div><div class="th-title">#'+esc(t.id)+'</div><div class="th-meta">'+esc(t.requester||'')+' · '+esc(t.contact||'')+' · '+esc(fmtDate(t.createdAt))+'</div></div><div class="th-meta">'+esc(t.status||'OPEN')+'</div></div>'+
-          '<div class="th-req">'+esc(t.requirement||'')+'</div>'+
-          '<div class="msg-wrap">'+m+'</div>'+
-          '<div class="th-reply">'+
-            '<div class="tm-grid"><input class="tm-input rep-name" placeholder="Investor name"><input class="tm-input rep-contact" placeholder="Email or phone"></div>'+
-            '<textarea class="tm-area rep-msg" placeholder="Reply to this deal"></textarea>'+
-            '<button class="tm-submit rep-send">Send Reply</button>'+
-          '</div>'+
-        '</div>';
-      }).join('');
+      var threads=((data&&data.threads)||[]).concat(localThreads);
+      var msgs=((data&&data.messages)||[]).concat(localThreadMsgs);
+      renderThreads(threads,msgs);
     })
     .catch(function(){
-      wrap.innerHTML='<div class="em-s">Unable to load threads.</div>';
+      renderThreads(localThreads,localThreadMsgs);
     });
 }
 function postThreadCreate(){
-  var name=document.getElementById('thName').value.trim();
-  var contact=document.getElementById('thContact').value.trim();
+  var lead=getLatestLead();
+  var name=(document.getElementById('thName').value||'').trim() || (lead&&lead.name)||'';
+  var contact=(document.getElementById('thContact').value||'').trim() || (lead&&(lead.email||lead.phone))||'';
   var req=document.getElementById('thReq').value.trim();
   var msg=document.getElementById('thMsg');
-  if(name.length<2||contact.length<3||req.length<10){msg.textContent='Please complete name, contact and requirement details.';return;}
+  if(name.length<2||contact.length<3||req.length<5){msg.textContent='Please complete name, contact and requirement details.';return;}
+  var localId='L'+Date.now().toString(36).toUpperCase();
+  localThreads.unshift({id:localId,requester:name,contact:contact,requirement:req,status:'OPEN',createdAt:new Date().toISOString()});
+  saveLocalThreads();
+  loadThreads();
   var data=new URLSearchParams({resource:'deal_threads',action:'create',requester:name,contact:contact,requirement:req,createdAt:new Date().toISOString()});
   fetch(notesURL,{method:'POST',mode:'no-cors',keepalive:true,headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:data.toString()})
     .then(function(){
-      msg.textContent='Thread submitted.';
+      msg.textContent='Thread submitted (local copy saved).';
       document.getElementById('thReq').value='';
       loadThreads();
     }).catch(function(){msg.textContent='Unable to submit thread right now.';});
@@ -777,6 +808,9 @@ function postThreadReply(threadId,card){
   var contact=(card.querySelector('.rep-contact').value||'').trim();
   var text=(card.querySelector('.rep-msg').value||'').trim();
   if(name.length<2||contact.length<3||text.length<2) return;
+  localThreadMsgs.push({threadId:threadId,fromName:name,fromContact:contact,message:text,createdAt:new Date().toISOString()});
+  saveLocalThreads();
+  loadThreads();
   var data=new URLSearchParams({resource:'deal_threads',action:'reply',threadId:threadId,fromName:name,fromContact:contact,message:text,createdAt:new Date().toISOString()});
   fetch(notesURL,{method:'POST',mode:'no-cors',keepalive:true,headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:data.toString()})
     .then(function(){ loadThreads(); })
@@ -892,6 +926,7 @@ document.getElementById('adminClose').addEventListener('click',function(){
 });
 document.getElementById('threadOpen').addEventListener('click',function(){
   document.getElementById('threadModal').classList.add('show');
+  prefillThreadContact();
   loadThreads();
 });
 document.getElementById('threadClose').addEventListener('click',function(){

@@ -9,8 +9,13 @@
  * Sheet setup:
  * - Spreadsheet with tab name: member_notes
  * - Header row (A1:E1): key | tab | member | note | updatedAt
+ *
+ * IMPORTANT:
+ * - If this script is NOT bound to the destination Google Sheet,
+ *   set SPREADSHEET_ID to the target sheet id below.
  */
 
+var SPREADSHEET_ID = ''; // e.g. '1AbC...xyz'. Leave blank only if script is container-bound to the sheet.
 var SHEET_NAME = 'member_notes';
 var HEADERS = ['key', 'tab', 'member', 'note', 'updatedAt'];
 var THREAD_SHEET = 'deal_threads';
@@ -19,70 +24,78 @@ var THREAD_MSG_SHEET = 'deal_thread_messages';
 var THREAD_MSG_HEADERS = ['threadId', 'fromName', 'fromContact', 'message', 'createdAt'];
 
 function doGet(e) {
-  var p = (e && e.parameter) || {};
-  var resource = String(p.resource || '');
-  if (resource === 'deal_threads') {
-    var ts = getSheetBySchema_(THREAD_SHEET, THREAD_HEADERS);
-    var ms = getSheetBySchema_(THREAD_MSG_SHEET, THREAD_MSG_HEADERS);
-    var threads = getRowsByHeaders_(ts, THREAD_HEADERS).sort(function (a, b) {
-      return String(b.createdAt || '').localeCompare(String(a.createdAt || ''));
+  try {
+    var p = (e && e.parameter) || {};
+    var resource = String(p.resource || '');
+    if (resource === 'deal_threads') {
+      var ts = getSheetBySchema_(THREAD_SHEET, THREAD_HEADERS);
+      var ms = getSheetBySchema_(THREAD_MSG_SHEET, THREAD_MSG_HEADERS);
+      var threads = getRowsByHeaders_(ts, THREAD_HEADERS).sort(function (a, b) {
+        return String(b.createdAt || '').localeCompare(String(a.createdAt || ''));
+      });
+      var messages = getRowsByHeaders_(ms, THREAD_MSG_HEADERS).sort(function (a, b) {
+        return String(a.createdAt || '').localeCompare(String(b.createdAt || ''));
+      });
+      return json_({ ok: true, threads: threads, messages: messages });
+    }
+    if (resource !== 'member_notes') return json_({ ok: false, error: 'Unknown resource' });
+
+    var sh = getSheet_();
+    var rows = getRows_(sh);
+    var notes = {};
+
+    rows.forEach(function (r) {
+      if (!r.key) return;
+      notes[r.key] = r.note || '';
     });
-    var messages = getRowsByHeaders_(ms, THREAD_MSG_HEADERS).sort(function (a, b) {
-      return String(a.createdAt || '').localeCompare(String(b.createdAt || ''));
-    });
-    return json_({ ok: true, threads: threads, messages: messages });
+
+    // Health check endpoint used by UI sync status
+    if (String(p.check || '') === '1') {
+      return json_({ ok: true, count: Object.keys(notes).length, now: new Date().toISOString() });
+    }
+
+    return json_({ ok: true, notes: notes, count: Object.keys(notes).length });
+  } catch (err) {
+    return json_({ ok: false, error: String(err) });
   }
-  if (resource !== 'member_notes') return json_({ ok: false, error: 'Unknown resource' });
-
-  var sh = getSheet_();
-  var rows = getRows_(sh);
-  var notes = {};
-
-  rows.forEach(function (r) {
-    if (!r.key) return;
-    notes[r.key] = r.note || '';
-  });
-
-  // Health check endpoint used by UI sync status
-  if (String(p.check || '') === '1') {
-    return json_({ ok: true, count: Object.keys(notes).length, now: new Date().toISOString() });
-  }
-
-  return json_({ ok: true, notes: notes, count: Object.keys(notes).length });
 }
 
 function doPost(e) {
-  var p = getParams_(e);
-  var resource = String(p.resource || '');
-  if (resource === 'deal_threads') {
-    return handleThreadPost_(p);
+  try {
+    var p = getParams_(e);
+    var resource = String(p.resource || '');
+    if (resource === 'deal_threads') {
+      return handleThreadPost_(p);
+    }
+    if (resource !== 'member_notes') return json_({ ok: false, error: 'Unknown resource' });
+
+    var action = String(p.action || 'upsert').toLowerCase();
+    var tab = String(p.tab || '').trim();
+    var member = String(p.member || '').trim();
+    var note = String(p.note || '');
+    var updatedAt = String(p.updatedAt || new Date().toISOString());
+
+    if (!tab || !member) return json_({ ok: false, error: 'tab/member required' });
+
+    var key = buildKey_(tab, member);
+    var sh = getSheet_();
+    var rowIndex = findRowByKey_(sh, key);
+
+    if (action === 'delete') {
+      if (rowIndex > 0) sh.deleteRow(rowIndex);
+      return json_({ ok: true, action: 'delete', key: key });
+    }
+
+    if (rowIndex > 0) {
+      sh.getRange(rowIndex, 1, 1, 5).setValues([[key, tab, member, note, updatedAt]]);
+    } else {
+      sh.appendRow([key, tab, member, note, updatedAt]);
+    }
+
+    return json_({ ok: true, action: 'upsert', key: key });
+  } catch (err) {
+    return json_({ ok: false, error: String(err) });
   }
-  if (resource !== 'member_notes') return json_({ ok: false, error: 'Unknown resource' });
-
-  var action = String(p.action || 'upsert').toLowerCase();
-  var tab = String(p.tab || '').trim();
-  var member = String(p.member || '').trim();
-  var note = String(p.note || '');
-  var updatedAt = String(p.updatedAt || new Date().toISOString());
-
-  if (!tab || !member) return json_({ ok: false, error: 'tab/member required' });
-
-  var key = buildKey_(tab, member);
-  var sh = getSheet_();
-  var rowIndex = findRowByKey_(sh, key);
-
-  if (action === 'delete') {
-    if (rowIndex > 0) sh.deleteRow(rowIndex);
-    return json_({ ok: true, action: 'delete', key: key });
-  }
-
-  if (rowIndex > 0) {
-    sh.getRange(rowIndex, 1, 1, 5).setValues([[key, tab, member, note, updatedAt]]);
-  } else {
-    sh.appendRow([key, tab, member, note, updatedAt]);
-  }
-
-  return json_({ ok: true, action: 'upsert', key: key });
 }
 
 function handleThreadPost_(p) {
@@ -152,13 +165,20 @@ function getSheet_() {
 }
 
 function getSheetBySchema_(name, headers) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = getSpreadsheet_();
   var sh = ss.getSheetByName(name);
   if (!sh) sh = ss.insertSheet(name);
   var firstRow = sh.getLastRow() >= 1 ? sh.getRange(1, 1, 1, headers.length).getValues()[0] : [];
   var missingHeaders = headers.some(function (h, i) { return firstRow[i] !== h; });
   if (missingHeaders) sh.getRange(1, 1, 1, headers.length).setValues([headers]);
   return sh;
+}
+
+function getSpreadsheet_() {
+  var active = SpreadsheetApp.getActiveSpreadsheet();
+  if (active) return active;
+  if (SPREADSHEET_ID) return SpreadsheetApp.openById(SPREADSHEET_ID);
+  throw new Error('No active spreadsheet. Set SPREADSHEET_ID in apps_script_member_notes.gs.');
 }
 
 function getRows_(sh) {
@@ -194,4 +214,15 @@ function json_(obj) {
   return ContentService
     .createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+/**
+ * Optional one-time helper:
+ * Run manually in Apps Script editor to create/refresh all required tabs/headers
+ * in the SAME spreadsheet.
+ */
+function setupAllSheets_() {
+  getSheetBySchema_(SHEET_NAME, HEADERS);
+  getSheetBySchema_(THREAD_SHEET, THREAD_HEADERS);
+  getSheetBySchema_(THREAD_MSG_SHEET, THREAD_MSG_HEADERS);
 }
