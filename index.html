@@ -125,6 +125,16 @@ input::placeholder{color:#bbb}
 .msg-meta{font-size:10px;color:#64748b}
 .msg-body{font-size:12px;color:#0f172a;white-space:pre-wrap}
 .th-reply{display:grid;gap:6px;margin-top:8px}
+.th-top{display:grid;grid-template-columns:1.1fr .9fr .8fr auto;gap:8px;align-items:center}
+.th-col{background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:6px}
+.th-k{font-size:10px;color:#64748b}
+.th-v{font-size:12px;color:#0f172a}
+.th-toggle{background:#0f766e;color:#fff;padding:7px 12px;font-size:12px}
+.th-body{display:none}
+.th.open .th-body{display:block}
+.rep-table{width:100%;border-collapse:collapse;font-size:12px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden}
+.rep-table th,.rep-table td{border-bottom:1px solid #eef2f7;padding:6px;vertical-align:top;text-align:left}
+.rep-table th{font-size:10px;color:#64748b;background:#f8fafc}
 
 
 /* ACCESS GATE */
@@ -233,7 +243,12 @@ input::placeholder{color:#bbb}
         <input id="thName" class="tm-input" placeholder="Your name">
         <input id="thContact" class="tm-input" placeholder="Email or phone">
       </div>
-      <textarea id="thReq" class="tm-area" placeholder="Deal requirement (amount, property type, location, timeline, LTV, etc.)"></textarea>
+      <div class="tm-grid">
+        <input id="thLocation" class="tm-input" placeholder="Property location">
+        <input id="thAmount" class="tm-input" placeholder="Requested amount (e.g. 850000)">
+      </div>
+      <input id="thLtv" class="tm-input" placeholder="Requested LTV (e.g. 75%)">
+      <textarea id="thReq" class="tm-area" placeholder="Extra deal details / notes (optional)"></textarea>
       <div>
         <button id="thCreate" class="tm-submit">Create Thread</button>
         <span id="thMsg" class="ad-msg"></span>
@@ -751,24 +766,34 @@ function loadThreads(){
   var wrap=document.getElementById('threadsList');
   wrap.innerHTML='Loading threads...';
   function renderThreads(threads,msgs){
-    if(!threads.length){wrap.innerHTML='<div class="em-s">No threads yet.</div>';return;}
+    var openThreads=threads.filter(function(t){ return (t.status||'OPEN').toUpperCase()==='OPEN'; });
+    if(!openThreads.length){wrap.innerHTML='<div class="em-s">No open deals yet.</div>';return;}
     var msgByThread={};
     msgs.forEach(function(m){
       if(!msgByThread[m.threadId]) msgByThread[m.threadId]=[];
       msgByThread[m.threadId].push(m);
     });
-    wrap.innerHTML=threads.map(function(t){
-      var m=(msgByThread[t.id]||[]).map(function(x){
-        return '<div class="msg"><div class="msg-meta">'+esc(x.fromName||'Investor')+' · '+esc(fmtDate(x.createdAt))+'</div><div class="msg-body">'+esc(x.message||'')+'</div></div>';
+    wrap.innerHTML=openThreads.map(function(t){
+      var rows=(msgByThread[t.id]||[]).map(function(x){
+        return '<tr><td>'+esc(x.fromName||'Investor')+'</td><td>'+esc(x.fromContact||'')+'</td><td>'+esc(x.message||'')+'</td><td>'+esc(fmtDate(x.createdAt))+'</td></tr>';
       }).join('');
+      if(!rows) rows='<tr><td colspan="4" class="th-meta">No investor replies yet.</td></tr>';
       return '<div class="th" data-thread="'+esc(t.id)+'">'+
         '<div class="th-h"><div><div class="th-title">#'+esc(t.id)+'</div><div class="th-meta">'+esc(t.requester||'')+' · '+esc(t.contact||'')+' · '+esc(fmtDate(t.createdAt))+'</div></div><div class="th-meta">'+esc(t.status||'OPEN')+'</div></div>'+
-        '<div class="th-req">'+esc(t.requirement||'')+'</div>'+
-        '<div class="msg-wrap">'+m+'</div>'+
-        '<div class="th-reply">'+
-          '<div class="tm-grid"><input class="tm-input rep-name" placeholder="Investor name"><input class="tm-input rep-contact" placeholder="Email or phone"></div>'+
-          '<textarea class="tm-area rep-msg" placeholder="Reply to this deal"></textarea>'+
-          '<button class="tm-submit rep-send">Send Reply</button>'+
+        '<div class="th-top">'+
+          '<div class="th-col"><div class="th-k">Property Location</div><div class="th-v">'+esc(t.propertyLocation||'-')+'</div></div>'+
+          '<div class="th-col"><div class="th-k">Requested Amount</div><div class="th-v">'+esc(t.requestedAmount||'-')+'</div></div>'+
+          '<div class="th-col"><div class="th-k">Requested LTV</div><div class="th-v">'+esc(t.requestedLtv||'-')+'</div></div>'+
+          '<button class="th-toggle">Open Thread</button>'+
+        '</div>'+
+        '<div class="th-body">'+
+          (t.requirement?'<div class="th-req">'+esc(t.requirement)+'</div>':'')+
+          '<div class="msg-wrap"><table class="rep-table"><thead><tr><th>Investor</th><th>Contact</th><th>Question / Reply</th><th>Time</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+          '<div class="th-reply">'+
+            '<div class="tm-grid"><input class="tm-input rep-name" placeholder="Investor name"><input class="tm-input rep-contact" placeholder="Email or phone"></div>'+
+            '<textarea class="tm-area rep-msg" placeholder="Question / reply for this deal"></textarea>'+
+            '<button class="tm-submit rep-send">Send Reply</button>'+
+          '</div>'+
         '</div>'+
       '</div>';
     }).join('');
@@ -788,18 +813,24 @@ function postThreadCreate(){
   var lead=getLatestLead();
   var name=(document.getElementById('thName').value||'').trim() || (lead&&lead.name)||'';
   var contact=(document.getElementById('thContact').value||'').trim() || (lead&&(lead.email||lead.phone))||'';
+  var location=(document.getElementById('thLocation').value||'').trim();
+  var amount=(document.getElementById('thAmount').value||'').trim();
+  var ltv=(document.getElementById('thLtv').value||'').trim();
   var req=document.getElementById('thReq').value.trim();
   var msg=document.getElementById('thMsg');
-  if(name.length<2||contact.length<3||req.length<5){msg.textContent='Please complete name, contact and requirement details.';return;}
+  if(name.length<2||contact.length<3||location.length<2||amount.length<1||ltv.length<1){msg.textContent='Please complete name, contact, property location, requested amount, and requested LTV.';return;}
   var localId='L'+Date.now().toString(36).toUpperCase();
-  localThreads.unshift({id:localId,requester:name,contact:contact,requirement:req,status:'OPEN',createdAt:new Date().toISOString()});
+  localThreads.unshift({id:localId,requester:name,contact:contact,propertyLocation:location,requestedAmount:amount,requestedLtv:ltv,requirement:req,status:'OPEN',createdAt:new Date().toISOString()});
   saveLocalThreads();
   loadThreads();
-  var data=new URLSearchParams({resource:'deal_threads',action:'create',requester:name,contact:contact,requirement:req,createdAt:new Date().toISOString()});
+  var data=new URLSearchParams({resource:'deal_threads',action:'create',requester:name,contact:contact,propertyLocation:location,requestedAmount:amount,requestedLtv:ltv,requirement:req,createdAt:new Date().toISOString()});
   fetch(notesURL,{method:'POST',mode:'no-cors',keepalive:true,headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:data.toString()})
     .then(function(){
       msg.textContent='Thread submitted (local copy saved).';
       document.getElementById('thReq').value='';
+      document.getElementById('thLocation').value='';
+      document.getElementById('thAmount').value='';
+      document.getElementById('thLtv').value='';
       loadThreads();
     }).catch(function(){msg.textContent='Unable to submit thread right now.';});
 }
@@ -934,6 +965,13 @@ document.getElementById('threadClose').addEventListener('click',function(){
 });
 document.getElementById('thCreate').addEventListener('click',postThreadCreate);
 document.getElementById('threadsList').addEventListener('click',function(e){
+  if(e.target.classList.contains('th-toggle')){
+    var box=e.target.closest('.th');
+    if(!box) return;
+    box.classList.toggle('open');
+    e.target.textContent=box.classList.contains('open')?'Hide Thread':'Open Thread';
+    return;
+  }
   if(!e.target.classList.contains('rep-send')) return;
   var card=e.target.closest('.th');
   if(!card) return;

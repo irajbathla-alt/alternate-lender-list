@@ -19,7 +19,7 @@ var SPREADSHEET_ID = ''; // e.g. '1AbC...xyz'. Leave blank only if script is con
 var SHEET_NAME = 'member_notes';
 var HEADERS = ['key', 'tab', 'member', 'note', 'updatedAt'];
 var THREAD_SHEET = 'deal_threads';
-var THREAD_HEADERS = ['id', 'requester', 'contact', 'requirement', 'status', 'createdAt', 'updatedAt'];
+var THREAD_HEADERS = ['id', 'requester', 'contact', 'propertyLocation', 'requestedAmount', 'requestedLtv', 'requirement', 'status', 'createdAt', 'updatedAt'];
 var THREAD_MSG_SHEET = 'deal_thread_messages';
 var THREAD_MSG_HEADERS = ['threadId', 'fromName', 'fromContact', 'message', 'createdAt'];
 
@@ -107,10 +107,13 @@ function handleThreadPost_(p) {
   if (action === 'create') {
     var requester = String(p.requester || '').trim();
     var contact = String(p.contact || '').trim();
+    var propertyLocation = String(p.propertyLocation || '').trim();
+    var requestedAmount = String(p.requestedAmount || '').trim();
+    var requestedLtv = String(p.requestedLtv || '').trim();
     var requirement = String(p.requirement || '').trim();
-    if (!requester || !contact || !requirement) return json_({ ok: false, error: 'Missing create fields' });
+    if (!requester || !contact || !propertyLocation || !requestedAmount || !requestedLtv) return json_({ ok: false, error: 'Missing create fields' });
     var id = 'D' + new Date().getTime().toString(36).toUpperCase();
-    ts.appendRow([id, requester, contact, requirement, 'OPEN', now, now]);
+    ts.appendRow([id, requester, contact, propertyLocation, requestedAmount, requestedLtv, requirement, 'OPEN', now, now]);
     return json_({ ok: true, action: 'create', id: id });
   }
 
@@ -134,7 +137,7 @@ function touchThread_(threadSheet, threadId, nowIso) {
   var values = threadSheet.getRange(2, 1, rows - 1, THREAD_HEADERS.length).getValues();
   for (var i = 0; i < values.length; i++) {
     if (String(values[i][0] || '') === threadId) {
-      threadSheet.getRange(i + 2, 7).setValue(nowIso);
+      threadSheet.getRange(i + 2, 10).setValue(nowIso);
       return;
     }
   }
