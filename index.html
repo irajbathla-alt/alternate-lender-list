@@ -788,6 +788,7 @@ function loadThreads(){
         '</div>'+
         '<div class="th-body">'+
           (t.requirement?'<div class="th-req">'+esc(t.requirement)+'</div>':'')+
+          '<div class="th-meta" style="margin-top:8px">Conversation (Investor questions + follow-ups)</div>'+
           '<div class="msg-wrap"><table class="rep-table"><thead><tr><th>Investor</th><th>Contact</th><th>Question / Reply</th><th>Time</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
           '<div class="th-reply">'+
             '<div class="tm-grid"><input class="tm-input rep-name" placeholder="Investor name"><input class="tm-input rep-contact" placeholder="Email or phone"></div>'+
@@ -801,8 +802,29 @@ function loadThreads(){
   return fetch(notesURL+'?resource=deal_threads&t='+(Date.now()),{method:'GET'})
     .then(function(r){if(!r.ok) return null; return r.json();})
     .then(function(data){
-      var threads=((data&&data.threads)||[]).concat(localThreads);
-      var msgs=((data&&data.messages)||[]).concat(localThreadMsgs);
+      var remoteThreads=(data&&data.threads)||[];
+      var remoteMsgs=(data&&data.messages)||[];
+      var tSeen={};
+      remoteThreads.forEach(function(t){
+        var k=[t.requester,t.contact,t.propertyLocation,t.requestedAmount,t.requestedLtv,t.requirement,t.createdAt].join('|');
+        tSeen[k]=true;
+      });
+      var mSeen={};
+      remoteMsgs.forEach(function(m){
+        var k=[m.threadId,m.fromName,m.fromContact,m.message,m.createdAt].join('|');
+        mSeen[k]=true;
+      });
+      localThreads=localThreads.filter(function(t){
+        var k=[t.requester,t.contact,t.propertyLocation,t.requestedAmount,t.requestedLtv,t.requirement,t.createdAt].join('|');
+        return !tSeen[k];
+      });
+      localThreadMsgs=localThreadMsgs.filter(function(m){
+        var k=[m.threadId,m.fromName,m.fromContact,m.message,m.createdAt].join('|');
+        return !mSeen[k];
+      });
+      saveLocalThreads();
+      var threads=remoteThreads.concat(localThreads);
+      var msgs=remoteMsgs.concat(localThreadMsgs);
       renderThreads(threads,msgs);
     })
     .catch(function(){
