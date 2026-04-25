@@ -36,9 +36,9 @@ function doGet(e) {
       var messages = getRowsByHeaders_(ms, THREAD_MSG_HEADERS).sort(function (a, b) {
         return String(a.createdAt || '').localeCompare(String(b.createdAt || ''));
       });
-      return json_({ ok: true, threads: threads, messages: messages });
+      return jsonWithCallback_({ ok: true, threads: threads, messages: messages }, p);
     }
-    if (resource !== 'member_notes') return json_({ ok: false, error: 'Unknown resource' });
+    if (resource !== 'member_notes') return jsonWithCallback_({ ok: false, error: 'Unknown resource' }, p);
 
     var sh = getSheet_();
     var rows = getRows_(sh);
@@ -51,10 +51,10 @@ function doGet(e) {
 
     // Health check endpoint used by UI sync status
     if (String(p.check || '') === '1') {
-      return json_({ ok: true, count: Object.keys(notes).length, now: new Date().toISOString() });
+      return jsonWithCallback_({ ok: true, count: Object.keys(notes).length, now: new Date().toISOString() }, p);
     }
 
-    return json_({ ok: true, notes: notes, count: Object.keys(notes).length });
+    return jsonWithCallback_({ ok: true, notes: notes, count: Object.keys(notes).length }, p);
   } catch (err) {
     return json_({ ok: false, error: String(err) });
   }
@@ -217,6 +217,16 @@ function json_(obj) {
   return ContentService
     .createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+function jsonWithCallback_(obj, params) {
+  var cb = params && params.callback ? String(params.callback).trim() : '';
+  if (!cb) return json_(obj);
+  var safeCb = cb.replace(/[^\w$.]/g, '');
+  var payload = safeCb + '(' + JSON.stringify(obj) + ');';
+  return ContentService
+    .createTextOutput(payload)
+    .setMimeType(ContentService.MimeType.JAVASCRIPT);
 }
 
 /**
