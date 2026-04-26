@@ -283,6 +283,22 @@ input::placeholder{color:#bbb}
       <button class="ad-save" id="adminSave">Save note</button>
       <button class="ad-del" id="adminDelete">Delete note</button>
     </div>
+    <div class="ad-help" style="margin-top:6px">Add New Lender (Admin)</div>
+    <div class="tm-grid">
+      <select id="newLenderTab" class="ad-select">
+        <option value="R">Residential</option>
+        <option value="C">Commercial</option>
+      </select>
+      <input id="newLenderName" class="ad-select" placeholder="Lender name">
+    </div>
+    <div class="tm-grid">
+      <input id="newLenderPhone" class="ad-select" placeholder="Phone (optional)">
+      <input id="newLenderWeb" class="ad-select" placeholder="Website (optional, no https://)">
+    </div>
+    <input id="newLenderProv" class="ad-select" placeholder="Provinces comma-separated (e.g. BC,AB,ON)">
+    <div class="ad-actions">
+      <button class="ad-save" id="addLenderBtn">Add Lender</button>
+    </div>
     <div class="ad-msg" id="adminMsg"></div>
   </div>
 </div>
@@ -585,9 +601,6 @@ R=dedup(R); C=dedup(C);
 R.sort(function(a,b){return a.n.localeCompare(b.n)});
 C.sort(function(a,b){return a.n.localeCompare(b.n)});
 
-document.getElementById('rc').textContent=' '+R.length;
-document.getElementById('cc').textContent=' '+C.length;
-
 var tab='R', provs=[], q='';
 var noteKey='vfcl_member_notes';
 var adminSessionKey='vfcl_admin_unlocked';
@@ -596,6 +609,8 @@ var localThreadKey='vfcl_deal_threads_local';
 var localThreadMsgKey='vfcl_deal_thread_messages_local';
 var investorProfileKey='vfcl_investor_profile';
 var ADMIN_PASSWORD='VFC2026!';
+var extraLendersKey='vfcl_extra_lenders';
+var extraLenders=(function(){try{return JSON.parse(localStorage.getItem(extraLendersKey)||'[]')||[];}catch(e){return [];}})();
 // Paste your dedicated Apps Script "member notes" Web App URL here.
 var notesURL='https://script.google.com/macros/s/AKfycbykTVuI9xN6RdfZbBB3mBsq19WsXmdiwSP219jQxAvEm_I5bnToZWvwgHen62TTaH5_/exec';
 var memberNotes=(function(){
@@ -686,6 +701,21 @@ function saveLocalThreads(){
   try{localStorage.setItem(localThreadMsgKey,JSON.stringify(localThreadMsgs));}catch(e){}
 }
 function saveInvestorProfile(){ try{localStorage.setItem(investorProfileKey,JSON.stringify(investorProfile));}catch(e){} }
+function saveExtraLenders(){ try{localStorage.setItem(extraLendersKey,JSON.stringify(extraLenders));}catch(e){} }
+function mergedData(type){
+  var base=type==='R'?R:C;
+  var add=extraLenders.filter(function(x){return x.t===type;}).map(function(x){
+    return {n:x.n,p:x.p||'',w:x.w||'',v:x.v||[]};
+  });
+  var all=dedup(base.concat(add));
+  all.sort(function(a,b){return a.n.localeCompare(b.n);});
+  return all;
+}
+function refreshCounts(){
+  document.getElementById('rc').textContent=' '+mergedData('R').length;
+  document.getElementById('cc').textContent=' '+mergedData('C').length;
+}
+refreshCounts();
 function setSyncStatus(msg){
   var el=document.getElementById('adminSyncStatus');
   if(el) el.textContent='Sync status: '+msg;
@@ -919,7 +949,7 @@ function postThreadReply(threadId,card){
     .then(function(){ loadThreads(); })
     .catch(function(){});
 }
-function currentData(){return tab==='R'?R:C;}
+function currentData(){return mergedData(tab);}
 function updateAdminList(){
   var sel=document.getElementById('adminMember');
   var data=currentData();
@@ -1090,6 +1120,25 @@ document.getElementById('adminDelete').addEventListener('click',function(){
   document.getElementById('adminNote').value='';
   document.getElementById('adminMsg').textContent='Note deleted for '+name+'.';
   draw();
+});
+document.getElementById('addLenderBtn').addEventListener('click',function(){
+  if(!adminUnlocked){document.getElementById('adminMsg').textContent='Password required to add lender.';return;}
+  var t=(document.getElementById('newLenderTab').value||'R').trim();
+  var n=(document.getElementById('newLenderName').value||'').trim();
+  var p=(document.getElementById('newLenderPhone').value||'').trim();
+  var w=(document.getElementById('newLenderWeb').value||'').trim();
+  var prov=(document.getElementById('newLenderProv').value||'').split(',').map(function(x){return x.trim().toUpperCase();}).filter(Boolean);
+  if(n.length<2 || !prov.length){document.getElementById('adminMsg').textContent='Please add lender name and at least one province.';return;}
+  extraLenders.push({t:t,n:n,p:p,w:w,v:prov,createdAt:new Date().toISOString()});
+  saveExtraLenders();
+  refreshCounts();
+  draw();
+  if(document.getElementById('adminModal').classList.contains('show')) updateAdminList();
+  document.getElementById('newLenderName').value='';
+  document.getElementById('newLenderPhone').value='';
+  document.getElementById('newLenderWeb').value='';
+  document.getElementById('newLenderProv').value='';
+  document.getElementById('adminMsg').textContent='New lender added.';
 });
 
 function showGate(){
