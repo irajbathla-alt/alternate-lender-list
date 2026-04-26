@@ -22,6 +22,8 @@ var THREAD_SHEET = 'deal_threads';
 var THREAD_HEADERS = ['id', 'requester', 'contact', 'propertyLocation', 'requestedAmount', 'requestedLtv', 'requirement', 'status', 'createdAt', 'updatedAt'];
 var THREAD_MSG_SHEET = 'deal_thread_messages';
 var THREAD_MSG_HEADERS = ['threadId', 'fromName', 'fromContact', 'message', 'createdAt'];
+var EXTRA_LENDER_SHEET = 'extra_lenders';
+var EXTRA_LENDER_HEADERS = ['id', 'tab', 'name', 'phone', 'website', 'provinces', 'createdAt'];
 
 function doGet(e) {
   try {
@@ -37,6 +39,11 @@ function doGet(e) {
         return String(a.createdAt || '').localeCompare(String(b.createdAt || ''));
       });
       return jsonWithCallback_({ ok: true, threads: threads, messages: messages }, p);
+    }
+    if (resource === 'extra_lenders') {
+      var es = getSheetBySchema_(EXTRA_LENDER_SHEET, EXTRA_LENDER_HEADERS);
+      var lenders = getRowsByHeaders_(es, EXTRA_LENDER_HEADERS);
+      return jsonWithCallback_({ ok: true, lenders: lenders }, p);
     }
     if (resource !== 'member_notes') return jsonWithCallback_({ ok: false, error: 'Unknown resource' }, p);
 
@@ -67,6 +74,9 @@ function doPost(e) {
     if (resource === 'deal_threads') {
       return handleThreadPost_(p);
     }
+    if (resource === 'extra_lenders') {
+      return handleExtraLenderPost_(p);
+    }
     if (resource !== 'member_notes') return json_({ ok: false, error: 'Unknown resource' });
 
     var action = String(p.action || 'upsert').toLowerCase();
@@ -96,6 +106,22 @@ function doPost(e) {
   } catch (err) {
     return json_({ ok: false, error: String(err) });
   }
+}
+
+function handleExtraLenderPost_(p) {
+  var action = String(p.action || 'create').toLowerCase();
+  if (action !== 'create') return json_({ ok: false, error: 'Unknown lender action' });
+  var tab = String(p.tab || 'R').trim().toUpperCase();
+  var name = String(p.name || '').trim();
+  var phone = String(p.phone || '').trim();
+  var website = String(p.website || '').trim();
+  var provinces = String(p.provinces || '').trim();
+  var createdAt = String(p.createdAt || new Date().toISOString());
+  if (!name || !provinces) return json_({ ok: false, error: 'name/provinces required' });
+  var id = 'L' + new Date().getTime().toString(36).toUpperCase();
+  var es = getSheetBySchema_(EXTRA_LENDER_SHEET, EXTRA_LENDER_HEADERS);
+  es.appendRow([id, tab, name, phone, website, provinces, createdAt]);
+  return json_({ ok: true, id: id, action: 'create' });
 }
 
 function handleThreadPost_(p) {
@@ -238,4 +264,5 @@ function setupAllSheets_() {
   getSheetBySchema_(SHEET_NAME, HEADERS);
   getSheetBySchema_(THREAD_SHEET, THREAD_HEADERS);
   getSheetBySchema_(THREAD_MSG_SHEET, THREAD_MSG_HEADERS);
+  getSheetBySchema_(EXTRA_LENDER_SHEET, EXTRA_LENDER_HEADERS);
 }

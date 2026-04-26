@@ -611,6 +611,7 @@ var investorProfileKey='vfcl_investor_profile';
 var ADMIN_PASSWORD='VFC2026!';
 var extraLendersKey='vfcl_extra_lenders';
 var extraLenders=(function(){try{return JSON.parse(localStorage.getItem(extraLendersKey)||'[]')||[];}catch(e){return [];}})();
+var remoteExtraLenders=[];
 // Paste your dedicated Apps Script "member notes" Web App URL here.
 var notesURL='https://script.google.com/macros/s/AKfycbykTVuI9xN6RdfZbBB3mBsq19WsXmdiwSP219jQxAvEm_I5bnToZWvwgHen62TTaH5_/exec';
 var memberNotes=(function(){
@@ -702,9 +703,28 @@ function saveLocalThreads(){
 }
 function saveInvestorProfile(){ try{localStorage.setItem(investorProfileKey,JSON.stringify(investorProfile));}catch(e){} }
 function saveExtraLenders(){ try{localStorage.setItem(extraLendersKey,JSON.stringify(extraLenders));}catch(e){} }
+function normalizeExtraLender(x){
+  return {
+    t:(x.t||x.tab||'R').toUpperCase(),
+    n:(x.n||x.name||'').trim(),
+    p:(x.p||x.phone||'').trim(),
+    w:(x.w||x.website||'').trim(),
+    v:Array.isArray(x.v)?x.v:(String(x.v||x.provinces||'').split(',').map(function(k){return k.trim().toUpperCase();}).filter(Boolean))
+  };
+}
+function mergedExtraLenders(){
+  var all=extraLenders.concat(remoteExtraLenders).map(normalizeExtraLender).filter(function(x){return x.n;});
+  var seen={};
+  return all.filter(function(x){
+    var k=[x.t,x.n.toLowerCase(),x.p.toLowerCase(),x.w.toLowerCase(),x.v.join(',')].join('|');
+    if(seen[k]) return false;
+    seen[k]=1;
+    return true;
+  });
+}
 function mergedData(type){
   var base=type==='R'?R:C;
-  var add=extraLenders.filter(function(x){return x.t===type;}).map(function(x){
+  var add=mergedExtraLenders().filter(function(x){return x.t===type;}).map(function(x){
     return {n:x.n,p:x.p||'',w:x.w||'',v:x.v||[]};
   });
   var all=dedup(base.concat(add));
@@ -734,6 +754,18 @@ function verifyNotesEndpoint(){
       setSyncStatus('write-only (endpoint blocks browser checks)');
       return false;
     });
+}
+function loadExtraLendersRemote(){
+  if(!notesURL) return Promise.resolve(false);
+  return jsonpFetch({resource:'extra_lenders'}).catch(function(){
+    return fetch(notesURL+'?resource=extra_lenders&t='+(Date.now()),{method:'GET'})
+      .then(function(r){ if(!r.ok) throw new Error('offline'); return r.json(); });
+  }).then(function(data){
+    remoteExtraLenders=((data&&data.lenders)||[]).map(normalizeExtraLender);
+    refreshCounts();
+    draw();
+    return true;
+  }).catch(function(){ return false; });
 }
 function postNoteOp(op){
   var data=new URLSearchParams({
@@ -1131,6 +1163,13 @@ document.getElementById('addLenderBtn').addEventListener('click',function(){
   if(n.length<2 || !prov.length){document.getElementById('adminMsg').textContent='Please add lender name and at least one province.';return;}
   extraLenders.push({t:t,n:n,p:p,w:w,v:prov,createdAt:new Date().toISOString()});
   saveExtraLenders();
+  fetch(notesURL,{
+    method:'POST',
+    mode:'no-cors',
+    keepalive:true,
+    headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},
+    body:new URLSearchParams({resource:'extra_lenders',action:'create',tab:t,name:n,phone:p,website:w,provinces:prov.join(','),createdAt:new Date().toISOString()}).toString()
+  }).then(function(){ loadExtraLendersRemote(); }).catch(function(){});
   refreshCounts();
   draw();
   if(document.getElementById('adminModal').classList.contains('show')) updateAdminList();
@@ -1181,11 +1220,13 @@ function persistGateSession(lead){
   verifyNotesEndpoint().then(function(){
     flushPendingOps();
     loadNotesRemote();
+    loadExtraLendersRemote();
   });
   window.setInterval(function(){
     verifyNotesEndpoint().then(function(){
       flushPendingOps();
       loadNotesRemote();
+      loadExtraLendersRemote();
     });
   },20000);
   document.getElementById('gateForm').addEventListener('submit',function(e){
