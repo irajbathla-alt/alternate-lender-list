@@ -605,6 +605,7 @@ var tab='R', provs=[], q='';
 var noteKey='vfcl_member_notes';
 var adminSessionKey='vfcl_admin_unlocked';
 var pendingOpsKey='vfcl_note_pending_ops';
+var pendingLenderOpsKey='vfcl_extra_lender_pending_ops';
 var localThreadKey='vfcl_deal_threads_local';
 var localThreadMsgKey='vfcl_deal_thread_messages_local';
 var investorProfileKey='vfcl_investor_profile';
@@ -619,6 +620,7 @@ var memberNotes=(function(){
 })();
 var adminUnlocked=(function(){try{return localStorage.getItem(adminSessionKey)==='1';}catch(e){return false;}})();
 var pendingOps=(function(){try{return JSON.parse(localStorage.getItem(pendingOpsKey)||'[]')||[];}catch(e){return [];}})();
+var pendingLenderOps=(function(){try{return JSON.parse(localStorage.getItem(pendingLenderOpsKey)||'[]')||[];}catch(e){return [];}})();
 var localThreads=(function(){try{return JSON.parse(localStorage.getItem(localThreadKey)||'[]')||[];}catch(e){return [];}})();
 var localThreadMsgs=(function(){try{return JSON.parse(localStorage.getItem(localThreadMsgKey)||'[]')||[];}catch(e){return [];}})();
 var investorProfile=(function(){try{return JSON.parse(localStorage.getItem(investorProfileKey)||'{}')||{};}catch(e){return {};}})();
@@ -697,6 +699,7 @@ function esc(s){
 function noteId(name,t){return t+'::'+name.toLowerCase().trim();}
 function saveNotes(){try{localStorage.setItem(noteKey,JSON.stringify(memberNotes));}catch(e){}}
 function savePendingOps(){try{localStorage.setItem(pendingOpsKey,JSON.stringify(pendingOps));}catch(e){}}
+function savePendingLenderOps(){try{localStorage.setItem(pendingLenderOpsKey,JSON.stringify(pendingLenderOps));}catch(e){}}
 function saveLocalThreads(){
   try{localStorage.setItem(localThreadKey,JSON.stringify(localThreads));}catch(e){}
   try{localStorage.setItem(localThreadMsgKey,JSON.stringify(localThreadMsgs));}catch(e){}
@@ -803,6 +806,53 @@ function flushPendingOps(){
     return true;
   }).catch(function(){
     setSyncStatus('offline (changes queued locally)');
+    return false;
+  });
+}
+function postExtraLenderOp(op){
+  var data=new URLSearchParams({
+    resource:'extra_lenders',
+    action:'create',
+    tab:op.tab||'R',
+    name:op.name||'',
+    phone:op.phone||'',
+    website:op.website||'',
+    provinces:Array.isArray(op.provinces)?op.provinces.join(','):String(op.provinces||''),
+    createdAt:op.createdAt||new Date().toISOString()
+  });
+  return fetch(notesURL,{
+    method:'POST',
+    mode:'no-cors',
+    keepalive:true,
+    headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},
+    body:data.toString()
+  }).then(function(){
+    return true;
+  });
+}
+function queueExtraLenderOp(lender){
+  pendingLenderOps.push({
+    tab:lender.t||'R',
+    name:lender.n||'',
+    phone:lender.p||'',
+    website:lender.w||'',
+    provinces:Array.isArray(lender.v)?lender.v:[],
+    createdAt:lender.createdAt||new Date().toISOString()
+  });
+  savePendingLenderOps();
+}
+function flushPendingLenderOps(){
+  if(!pendingLenderOps.length) return Promise.resolve(true);
+  var ops=pendingLenderOps.slice();
+  return ops.reduce(function(p,op){
+    return p.then(function(){ return postExtraLenderOp(op); });
+  },Promise.resolve()).then(function(){
+    pendingLenderOps=[];
+    savePendingLenderOps();
+    setSyncStatus('connected');
+    return loadExtraLendersRemote().then(function(){ return true; });
+  }).catch(function(){
+    setSyncStatus('offline (new lenders queued locally)');
     return false;
   });
 }
@@ -1163,13 +1213,8 @@ document.getElementById('addLenderBtn').addEventListener('click',function(){
   if(n.length<2 || !prov.length){document.getElementById('adminMsg').textContent='Please add lender name and at least one province.';return;}
   extraLenders.push({t:t,n:n,p:p,w:w,v:prov,createdAt:new Date().toISOString()});
   saveExtraLenders();
-  fetch(notesURL,{
-    method:'POST',
-    mode:'no-cors',
-    keepalive:true,
-    headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},
-    body:new URLSearchParams({resource:'extra_lenders',action:'create',tab:t,name:n,phone:p,website:w,provinces:prov.join(','),createdAt:new Date().toISOString()}).toString()
-  }).then(function(){ loadExtraLendersRemote(); }).catch(function(){});
+  queueExtraLenderOp({t:t,n:n,p:p,w:w,v:prov,createdAt:new Date().toISOString()});
+  flushPendingLenderOps();
   refreshCounts();
   draw();
   if(document.getElementById('adminModal').classList.contains('show')) updateAdminList();
@@ -1219,12 +1264,14 @@ function persistGateSession(lead){
   setSyncStatus('checking…');
   verifyNotesEndpoint().then(function(){
     flushPendingOps();
+    flushPendingLenderOps();
     loadNotesRemote();
     loadExtraLendersRemote();
   });
   window.setInterval(function(){
     verifyNotesEndpoint().then(function(){
       flushPendingOps();
+      flushPendingLenderOps();
       loadNotesRemote();
       loadExtraLendersRemote();
     });
