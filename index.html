@@ -78,6 +78,63 @@ input::placeholder{color:#bbb}
 .ft a{font-family:'JetBrains Mono',monospace;font-size:11px;color:#3b82f6;text-decoration:none;display:block;margin-top:3px}
 .ft a:hover{text-decoration:underline}
 
+/* Notes + admin */
+.admin-wrap{display:flex;justify-content:center;padding:10px 16px 0}
+.admin-btn{font-size:13px;color:#2563eb;background:#eef4ff;border:1px solid #cfe0ff;padding:7px 14px}
+.admin-btn:hover{background:#dceaff}
+.cnote{margin-top:2px;padding:6px 8px;background:#f8fafc;border:1px dashed #d6dee9;border-radius:6px;font-size:12px;color:#334155;line-height:1.35}
+.ad{position:fixed;inset:0;z-index:220;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;padding:16px}
+.ad.show{display:flex}
+.ad-card{width:min(640px,100%);background:#fff;border:1px solid #dbe3f2;border-radius:16px;padding:18px;box-shadow:0 20px 55px rgba(2,6,23,.22);display:flex;flex-direction:column;gap:10px}
+.ad-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.ad-title{font-size:24px}
+.ad-x{font-size:13px;color:#6b7280;background:#f3f4f6;padding:6px 10px}
+.ad-x:hover{background:#e5e7eb}
+.ad-help{font-size:13px;color:#475569}
+.ad-label{font-size:13px;color:#334155}
+.ad-select,.ad-note{width:100%;border:1px solid #d5deec;border-radius:10px;padding:9px 10px;font-family:'JetBrains Mono',monospace;font-size:12px}
+.ad-note{min-height:140px;resize:vertical}
+.ad-actions{display:flex;flex-wrap:wrap;gap:8px}
+.ad-save{background:#3b82f6;color:#fff;padding:8px 14px;font-size:13px}
+.ad-del{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;padding:8px 14px;font-size:13px}
+.ad-save[disabled],.ad-del[disabled]{opacity:.45;cursor:not-allowed}
+.ad-msg{font-size:12px;color:#64748b;min-height:16px}
+.ad-auth{display:grid;gap:6px;padding:8px;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc}
+.ad-auth-row{display:flex;gap:8px;align-items:center}
+.ad-auth-btn{font-size:12px;padding:7px 12px;background:#111827;color:#fff}
+.ad-auth-state{font-size:12px;color:#475569}
+.ad-sync{font-size:12px;color:#64748b}
+.tb-btn{font-size:13px;color:#065f46;background:#ecfdf5;border:1px solid #a7f3d0;padding:7px 14px}
+.tb-btn:hover{background:#d1fae5}
+.tm{position:fixed;inset:0;z-index:230;background:rgba(2,6,23,.5);display:none;align-items:center;justify-content:center;padding:16px}
+.tm.show{display:flex}
+.tm-card{width:min(860px,100%);max-height:min(88vh,900px);overflow:auto;background:#fff;border:1px solid #dbe3f2;border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px}
+.tm-row{display:grid;gap:8px}
+.tm-grid{display:grid;gap:8px;grid-template-columns:1fr 1fr}
+.tm-input,.tm-area{width:100%;border:1px solid #d5deec;border-radius:10px;padding:9px 10px;font-family:'JetBrains Mono',monospace;font-size:12px}
+.tm-area{min-height:84px;resize:vertical}
+.tm-submit{background:#047857;color:#fff;padding:9px 14px;font-size:13px}
+.th-wrap{display:grid;gap:10px}
+.th{border:1px solid #e5e7eb;border-radius:12px;padding:10px;background:#fafafa}
+.th-h{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.th-title{font-size:14px;color:#111}
+.th-meta{font-size:11px;color:#6b7280}
+.th-req{font-size:13px;color:#1f2937;margin-top:6px;white-space:pre-wrap}
+.msg-wrap{display:grid;gap:6px;margin-top:8px}
+.msg{background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:7px}
+.msg-meta{font-size:10px;color:#64748b}
+.msg-body{font-size:12px;color:#0f172a;white-space:pre-wrap}
+.th-reply{display:grid;gap:6px;margin-top:8px}
+.th-top{display:grid;grid-template-columns:1.1fr .9fr .8fr auto;gap:8px;align-items:center}
+.th-col{background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:6px}
+.th-k{font-size:10px;color:#64748b}
+.th-v{font-size:12px;color:#0f172a}
+.th-toggle{background:#0f766e;color:#fff;padding:7px 12px;font-size:12px}
+.th-body{display:none}
+.th.open .th-body{display:block}
+.rep-table{width:100%;border-collapse:collapse;font-size:12px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden}
+.rep-table th,.rep-table td{border-bottom:1px solid #eef2f7;padding:6px;vertical-align:top;text-align:left}
+.rep-table th{font-size:10px;color:#64748b;background:#f8fafc}
 
 
 /* ACCESS GATE */
@@ -160,6 +217,10 @@ input::placeholder{color:#bbb}
       <button class="p-btn" data-p="ATL">ATL</button>
     </div>
   </div>
+  <div class="admin-wrap">
+    <button class="admin-btn" id="adminOpen">Admin Portal</button>
+    <button class="tb-btn" id="threadOpen" style="margin-left:8px">Deal Threads</button>
+  </div>
 </div>
 
 <div class="sb">
@@ -170,8 +231,77 @@ input::placeholder{color:#bbb}
   <span class="ct"><em id="n">0</em></span>
   <button class="cl" id="clr">Clear</button>
 </div>
+<div class="tm" id="threadModal">
+  <div class="tm-card">
+    <div class="ad-top">
+      <div class="ad-title">Deal Threads</div>
+      <button class="ad-x" id="threadClose">Close</button>
+    </div>
+    <div class="ad-help">Post a funding request. Each deal becomes a unique thread. Investors can review and contact directly.</div>
+    <div class="tm-row">
+      <div class="tm-grid">
+        <input id="thName" class="tm-input" placeholder="Your name">
+        <input id="thContact" class="tm-input" placeholder="Email or phone">
+      </div>
+      <div class="tm-grid">
+        <input id="thLocation" class="tm-input" placeholder="Property location">
+        <input id="thAmount" class="tm-input" placeholder="Requested amount (e.g. 850000)">
+      </div>
+      <input id="thLtv" class="tm-input" placeholder="Requested LTV (e.g. 75%)">
+      <textarea id="thReq" class="tm-area" placeholder="Extra deal details / notes (optional)"></textarea>
+      <div>
+        <button id="thCreate" class="tm-submit">Create Thread</button>
+        <span id="thMsg" class="ad-msg"></span>
+      </div>
+    </div>
+    <div id="threadsList" class="th-wrap"></div>
+  </div>
+</div>
 
 <div id="list"></div>
+<div class="ad" id="adminModal">
+  <div class="ad-card">
+    <div class="ad-top">
+      <div class="ad-title">Admin Portal</div>
+      <button class="ad-x" id="adminClose">Close</button>
+    </div>
+    <div class="ad-help">Add internal deal notes for each member. Notes are visible to all users and will sync online when the configured endpoint is available.</div>
+    <div class="ad-auth">
+      <div class="ad-label">Admin password required to edit notes</div>
+      <div class="ad-auth-row">
+        <input id="adminPassword" class="ad-select" type="password" placeholder="Enter admin password">
+        <button id="adminUnlock" class="ad-auth-btn">Unlock</button>
+      </div>
+      <div id="adminAuthState" class="ad-auth-state">Locked (view only).</div>
+      <div id="adminSyncStatus" class="ad-sync">Sync status: checking…</div>
+    </div>
+    <label class="ad-label" for="adminMember">Member</label>
+    <select id="adminMember" class="ad-select"></select>
+    <label class="ad-label" for="adminNote">Notes</label>
+    <textarea id="adminNote" class="ad-note" placeholder="Add your deal experience, strengths, red flags, and contact preferences..."></textarea>
+    <div class="ad-actions">
+      <button class="ad-save" id="adminSave">Save note</button>
+      <button class="ad-del" id="adminDelete">Delete note</button>
+    </div>
+    <div class="ad-help" style="margin-top:6px">Add New Lender (Admin)</div>
+    <div class="tm-grid">
+      <select id="newLenderTab" class="ad-select">
+        <option value="R">Residential</option>
+        <option value="C">Commercial</option>
+      </select>
+      <input id="newLenderName" class="ad-select" placeholder="Lender name">
+    </div>
+    <div class="tm-grid">
+      <input id="newLenderPhone" class="ad-select" placeholder="Phone (optional)">
+      <input id="newLenderWeb" class="ad-select" placeholder="Website (optional, no https://)">
+    </div>
+    <input id="newLenderProv" class="ad-select" placeholder="Provinces comma-separated (e.g. BC,AB,ON)">
+    <div class="ad-actions">
+      <button class="ad-save" id="addLenderBtn">Add Lender</button>
+    </div>
+    <div class="ad-msg" id="adminMsg"></div>
+  </div>
+</div>
 
 <script>
 var R=[
@@ -352,7 +482,9 @@ var R=[
   {n:"PHL",p:"604.579.0847",w:"phlcapital.com",v:["BC","AB","ON"]},
   {n:"Phoenix Financial Inc.",p:"902.406.7616",w:"phoenixfinancialinc.net",v:["ATL"]},
   {n:"Pillar Financial Services Inc.",p:"877.279.2116",w:"pillarfinancial.ca",v:["ON"]},
+  {n:"Premiere Home Mortgage Ltd.",p:"",w:"premierecanadian.ca",v:["BC","AB","ON"]},
   {n:"Pineapple",p:"833.347.7799",w:"gopineapple.ca",v:["BC","SK","MB","ON","QC","ATL"]},
+  {n:"Pacifica Mortgage Investment Corp.",p:"",w:"pacificamortgage.ca",v:["BC"]},
   {n:"Pioneer West Acceptance Corp.",p:"604.679.9447",w:"pioneerwest.com",v:["BC","SK"]},
   {n:"PMB Professional Mortgage Brokers Inc.",p:"905.985.4029",w:"pmbmortgages.ca",v:["ON"]},
   {n:"Pocmit Realty Advisors Inc.",p:"905.522.7936",w:"pracommercial.com",v:["ON"]},
@@ -386,6 +518,7 @@ var R=[
   {n:"Spectrum Canada Mortgage Services Inc.",p:"877.253.4377",w:"spectrum.canada.com",v:["BC","SK","ON"]},
   {n:"Sterling Bridge Mortgage Corp.",p:"403.298.0638",w:"sterlingbridge.ca",v:["SK"]},
   {n:"Stewart Mortgage Corp.",p:"250.372.1995",w:"stewartmortgage.ca",v:["BC"]},
+  {n:"Tekamar Mortgage Fund Ltd.",p:"",w:"tekfund.ca",v:["BC"]},
   {n:"Strive Capital",p:"403.633.7340",w:"strivecapital.ca",v:["BC","AB","SK","MB","QC","ATL"]},
   {n:"Sun Micro Financial - The Mortgage Centre",p:"905.212.1099",w:"sunmicrofinancial.ca",v:["BC","AB","ON"]},
   {n:"Syndicate Lending Corporation",p:"604.829.7007",w:"syndicatelending.com",v:["BC"]},
@@ -424,6 +557,7 @@ var C=[
   {n:"Cedar Peaks Mortgage Services Ltd.",p:"403.850.3373",w:"cedarpeaksmortgage.ca",v:["BC","AB"]},
   {n:"Centurion Mortgage Capital Corporation",p:"416.733.5600",w:"centurion.ca",v:["BC","AB","SK","MB","ON","QC","ATL"]},
   {n:"City Mortgage Investment Corporation",p:"604.763.3346",w:"citymortgage.ca",v:["BC"]},
+  {n:"Cove Mortgage Ltd.",p:"",w:"covemortgage.com",v:["BC"]},
   {n:"Community Trust Company",p:"800.268.1576",w:"communitytrust.ca",v:["BC","AB","ON"]},
   {n:"Domain Funding",p:"604.681.0000",w:"domainfunding.ca",v:["BC","AB"]},
   {n:"East Coast Mortgage Brokers",p:"709.754.0422",w:"ecmb.ca",v:["ATL"]},
@@ -467,10 +601,29 @@ R=dedup(R); C=dedup(C);
 R.sort(function(a,b){return a.n.localeCompare(b.n)});
 C.sort(function(a,b){return a.n.localeCompare(b.n)});
 
-document.getElementById('rc').textContent=' '+R.length;
-document.getElementById('cc').textContent=' '+C.length;
-
 var tab='R', provs=[], q='';
+var noteKey='vfcl_member_notes';
+var adminSessionKey='vfcl_admin_unlocked';
+var pendingOpsKey='vfcl_note_pending_ops';
+var localThreadKey='vfcl_deal_threads_local';
+var localThreadMsgKey='vfcl_deal_thread_messages_local';
+var investorProfileKey='vfcl_investor_profile';
+var ADMIN_PASSWORD='VFC2026!';
+var extraLendersKey='vfcl_extra_lenders';
+var extraLenders=(function(){try{return JSON.parse(localStorage.getItem(extraLendersKey)||'[]')||[];}catch(e){return [];}})();
+var remoteExtraLenders=[];
+// Paste your dedicated Apps Script "member notes" Web App URL here.
+var notesURL='https://script.google.com/macros/s/AKfycbwRYQ_4KUAdqPIpMf6zqPcblYgmAbBouR6yPZuWXAuhtGQYwsa-i4KslFfXcffaF6Nt/exec';
+var memberNotes=(function(){
+  try{return JSON.parse(localStorage.getItem(noteKey)||'{}')||{};}catch(e){return {};}
+})();
+var adminUnlocked=(function(){try{return localStorage.getItem(adminSessionKey)==='1';}catch(e){return false;}})();
+var pendingOps=(function(){try{return JSON.parse(localStorage.getItem(pendingOpsKey)||'[]')||[];}catch(e){return [];}})();
+var localThreads=(function(){try{return JSON.parse(localStorage.getItem(localThreadKey)||'[]')||[];}catch(e){return [];}})();
+var localThreadMsgs=(function(){try{return JSON.parse(localStorage.getItem(localThreadMsgKey)||'[]')||[];}catch(e){return [];}})();
+var investorProfile=(function(){try{return JSON.parse(localStorage.getItem(investorProfileKey)||'{}')||{};}catch(e){return {};}})();
+var gateSessionKey='vfcl_gate_session';
+var gateHours=8; // keep access for 8 hours before requiring a new login
 
 // Existing Google Apps Script endpoint used for lead capture
 var scriptURL='https://script.google.com/macros/s/AKfycbxqvRdFTUynTIhWn0h2aU5W1jouIs369XrmkZGGKBPkeursr4_UBIrlwtmdzsdBjStO/exec';
@@ -511,9 +664,338 @@ function saveLeadRemote(lead){
 
 
 function idx(el){ return el.getAttribute('data-tab')||el.getAttribute('data-p'); }
+function jsonpFetch(params){
+  return new Promise(function(resolve,reject){
+    if(!notesURL){reject(new Error('No endpoint'));return;}
+    var cb='vfcl_jsonp_'+Date.now()+'_'+Math.floor(Math.random()*9999);
+    var q=new URLSearchParams(params||{});
+    q.set('callback',cb);
+    q.set('t',Date.now());
+    var s=document.createElement('script');
+    var done=false;
+    window[cb]=function(data){
+      done=true;
+      try{ delete window[cb]; }catch(e){ window[cb]=undefined; }
+      if(s.parentNode) s.parentNode.removeChild(s);
+      resolve(data);
+    };
+    s.onerror=function(){
+      if(done) return;
+      try{ delete window[cb]; }catch(e){ window[cb]=undefined; }
+      reject(new Error('JSONP failed'));
+    };
+    s.src=notesURL+'?'+q.toString();
+    document.body.appendChild(s);
+    setTimeout(function(){ if(!done){ try{ delete window[cb]; }catch(e){ window[cb]=undefined; } reject(new Error('JSONP timeout')); } },8000);
+  });
+}
+function esc(s){
+  return String(s||'').replace(/[&<>"']/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+function noteId(name,t){return t+'::'+name.toLowerCase().trim();}
+function saveNotes(){try{localStorage.setItem(noteKey,JSON.stringify(memberNotes));}catch(e){}}
+function savePendingOps(){try{localStorage.setItem(pendingOpsKey,JSON.stringify(pendingOps));}catch(e){}}
+function saveLocalThreads(){
+  try{localStorage.setItem(localThreadKey,JSON.stringify(localThreads));}catch(e){}
+  try{localStorage.setItem(localThreadMsgKey,JSON.stringify(localThreadMsgs));}catch(e){}
+}
+function saveInvestorProfile(){ try{localStorage.setItem(investorProfileKey,JSON.stringify(investorProfile));}catch(e){} }
+function saveExtraLenders(){ try{localStorage.setItem(extraLendersKey,JSON.stringify(extraLenders));}catch(e){} }
+function normalizeExtraLender(x){
+  return {
+    t:(x.t||x.tab||'R').toUpperCase(),
+    n:(x.n||x.name||'').trim(),
+    p:(x.p||x.phone||'').trim(),
+    w:(x.w||x.website||'').trim(),
+    v:Array.isArray(x.v)?x.v:(String(x.v||x.provinces||'').split(',').map(function(k){return k.trim().toUpperCase();}).filter(Boolean))
+  };
+}
+function mergedExtraLenders(){
+  var all=extraLenders.concat(remoteExtraLenders).map(normalizeExtraLender).filter(function(x){return x.n;});
+  var seen={};
+  return all.filter(function(x){
+    var k=[x.t,x.n.toLowerCase(),x.p.toLowerCase(),x.w.toLowerCase(),x.v.join(',')].join('|');
+    if(seen[k]) return false;
+    seen[k]=1;
+    return true;
+  });
+}
+function mergedData(type){
+  var base=type==='R'?R:C;
+  var add=mergedExtraLenders().filter(function(x){return x.t===type;}).map(function(x){
+    return {n:x.n,p:x.p||'',w:x.w||'',v:x.v||[]};
+  });
+  var all=dedup(base.concat(add));
+  all.sort(function(a,b){return a.n.localeCompare(b.n);});
+  return all;
+}
+function refreshCounts(){
+  document.getElementById('rc').textContent=' '+mergedData('R').length;
+  document.getElementById('cc').textContent=' '+mergedData('C').length;
+}
+refreshCounts();
+function setSyncStatus(msg){
+  var el=document.getElementById('adminSyncStatus');
+  if(el) el.textContent='Sync status: '+msg;
+}
+function verifyNotesEndpoint(){
+  if(!notesURL) return Promise.resolve(false);
+  return jsonpFetch({resource:'member_notes',check:1}).catch(function(){
+    return fetch(notesURL+'?resource=member_notes&check=1&t='+(Date.now()),{method:'GET'})
+      .then(function(r){ if(!r.ok) throw new Error('offline'); return r.json(); });
+  })
+    .then(function(){
+      setSyncStatus('connected');
+      return true;
+    })
+    .catch(function(){
+      setSyncStatus('write-only (endpoint blocks browser checks)');
+      return false;
+    });
+}
+function loadExtraLendersRemote(){
+  if(!notesURL) return Promise.resolve(false);
+  return jsonpFetch({resource:'extra_lenders'}).catch(function(){
+    return fetch(notesURL+'?resource=extra_lenders&t='+(Date.now()),{method:'GET'})
+      .then(function(r){ if(!r.ok) throw new Error('offline'); return r.json(); });
+  }).then(function(data){
+    remoteExtraLenders=((data&&data.lenders)||[]).map(normalizeExtraLender);
+    refreshCounts();
+    draw();
+    return true;
+  }).catch(function(){ return false; });
+}
+function postNoteOp(op){
+  var data=new URLSearchParams({
+    resource:'member_notes',
+    action:op.action||'upsert',
+    tab:op.tab||'R',
+    member:op.member||'',
+    note:op.note||'',
+    updatedAt:op.updatedAt||new Date().toISOString()
+  });
+  return fetch(notesURL,{
+    method:'POST',
+    mode:'no-cors',
+    keepalive:true,
+    headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},
+    body:data.toString()
+  }).then(function(){
+    setSyncStatus('write sent');
+    return true;
+  });
+}
+function queueNoteOp(action,name,note){
+  pendingOps.push({action:action,tab:tab,member:name,note:note,updatedAt:new Date().toISOString()});
+  savePendingOps();
+}
+function flushPendingOps(){
+  if(!pendingOps.length) return Promise.resolve(true);
+  var ops=pendingOps.slice();
+  return ops.reduce(function(p,op){
+    return p.then(function(){ return postNoteOp(op); });
+  },Promise.resolve()).then(function(){
+    pendingOps=[];
+    savePendingOps();
+    setSyncStatus('connected');
+    return true;
+  }).catch(function(){
+    setSyncStatus('offline (changes queued locally)');
+    return false;
+  });
+}
+function loadNotesRemote(){
+  if(!notesURL) return Promise.resolve(false);
+  return jsonpFetch({resource:'member_notes'}).catch(function(){
+    return fetch(notesURL+'?resource=member_notes&t='+(Date.now()),{method:'GET'})
+      .then(function(r){ if(!r.ok) throw new Error('offline'); return r.json(); });
+  })
+    .then(function(data){
+      if(!data) return false;
+      var obj=(Array.isArray(data)?data.reduce(function(acc,row){
+        if(row&&row.key)acc[row.key]=row.note||''; return acc;
+      },{}):data.notes)||data;
+      if(obj&&typeof obj==='object'){
+        memberNotes=obj;
+        saveNotes();
+        draw();
+        setSyncStatus('connected');
+        return true;
+      }
+      return false;
+    }).catch(function(){
+      setSyncStatus('write-only (saved locally, remote read blocked)');
+      return false;
+    });
+}
+function setAuthUI(){
+  var state=document.getElementById('adminAuthState');
+  var canEdit=adminUnlocked;
+  document.getElementById('adminSave').disabled=!canEdit;
+  document.getElementById('adminDelete').disabled=!canEdit;
+  state.textContent=canEdit?'Unlocked: edit enabled.':'Locked (view only).';
+}
+function fmtDate(iso){
+  if(!iso) return '';
+  var d=new Date(iso);
+  if(isNaN(d.getTime())) return iso;
+  return d.toLocaleString();
+}
+function getLatestLead(){
+  try{
+    var leads=JSON.parse(localStorage.getItem('vfcl_leads')||'[]');
+    if(!leads.length) return null;
+    return leads[leads.length-1];
+  }catch(e){return null;}
+}
+function prefillThreadContact(){
+  var lead=getLatestLead();
+  if(!lead) return;
+  var n=document.getElementById('thName');
+  var c=document.getElementById('thContact');
+  if(n && !n.value.trim()) n.value=(lead.name||'').trim();
+  if(c && !c.value.trim()) c.value=(lead.email||lead.phone||'').trim();
+}
+function loadThreads(){
+  var wrap=document.getElementById('threadsList');
+  wrap.innerHTML='Loading threads...';
+  function renderThreads(threads,msgs){
+    var openThreads=threads.filter(function(t){
+      var isOpen=(t.status||'OPEN').toUpperCase()==='OPEN';
+      var hasCore=(t.id||'').trim().length>0;
+      return isOpen&&hasCore;
+    });
+    if(!openThreads.length){wrap.innerHTML='<div class="em-s">No open deals yet.</div>';return;}
+    var msgByThread={};
+    msgs.forEach(function(m){
+      if(!msgByThread[m.threadId]) msgByThread[m.threadId]=[];
+      msgByThread[m.threadId].push(m);
+    });
+    wrap.innerHTML=openThreads.map(function(t){
+      var uniqueMsg={}, rows=(msgByThread[t.id]||[]).filter(function(x){
+        var mk=[x.fromName||'',x.fromContact||'',x.message||''].join('|').toLowerCase();
+        if(uniqueMsg[mk]) return false;
+        uniqueMsg[mk]=true;
+        return true;
+      }).map(function(x){
+        return '<tr><td>'+esc(x.fromName||'Investor')+'</td><td>'+esc(x.fromContact||'')+'</td><td>'+esc(x.message||'')+'</td><td>'+esc(fmtDate(x.createdAt))+'</td></tr>';
+      }).join('');
+      if(!rows) rows='<tr><td colspan="4" class="th-meta">No investor replies yet.</td></tr>';
+      return '<div class="th" data-thread="'+esc(t.id)+'">'+
+        '<div class="th-h"><div><div class="th-title">#'+esc(t.id)+'</div><div class="th-meta">'+esc(t.requester||'')+' · '+esc(t.contact||'')+' · '+esc(fmtDate(t.createdAt))+'</div></div><div class="th-meta">'+esc(t.status||'OPEN')+'</div></div>'+
+        '<div class="th-top">'+
+          '<div class="th-col"><div class="th-k">Property Location</div><div class="th-v">'+esc(t.propertyLocation||'-')+'</div></div>'+
+          '<div class="th-col"><div class="th-k">Requested Amount</div><div class="th-v">'+esc(t.requestedAmount||'-')+'</div></div>'+
+          '<div class="th-col"><div class="th-k">Requested LTV</div><div class="th-v">'+esc(t.requestedLtv||'-')+'</div></div>'+
+          '<button class="th-toggle">Open Thread</button>'+
+        '</div>'+
+        '<div class="th-body">'+
+          (t.requirement?'<div class="th-req">'+esc(t.requirement)+'</div>':'')+
+          '<div class="th-meta" style="margin-top:8px">Conversation (Investor questions + follow-ups)</div>'+
+          '<div class="msg-wrap"><table class="rep-table"><thead><tr><th>Investor</th><th>Contact</th><th>Question / Reply</th><th>Time</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+          '<div class="th-reply">'+
+            '<div class="tm-grid"><input class="tm-input rep-name" placeholder="Investor name" value="'+esc(investorProfile.name||'')+'"><input class="tm-input rep-contact" placeholder="Email or phone" value="'+esc(investorProfile.contact||'')+'"></div>'+
+            '<textarea class="tm-area rep-msg" placeholder="Question / reply for this deal"></textarea>'+
+            '<button class="tm-submit rep-send">Send Reply</button>'+
+          '</div>'+
+        '</div>'+
+      '</div>';
+    }).join('');
+  }
+  return jsonpFetch({resource:'deal_threads'}).catch(function(){
+    return fetch(notesURL+'?resource=deal_threads&t='+(Date.now()),{method:'GET'})
+      .then(function(r){ if(!r.ok) throw new Error('offline'); return r.json(); });
+  })
+    .then(function(data){
+      var remoteThreads=(data&&data.threads)||[];
+      var remoteMsgs=(data&&data.messages)||[];
+      var tSeen={};
+      remoteThreads.forEach(function(t){
+        var k=[t.requester,t.contact,t.propertyLocation,t.requestedAmount,t.requestedLtv,t.requirement].join('|');
+        tSeen[k]=true;
+      });
+      var mSeen={};
+      remoteMsgs.forEach(function(m){
+        var k=[m.threadId,m.fromName,m.fromContact,m.message].join('|');
+        mSeen[k]=true;
+      });
+      localThreads=localThreads.filter(function(t){
+        var k=[t.requester,t.contact,t.propertyLocation,t.requestedAmount,t.requestedLtv,t.requirement].join('|');
+        return !tSeen[k];
+      });
+      localThreadMsgs=localThreadMsgs.filter(function(m){
+        var k=[m.threadId,m.fromName,m.fromContact,m.message].join('|');
+        return !mSeen[k];
+      });
+      saveLocalThreads();
+      var threads=remoteThreads.concat(localThreads);
+      var msgs=remoteMsgs.concat(localThreadMsgs);
+      renderThreads(threads,msgs);
+    })
+    .catch(function(){
+      renderThreads(localThreads,localThreadMsgs);
+    });
+}
+function postThreadCreate(){
+  var lead=getLatestLead();
+  var name=(document.getElementById('thName').value||'').trim() || (lead&&lead.name)||'';
+  var contact=(document.getElementById('thContact').value||'').trim() || (lead&&(lead.email||lead.phone))||'';
+  var location=(document.getElementById('thLocation').value||'').trim();
+  var amount=(document.getElementById('thAmount').value||'').trim();
+  var ltv=(document.getElementById('thLtv').value||'').trim();
+  var req=document.getElementById('thReq').value.trim();
+  var msg=document.getElementById('thMsg');
+  if(name.length<2||contact.length<3||location.length<2||amount.length<1||ltv.length<1){msg.textContent='Please complete name, contact, property location, requested amount, and requested LTV.';return;}
+  var localId='L'+Date.now().toString(36).toUpperCase();
+  localThreads.unshift({id:localId,requester:name,contact:contact,propertyLocation:location,requestedAmount:amount,requestedLtv:ltv,requirement:req,status:'OPEN',createdAt:new Date().toISOString()});
+  saveLocalThreads();
+  loadThreads();
+  var data=new URLSearchParams({resource:'deal_threads',action:'create',requester:name,contact:contact,propertyLocation:location,requestedAmount:amount,requestedLtv:ltv,requirement:req,createdAt:new Date().toISOString()});
+  fetch(notesURL,{method:'POST',mode:'no-cors',keepalive:true,headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:data.toString()})
+    .then(function(){
+      msg.textContent='Thread submitted (local copy saved).';
+      document.getElementById('thReq').value='';
+      document.getElementById('thLocation').value='';
+      document.getElementById('thAmount').value='';
+      document.getElementById('thLtv').value='';
+      loadThreads();
+    }).catch(function(){msg.textContent='Unable to submit thread right now.';});
+}
+function postThreadReply(threadId,card){
+  var name=(card.querySelector('.rep-name').value||'').trim();
+  var contact=(card.querySelector('.rep-contact').value||'').trim();
+  var text=(card.querySelector('.rep-msg').value||'').trim();
+  if(name.length<2||contact.length<3||text.length<2){
+    alert('Please enter investor name, contact, and reply.');
+    return;
+  }
+  investorProfile={name:name,contact:contact};
+  saveInvestorProfile();
+  localThreadMsgs.push({threadId:threadId,fromName:name,fromContact:contact,message:text,createdAt:new Date().toISOString()});
+  saveLocalThreads();
+  loadThreads();
+  var data=new URLSearchParams({resource:'deal_threads',action:'reply',threadId:threadId,fromName:name,fromContact:contact,message:text,createdAt:new Date().toISOString()});
+  fetch(notesURL,{method:'POST',mode:'no-cors',keepalive:true,headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:data.toString()})
+    .then(function(){ loadThreads(); })
+    .catch(function(){});
+}
+function currentData(){return mergedData(tab);}
+function updateAdminList(){
+  var sel=document.getElementById('adminMember');
+  var data=currentData();
+  sel.innerHTML=data.map(function(m){return '<option value="'+esc(m.n)+'">'+esc(m.n)+'</option>';}).join('');
+  onAdminPick();
+}
+function onAdminPick(){
+  var name=document.getElementById('adminMember').value||'';
+  document.getElementById('adminNote').value=memberNotes[noteId(name,tab)]||'';
+  document.getElementById('adminMsg').textContent='';
+}
 
 function draw(){
-  var data=tab==='R'?R:C;
+  var data=currentData();
   var res=data.filter(function(l){
     var mq=!q||l.n.toLowerCase().indexOf(q)>-1||l.p.indexOf(q)>-1||l.w.toLowerCase().indexOf(q)>-1;
     var mp=provs.length===0||provs.every(function(p){return l.v.indexOf(p)>-1});
@@ -547,8 +1029,11 @@ function draw(){
       var pts=l.v.map(function(p){return'<span class="pt '+p+'">'+p+'</span>';}).join('');
       var ph=l.p?'<div class="mr">'+PH+'<span class="ph">'+l.p+'</span></div>':'';
       var wb=l.w?'<div class="mr">'+WB+'<a href="https://'+l.w+'" target="_blank">'+l.w+'</a></div>':'';
+      var note=memberNotes[noteId(l.n,tab)]||'';
+      var noteHtml=note?'<div class="cnote"><strong>Notes:</strong> '+esc(note)+'</div>':'';
       html+='<div class="c"><div class="ct2"><div class="cn">'+l.n+'</div><div class="pts">'+pts+'</div></div>';
       if(ph||wb)html+='<div class="cm">'+ph+wb+'</div>';
+      html+=noteHtml;
       html+='</div>';
     });
     html+='</div></div>';
@@ -565,6 +1050,7 @@ document.querySelectorAll('.t-btn').forEach(function(btn){
     tab=btn.getAttribute('data-tab');
     document.getElementById('q').value='';
     q='';
+    if(document.getElementById('adminModal').classList.contains('show')) updateAdminList();
     draw();
   });
 });
@@ -595,6 +1081,105 @@ document.getElementById('clr').addEventListener('click',function(){
   draw();
 });
 
+document.getElementById('adminOpen').addEventListener('click',function(){
+  updateAdminList();
+  setAuthUI();
+  document.getElementById('adminModal').classList.add('show');
+});
+document.getElementById('adminClose').addEventListener('click',function(){
+  document.getElementById('adminModal').classList.remove('show');
+});
+document.getElementById('threadOpen').addEventListener('click',function(){
+  document.getElementById('threadModal').classList.add('show');
+  prefillThreadContact();
+  loadThreads();
+});
+document.getElementById('threadClose').addEventListener('click',function(){
+  document.getElementById('threadModal').classList.remove('show');
+});
+document.getElementById('thCreate').addEventListener('click',postThreadCreate);
+document.getElementById('threadsList').addEventListener('click',function(e){
+  if(e.target.classList.contains('th-toggle')){
+    var box=e.target.closest('.th');
+    if(!box) return;
+    box.classList.toggle('open');
+    e.target.textContent=box.classList.contains('open')?'Hide Thread':'Open Thread';
+    return;
+  }
+  if(!e.target.classList.contains('rep-send')) return;
+  var card=e.target.closest('.th');
+  if(!card) return;
+  postThreadReply(card.getAttribute('data-thread'),card);
+});
+document.getElementById('adminMember').addEventListener('change',onAdminPick);
+document.getElementById('adminUnlock').addEventListener('click',function(){
+  var entered=(document.getElementById('adminPassword').value||'').trim();
+  if(entered===ADMIN_PASSWORD){
+    adminUnlocked=true;
+    try{localStorage.setItem(adminSessionKey,'1');}catch(e){}
+    document.getElementById('adminPassword').value='';
+    setAuthUI();
+    document.getElementById('adminMsg').textContent='Admin access granted.';
+  }else{
+    adminUnlocked=false;
+    try{localStorage.removeItem(adminSessionKey);}catch(e){}
+    setAuthUI();
+    document.getElementById('adminMsg').textContent='Incorrect password.';
+  }
+});
+document.getElementById('adminSave').addEventListener('click',function(){
+  if(!adminUnlocked){document.getElementById('adminMsg').textContent='Password required to edit notes.';return;}
+  var name=document.getElementById('adminMember').value||'';
+  if(!name)return;
+  var note=document.getElementById('adminNote').value.trim();
+  memberNotes[noteId(name,tab)]=note;
+  saveNotes();
+  queueNoteOp('upsert',name,note);
+  flushPendingOps();
+  loadNotesRemote();
+  document.getElementById('adminMsg').textContent='Note saved for '+name+'.';
+  draw();
+});
+document.getElementById('adminDelete').addEventListener('click',function(){
+  if(!adminUnlocked){document.getElementById('adminMsg').textContent='Password required to edit notes.';return;}
+  var name=document.getElementById('adminMember').value||'';
+  if(!name)return;
+  delete memberNotes[noteId(name,tab)];
+  saveNotes();
+  queueNoteOp('delete',name,'');
+  flushPendingOps();
+  loadNotesRemote();
+  document.getElementById('adminNote').value='';
+  document.getElementById('adminMsg').textContent='Note deleted for '+name+'.';
+  draw();
+});
+document.getElementById('addLenderBtn').addEventListener('click',function(){
+  if(!adminUnlocked){document.getElementById('adminMsg').textContent='Password required to add lender.';return;}
+  var t=(document.getElementById('newLenderTab').value||'R').trim();
+  var n=(document.getElementById('newLenderName').value||'').trim();
+  var p=(document.getElementById('newLenderPhone').value||'').trim();
+  var w=(document.getElementById('newLenderWeb').value||'').trim();
+  var prov=(document.getElementById('newLenderProv').value||'').split(',').map(function(x){return x.trim().toUpperCase();}).filter(Boolean);
+  if(n.length<2 || !prov.length){document.getElementById('adminMsg').textContent='Please add lender name and at least one province.';return;}
+  extraLenders.push({t:t,n:n,p:p,w:w,v:prov,createdAt:new Date().toISOString()});
+  saveExtraLenders();
+  fetch(notesURL,{
+    method:'POST',
+    mode:'no-cors',
+    keepalive:true,
+    headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},
+    body:new URLSearchParams({resource:'extra_lenders',action:'create',tab:t,name:n,phone:p,website:w,provinces:prov.join(','),createdAt:new Date().toISOString()}).toString()
+  }).then(function(){ loadExtraLendersRemote(); }).catch(function(){});
+  refreshCounts();
+  draw();
+  if(document.getElementById('adminModal').classList.contains('show')) updateAdminList();
+  document.getElementById('newLenderName').value='';
+  document.getElementById('newLenderPhone').value='';
+  document.getElementById('newLenderWeb').value='';
+  document.getElementById('newLenderProv').value='';
+  document.getElementById('adminMsg').textContent='New lender added.';
+});
+
 function showGate(){
   document.getElementById('gate').classList.remove('hide');
 }
@@ -604,8 +1189,46 @@ function unlockList(){
   draw();
 }
 
+function hasActiveGateSession(){
+  try{
+    var session=JSON.parse(localStorage.getItem(gateSessionKey)||'{}');
+    if(!session || !session.expiresAt) return false;
+    return new Date(session.expiresAt).getTime()>Date.now();
+  }catch(e){return false;}
+}
+
+function persistGateSession(lead){
+  var expiresAt=new Date(Date.now()+gateHours*60*60*1000).toISOString();
+  try{
+    localStorage.setItem(gateSessionKey,JSON.stringify({
+      name:lead.name||'',
+      email:lead.email||'',
+      phone:lead.phone||'',
+      grantedAt:lead.grantedAt||new Date().toISOString(),
+      expiresAt:expiresAt
+    }));
+  }catch(e){}
+}
+
 (function initGate(){
+  if(hasActiveGateSession()){
+    unlockList();
+    return;
+  }
   showGate();
+  setSyncStatus('checking…');
+  verifyNotesEndpoint().then(function(){
+    flushPendingOps();
+    loadNotesRemote();
+    loadExtraLendersRemote();
+  });
+  window.setInterval(function(){
+    verifyNotesEndpoint().then(function(){
+      flushPendingOps();
+      loadNotesRemote();
+      loadExtraLendersRemote();
+    });
+  },20000);
   document.getElementById('gateForm').addEventListener('submit',function(e){
     e.preventDefault();
     var name=document.getElementById('gName').value.trim();
@@ -630,6 +1253,7 @@ function unlockList(){
     };
 
     saveLeadLocal(lead);
+    persistGateSession(lead);
     saveLeadRemote(lead).finally(function(){
       unlockList();
     });
