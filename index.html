@@ -83,6 +83,7 @@ input::placeholder{color:#bbb}
 .admin-btn{font-size:13px;color:#2563eb;background:#eef4ff;border:1px solid #cfe0ff;padding:7px 14px}
 .admin-btn:hover{background:#dceaff}
 .cnote{margin-top:2px;padding:6px 8px;background:#f8fafc;border:1px dashed #d6dee9;border-radius:6px;font-size:12px;color:#334155;line-height:1.35}
+.cnote.locked{filter:blur(3px);user-select:none;pointer-events:none}
 .cnote details{margin-top:4px}
 .cnote summary{cursor:pointer;color:#1d4ed8;font-weight:700;outline:none}
 .cnote .note-full{margin-top:6px;white-space:pre-wrap}
@@ -894,6 +895,7 @@ function setAuthUI(){
   document.getElementById('adminSave').disabled=!canEdit;
   document.getElementById('adminDelete').disabled=!canEdit;
   state.textContent=canEdit?'Unlocked: edit enabled.':'Locked (view only).';
+  draw();
 }
 function fmtDate(iso){
   if(!iso) return '';
@@ -1089,7 +1091,14 @@ function draw(){
       var wb=l.w?'<div class="mr">'+WB+'<a href="https://'+l.w+'" target="_blank">'+l.w+'</a></div>':'';
       var note=memberNotes[noteId(l.n,tab)]||'';
       var notePreview=previewNote(note,140);
-      var noteHtml=note?'<div class="cnote"><strong>Notes:</strong> '+esc(notePreview)+' <details><summary>View full details</summary><div class="note-full">'+esc(note)+'</div></details></div>':'';
+      var noteHtml='';
+      if(note){
+        if(adminUnlocked){
+          noteHtml='<div class="cnote"><strong>Notes:</strong> '+esc(notePreview)+' <details><summary>View full details</summary><div class="note-full">'+esc(note)+'</div></details></div>';
+        }else{
+          noteHtml='<div class="cnote locked"><strong>Notes:</strong> '+esc(notePreview)+' <details><summary>View full details</summary><div class="note-full">'+esc(note)+'</div></details></div><div class="mini" style="margin-top:4px;color:#64748b">Admin login required to view notes.</div>';
+        }
+      }
       html+='<div class="c"><div class="ct2"><div class="cn">'+l.n+'</div><div class="pts">'+pts+'</div></div>';
       if(ph||wb)html+='<div class="cm">'+ph+wb+'</div>';
       html+=noteHtml;
