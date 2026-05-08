@@ -1008,20 +1008,16 @@ function postThreadCreate(){
   var req=document.getElementById('thReq').value.trim();
   var msg=document.getElementById('thMsg');
   if(name.length<2||contact.length<3||location.length<2||amount.length<1||ltv.length<1){msg.textContent='Please complete name, contact, property location, requested amount, and requested LTV.';return;}
-  var localId='L'+Date.now().toString(36).toUpperCase();
-  localThreads.unshift({id:localId,requester:name,contact:contact,propertyLocation:location,requestedAmount:amount,requestedLtv:ltv,requirement:req,status:'OPEN',createdAt:new Date().toISOString()});
-  saveLocalThreads();
-  loadThreads();
   var data=new URLSearchParams({resource:'deal_threads',action:'create',requester:name,contact:contact,propertyLocation:location,requestedAmount:amount,requestedLtv:ltv,requirement:req,createdAt:new Date().toISOString()});
   fetch(notesURL,{method:'POST',mode:'no-cors',keepalive:true,headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:data.toString()})
     .then(function(){
-      msg.textContent='Thread submitted (local copy saved).';
+      msg.textContent='Thread submitted online and visible to all.';
       document.getElementById('thReq').value='';
       document.getElementById('thLocation').value='';
       document.getElementById('thAmount').value='';
       document.getElementById('thLtv').value='';
       loadThreads();
-    }).catch(function(){msg.textContent='Unable to submit thread right now.';});
+    }).catch(function(){msg.textContent='Unable to submit thread online right now. Please try again.';});
 }
 function postThreadReply(threadId,card){
   var name=(card.querySelector('.rep-name').value||'').trim();
