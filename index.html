@@ -191,6 +191,10 @@ input::placeholder{color:#bbb}
         <label for="gPhone" class="gl">Phone</label>
         <input id="gPhone" name="phone" class="gi" type="tel" autocomplete="tel" required>
       </div>
+      <div>
+        <label for="gAdminPass" class="gl">Admin Password</label>
+        <input id="gAdminPass" name="admin_password" class="gi" type="password" autocomplete="current-password" required>
+      </div>
       <div class="g-actions">
         <div class="g-note">Please enter details to continue. Contact details are saved for follow-up.</div>
         <button class="g-btn" type="submit">Access List</button>
@@ -230,7 +234,7 @@ input::placeholder{color:#bbb}
 <div class="sb">
   <div class="sw">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-    <input id="q" type="text" placeholder="Search lender…" autocomplete="off">
+    <input id="q" type="text" placeholder="Search lender…" autocomplete="off" aria-label="Search lenders">
   </div>
   <span class="ct"><em id="n">0</em></span>
   <button class="cl" id="clr">Clear</button>
@@ -606,30 +610,8 @@ R.sort(function(a,b){return a.n.localeCompare(b.n)});
 C.sort(function(a,b){return a.n.localeCompare(b.n)});
 
 var tab='R', provs=[], q='';
-var noteKey='vfcl_member_notes';
-var adminSessionKey='vfcl_admin_unlocked';
-var pendingOpsKey='vfcl_note_pending_ops';
-var pendingLenderOpsKey='vfcl_extra_lender_pending_ops';
-var localThreadKey='vfcl_deal_threads_local';
-var localThreadMsgKey='vfcl_deal_thread_messages_local';
-var investorProfileKey='vfcl_investor_profile';
-var ADMIN_PASSWORD='VFC2026!';
-var extraLendersKey='vfcl_extra_lenders';
-var extraLenders=(function(){try{return JSON.parse(localStorage.getItem(extraLendersKey)||'[]')||[];}catch(e){return [];}})();
-var remoteExtraLenders=[];
-// Paste your dedicated Apps Script "member notes" Web App URL here.
-var notesURL='https://script.google.com/macros/s/AKfycbwRYQ_4KUAdqPIpMf6zqPcblYgmAbBouR6yPZuWXAuhtGQYwsa-i4KslFfXcffaF6Nt/exec';
-var memberNotes=(function(){
-  try{return JSON.parse(localStorage.getItem(noteKey)||'{}')||{};}catch(e){return {};}
-})();
-var adminUnlocked=(function(){try{return localStorage.getItem(adminSessionKey)==='1';}catch(e){return false;}})();
-var pendingOps=(function(){try{return JSON.parse(localStorage.getItem(pendingOpsKey)||'[]')||[];}catch(e){return [];}})();
-var pendingLenderOps=(function(){try{return JSON.parse(localStorage.getItem(pendingLenderOpsKey)||'[]')||[];}catch(e){return [];}})();
-var localThreads=(function(){try{return JSON.parse(localStorage.getItem(localThreadKey)||'[]')||[];}catch(e){return [];}})();
-var localThreadMsgs=(function(){try{return JSON.parse(localStorage.getItem(localThreadMsgKey)||'[]')||[];}catch(e){return [];}})();
-var investorProfile=(function(){try{return JSON.parse(localStorage.getItem(investorProfileKey)||'{}')||{};}catch(e){return {};}})();
-var gateSessionKey='vfcl_gate_session';
-var gateHours=8; // keep access for 8 hours before requiring a new login
+var ACCESS_KEY='vfcl_access_granted_until';
+var ACCESS_TTL_DAYS=30;
 
 // Existing Google Apps Script endpoint used for lead capture
 var scriptURL='https://script.google.com/macros/s/AKfycbxqvRdFTUynTIhWn0h2aU5W1jouIs369XrmkZGGKBPkeursr4_UBIrlwtmdzsdBjStO/exec';
@@ -638,7 +620,13 @@ function saveLeadLocal(lead){
   try{
     var key='vfcl_leads';
     var leads=JSON.parse(localStorage.getItem(key)||'[]');
-    leads.push(lead);
+    leads.push({
+      name:lead.name||'',
+      email:lead.email||'',
+      phone:lead.phone||'',
+      grantedAt:lead.grantedAt||'',
+      source:lead.source||''
+    });
     localStorage.setItem(key,JSON.stringify(leads));
   }catch(e){}
 }
@@ -651,6 +639,7 @@ function saveLeadRemote(lead){
     name:lead.name||'',
     phone:lead.phone||'',
     email:lead.email||'',
+    adminPassword:lead.adminPassword||'',
     tier:'LOGIN',
     score:lead.grantedAt||''
   });
@@ -665,6 +654,27 @@ function saveLeadRemote(lead){
   }).catch(function(){
     return false;
   });
+}
+
+function markAccessGranted(){
+  try{
+    var until=Date.now()+(ACCESS_TTL_DAYS*24*60*60*1000);
+    localStorage.setItem(ACCESS_KEY,String(until));
+  }catch(e){}
+}
+
+function hasValidAccess(){
+  try{
+    var until=Number(localStorage.getItem(ACCESS_KEY)||0);
+    return Number.isFinite(until)&&until>Date.now();
+  }catch(e){
+    return false;
+  }
+}
+
+function normalizeWebsite(url){
+  if(!url) return '';
+  return /^https?:\/\//i.test(url)?url:('https://'+url);
 }
 
 
@@ -1088,17 +1098,7 @@ function draw(){
     g[letter].forEach(function(l){
       var pts=l.v.map(function(p){return'<span class="pt '+p+'">'+p+'</span>';}).join('');
       var ph=l.p?'<div class="mr">'+PH+'<span class="ph">'+l.p+'</span></div>':'';
-      var wb=l.w?'<div class="mr">'+WB+'<a href="https://'+l.w+'" target="_blank">'+l.w+'</a></div>':'';
-      var note=memberNotes[noteId(l.n,tab)]||'';
-      var notePreview=previewNote(note,140);
-      var noteHtml='';
-      if(note){
-        if(adminUnlocked){
-          noteHtml='<div class="cnote"><strong>Notes:</strong> '+esc(notePreview)+' <details><summary>View full details</summary><div class="note-full">'+esc(note)+'</div></details></div>';
-        }else{
-          noteHtml='<div class="cnote locked"><strong>Notes:</strong> '+esc(notePreview)+' <details><summary>View full details</summary><div class="note-full">'+esc(note)+'</div></details></div><div class="mini" style="margin-top:4px;color:#64748b">Admin login required to view notes.</div>';
-        }
-      }
+      var wb=l.w?'<div class="mr">'+WB+'<a href="'+normalizeWebsite(l.w)+'" target="_blank" rel="noopener noreferrer">'+l.w+'</a></div>':'';
       html+='<div class="c"><div class="ct2"><div class="cn">'+l.n+'</div><div class="pts">'+pts+'</div></div>';
       if(ph||wb)html+='<div class="cm">'+ph+wb+'</div>';
       html+=noteHtml;
@@ -1274,22 +1274,8 @@ function persistGateSession(lead){
 }
 
 (function initGate(){
-  function syncAll(){
-    verifyNotesEndpoint().then(function(){
-      flushPendingOps();
-      flushPendingLenderOps();
-      loadNotesRemote();
-      loadExtraLendersRemote();
-    });
-  }
-  function startSyncLoop(){
-    setSyncStatus('checking…');
-    syncAll();
-    window.setInterval(syncAll,20000);
-  }
-  if(hasActiveGateSession()){
+  if(hasValidAccess()){
     unlockList();
-    startSyncLoop();
     return;
   }
   showGate();
@@ -1299,12 +1285,14 @@ function persistGateSession(lead){
     var name=document.getElementById('gName').value.trim();
     var email=document.getElementById('gEmail').value.trim();
     var phone=document.getElementById('gPhone').value.trim();
+    var adminPass=document.getElementById('gAdminPass').value;
     var digits=phone.replace(/\D/g,'');
     var err='';
 
     if(name.length<2) err='Please enter your full name.';
     else if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) err='Please enter a valid email address.';
     else if(digits.length<10) err='Please enter a valid phone number.';
+    else if(adminPass.length<1) err='Please enter admin password.';
 
     document.getElementById('gErr').textContent=err;
     if(err) return;
@@ -1313,6 +1301,7 @@ function persistGateSession(lead){
       name:name,
       email:email,
       phone:phone,
+      adminPassword:adminPass,
       grantedAt:new Date().toISOString(),
       source:'alternate-lender-list'
     };
@@ -1320,6 +1309,7 @@ function persistGateSession(lead){
     saveLeadLocal(lead);
     persistGateSession(lead);
     saveLeadRemote(lead).finally(function(){
+      markAccessGranted();
       unlockList();
     });
   });
