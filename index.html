@@ -634,6 +634,7 @@ var localThreads=(function(){try{return JSON.parse(localStorage.getItem(localThr
 var localThreadMsgs=(function(){try{return JSON.parse(localStorage.getItem(localThreadMsgKey)||'[]')||[];}catch(e){return [];}})();
 var investorProfile=(function(){try{return JSON.parse(localStorage.getItem(investorProfileKey)||'{}')||{};}catch(e){return {};}})();
 var gateSessionKey='vfcl_gate_session';
+var gateLocalAccountsKey='vfcl_gate_accounts_local';
 var gateHours=8; // keep access for 8 hours before requiring a new login
 
 // Existing Google Apps Script endpoint used for lead capture
@@ -696,6 +697,12 @@ function loginAccountRemote(email,password){
     if(!res || !res.ok || !res.account) throw new Error((res&&res.error)||'Invalid email or password.');
     return res.account;
   });
+}
+function getLocalGateAccounts(){
+  try{return JSON.parse(localStorage.getItem(gateLocalAccountsKey)||'{}')||{};}catch(e){return {};}
+}
+function saveLocalGateAccounts(accounts){
+  try{localStorage.setItem(gateLocalAccountsKey,JSON.stringify(accounts));}catch(e){}
 }
 
 
@@ -1371,7 +1378,18 @@ function persistGateSession(lead){
           unlockList();
         })
         .catch(function(){
-          document.getElementById('gErr').textContent='Could not create account in Google Sheet right now.';
+          var accounts=getLocalGateAccounts();
+          var k=email.toLowerCase();
+          if(accounts[k]){
+            document.getElementById('gErr').textContent='Account already exists. Please login.';
+            return;
+          }
+          accounts[k]={name:name,email:email,phone:phone,password:password,createdAt:new Date().toISOString()};
+          saveLocalGateAccounts(accounts);
+          saveLeadLocal(lead);
+          persistGateSession(lead);
+          document.getElementById('gErr').textContent='Apps Script unavailable. Account saved locally on this device.';
+          unlockList();
         });
     }else{
       loginAccountRemote(email,password)
@@ -1383,6 +1401,17 @@ function persistGateSession(lead){
           unlockList();
         })
         .catch(function(err){
+          var accounts=getLocalGateAccounts();
+          var acct=accounts[email.toLowerCase()];
+          if(acct && acct.password===password){
+            lead.name=(acct.name||name);
+            lead.email=(acct.email||email);
+            lead.phone=(acct.phone||'');
+            persistGateSession(lead);
+            document.getElementById('gErr').textContent='Logged in using local account (Apps Script unavailable).';
+            unlockList();
+            return;
+          }
           document.getElementById('gErr').textContent=(err&&err.message)||'Login failed.';
         });
     }

@@ -28,8 +28,8 @@ var ACCOUNT_SHEET = 'accounts';
 var ACCOUNT_HEADERS = ['email', 'name', 'phone', 'passwordHash', 'createdAt', 'updatedAt'];
 
 function doGet(e) {
+  var p = (e && e.parameter) || {};
   try {
-    var p = (e && e.parameter) || {};
     var resource = String(p.resource || '');
     if (resource === 'deal_threads') {
       var ts = getSheetBySchema_(THREAD_SHEET, THREAD_HEADERS);
@@ -68,7 +68,7 @@ function doGet(e) {
 
     return jsonWithCallback_({ ok: true, notes: notes, count: Object.keys(notes).length }, p);
   } catch (err) {
-    return json_({ ok: false, error: String(err) });
+    return jsonWithCallback_({ ok: false, error: String(err) }, p);
   }
 }
 
