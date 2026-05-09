@@ -25,7 +25,7 @@ var THREAD_MSG_HEADERS = ['threadId', 'fromName', 'fromContact', 'message', 'cre
 var EXTRA_LENDER_SHEET = 'extra_lenders';
 var EXTRA_LENDER_HEADERS = ['id', 'tab', 'name', 'phone', 'website', 'provinces', 'createdAt'];
 var ACCOUNT_SHEET = 'accounts';
-var ACCOUNT_HEADERS = ['email', 'name', 'phone', 'passwordHash', 'createdAt', 'updatedAt'];
+var ACCOUNT_HEADERS = ['email', 'name', 'phone', 'passwordHash', 'loginCount', 'lastLoginAt', 'createdAt', 'updatedAt'];
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
@@ -138,9 +138,17 @@ function handleAccountGet_(p) {
   if (String(acct.passwordHash || '') !== hashPassword_(password, email)) {
     return jsonWithCallback_({ ok: false, error: 'Invalid email or password' }, p);
   }
+  var newCount = Math.max(0, parseInt(String(acct.loginCount || '0'), 10) || 0) + 1;
+  var now = new Date().toISOString();
+  var rowIndex = findRowByEmail_(as, email);
+  if (rowIndex > 0) {
+    as.getRange(rowIndex, 5).setValue(String(newCount));
+    as.getRange(rowIndex, 6).setValue(now);
+    as.getRange(rowIndex, 8).setValue(now);
+  }
   return jsonWithCallback_({
     ok: true,
-    account: { email: acct.email, name: acct.name, phone: acct.phone }
+    account: { email: acct.email, name: acct.name, phone: acct.phone, loginCount: String(newCount), lastLoginAt: now }
   }, p);
 }
 
@@ -164,8 +172,19 @@ function handleAccountSignup_(p) {
       return json_({ ok: false, error: 'Account already exists' });
     }
   }
-  as.appendRow([email, name, phone, hashPassword_(password, email), now, now]);
+  as.appendRow([email, name, phone, hashPassword_(password, email), '0', '', now, now]);
   return json_({ ok: true, action: 'signup', email: email });
+}
+
+function findRowByEmail_(sh, email) {
+  var lastRow = sh.getLastRow();
+  if (lastRow < 2) return -1;
+  var emails = sh.getRange(2, 1, lastRow - 1, 1).getValues();
+  var target = String(email || '').trim().toLowerCase();
+  for (var i = 0; i < emails.length; i++) {
+    if (String(emails[i][0] || '').trim().toLowerCase() === target) return i + 2;
+  }
+  return -1;
 }
 
 function hashPassword_(password, email) {
