@@ -623,7 +623,7 @@ var extraLendersKey='vfcl_extra_lenders';
 var extraLenders=(function(){try{return JSON.parse(localStorage.getItem(extraLendersKey)||'[]')||[];}catch(e){return [];}})();
 var remoteExtraLenders=[];
 // Paste your dedicated Apps Script "member notes" Web App URL here.
-var notesURL='https://script.google.com/macros/s/AKfycbyO3inP2i6gqmuicYG25TFz_IHEiPI2ZZavxGU3hbDkzNEv-cPzoIxyC40kASJdGr2N/exec';
+var notesURL='https://script.google.com/macros/s/AKfycbwfbhYPRlPJ8RNxc7q6Or8dUyFBPJ8jVWjyYflE_L2sQyXcjER4S1RVVFYDJko6z8EX/exec';
 var memberNotes=(function(){
   try{return JSON.parse(localStorage.getItem(noteKey)||'{}')||{};}catch(e){return {};}
 })();
@@ -638,7 +638,7 @@ var gateLocalAccountsKey='vfcl_gate_accounts_local';
 var gateHours=8; // keep access for 8 hours before requiring a new login
 
 // Existing Google Apps Script endpoint used for lead capture
-var scriptURL='https://script.google.com/macros/s/AKfycbyO3inP2i6gqmuicYG25TFz_IHEiPI2ZZavxGU3hbDkzNEv-cPzoIxyC40kASJdGr2N/exec';
+var scriptURL='https://script.google.com/macros/s/AKfycbwfbhYPRlPJ8RNxc7q6Or8dUyFBPJ8jVWjyYflE_L2sQyXcjER4S1RVVFYDJko6z8EX/exec';
 
 function saveLeadLocal(lead){
   try{
