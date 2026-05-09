@@ -7,7 +7,24 @@
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:#fff;color:#111;font-family:'EB Garamond',Georgia,serif;font-size:16px;-webkit-font-smoothing:antialiased;min-height:100vh}
+:root{
+  --bg:#f6f8fc;
+  --surface:#ffffff;
+  --surface-soft:#f8fafc;
+  --text:#0f172a;
+  --muted:#64748b;
+  --line:#e2e8f0;
+  --primary:#2563eb;
+  --primary-strong:#1d4ed8;
+  --success:#047857;
+  --success-soft:#ecfdf5;
+  --radius-lg:16px;
+  --radius-md:10px;
+  --shadow-sm:0 2px 8px rgba(15,23,42,.05);
+  --shadow-md:0 10px 30px rgba(15,23,42,.09);
+  --shadow-lg:0 20px 55px rgba(2,6,23,.18);
+}
+body{background:radial-gradient(1200px 800px at 20% -10%,#eef4ff 0%,#f8fbff 30%,var(--bg) 60%,#f4f7fb 100%);color:var(--text);font-family:'EB Garamond',Georgia,serif;font-size:16px;-webkit-font-smoothing:antialiased;min-height:100vh}
 
 /* HEADER */
 .hd{text-align:center;padding:24px 16px 0}
@@ -18,7 +35,7 @@ body{background:#fff;color:#111;font-family:'EB Garamond',Georgia,serif;font-siz
 .pills{display:flex;justify-content:center;padding:14px 16px 0}
 .pill-wrap{display:inline-flex;align-items:center;background:#f0f0f0;border-radius:100px;padding:3px;gap:1px}
 .sep{width:1px;height:14px;background:#d0d0d0;margin:0 2px}
-button{font-family:'EB Garamond',Georgia,serif;border:none;cursor:pointer;border-radius:100px;white-space:nowrap;transition:all .15s;line-height:1}
+button{font-family:'EB Garamond',Georgia,serif;border:none;cursor:pointer;border-radius:100px;white-space:nowrap;transition:all .2s ease;line-height:1}
 .t-btn{font-size:15px;color:#555;background:none;padding:7px 20px 8px}
 .p-btn{font-size:13px;color:#555;background:none;padding:7px 0 8px;flex:1;text-align:center;letter-spacing:.3px}
 .pill-wrap.prow{display:flex;width:calc(100vw - 32px);max-width:480px}
@@ -48,8 +65,9 @@ input::placeholder{color:#bbb}
 .cl-list{}
 
 /* Card */
-.c{padding:9px 16px;border-bottom:1px solid #f0f0f0;display:flex;flex-direction:column;gap:3px}
-.c:active{background:#f8f8f8}
+.c{padding:10px 16px;border-bottom:1px solid #edf2f7;display:flex;flex-direction:column;gap:3px;transition:transform .18s ease,box-shadow .18s ease,background .18s ease}
+.c:hover{background:#fff;box-shadow:var(--shadow-sm);transform:translateY(-1px)}
+.c:active{background:#f8f8f8;transform:translateY(0)}
 .ct2{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
 .cn{font-size:15px;font-weight:500;color:#111;line-height:1.3;flex:1}
 .pts{display:flex;gap:2px;flex-wrap:wrap;justify-content:flex-end;flex-shrink:0;max-width:94px}
@@ -80,8 +98,8 @@ input::placeholder{color:#bbb}
 
 /* Notes + admin */
 .admin-wrap{display:flex;justify-content:center;padding:10px 16px 0}
-.admin-btn{font-size:13px;color:#2563eb;background:#eef4ff;border:1px solid #cfe0ff;padding:7px 14px}
-.admin-btn:hover{background:#dceaff}
+.admin-btn{font-size:13px;color:var(--primary);background:#eef4ff;border:1px solid #cfe0ff;padding:8px 14px;box-shadow:var(--shadow-sm)}
+.admin-btn:hover{background:#dceaff;transform:translateY(-1px)}
 .cnote{margin-top:2px;padding:6px 8px;background:#f8fafc;border:1px dashed #d6dee9;border-radius:6px;font-size:12px;color:#334155;line-height:1.35}
 .cnote.locked{filter:blur(3px);user-select:none;pointer-events:none}
 .cnote details{margin-top:4px}
@@ -89,7 +107,7 @@ input::placeholder{color:#bbb}
 .cnote .note-full{margin-top:6px;white-space:pre-wrap}
 .ad{position:fixed;inset:0;z-index:220;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;padding:16px}
 .ad.show{display:flex}
-.ad-card{width:min(640px,100%);background:#fff;border:1px solid #dbe3f2;border-radius:16px;padding:18px;box-shadow:0 20px 55px rgba(2,6,23,.22);display:flex;flex-direction:column;gap:10px}
+.ad-card{width:min(640px,100%);background:linear-gradient(180deg,#fff 0%,#fbfdff 100%);border:1px solid #dbe3f2;border-radius:var(--radius-lg);padding:18px;box-shadow:var(--shadow-lg);display:flex;flex-direction:column;gap:10px}
 .ad-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .ad-title{font-size:24px}
 .ad-x{font-size:13px;color:#6b7280;background:#f3f4f6;padding:6px 10px}
@@ -108,18 +126,19 @@ input::placeholder{color:#bbb}
 .ad-auth-btn{font-size:12px;padding:7px 12px;background:#111827;color:#fff}
 .ad-auth-state{font-size:12px;color:#475569}
 .ad-sync{font-size:12px;color:#64748b}
-.tb-btn{font-size:13px;color:#065f46;background:#ecfdf5;border:1px solid #a7f3d0;padding:7px 14px}
-.tb-btn:hover{background:#d1fae5}
+.tb-btn{font-size:13px;color:#065f46;background:var(--success-soft);border:1px solid #a7f3d0;padding:8px 14px;box-shadow:var(--shadow-sm)}
+.tb-btn:hover{background:#d1fae5;transform:translateY(-1px)}
 .tm{position:fixed;inset:0;z-index:230;background:rgba(2,6,23,.5);display:none;align-items:center;justify-content:center;padding:16px}
 .tm.show{display:flex}
-.tm-card{width:min(860px,100%);max-height:min(88vh,900px);overflow:auto;background:#fff;border:1px solid #dbe3f2;border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px}
+.tm-card{width:min(860px,100%);max-height:min(88vh,900px);overflow:auto;background:linear-gradient(180deg,#fff 0%,#fbfdff 100%);border:1px solid #dbe3f2;border-radius:var(--radius-lg);padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--shadow-lg)}
 .tm-row{display:grid;gap:8px}
 .tm-grid{display:grid;gap:8px;grid-template-columns:1fr 1fr}
 .tm-input,.tm-area{width:100%;border:1px solid #d5deec;border-radius:10px;padding:9px 10px;font-family:'JetBrains Mono',monospace;font-size:12px}
 .tm-area{min-height:84px;resize:vertical}
-.tm-submit{background:#047857;color:#fff;padding:9px 14px;font-size:13px}
+.tm-submit{background:var(--success);color:#fff;padding:9px 14px;font-size:13px;box-shadow:var(--shadow-sm)}
+.tm-submit:hover{transform:translateY(-1px);filter:brightness(1.03)}
 .th-wrap{display:grid;gap:10px}
-.th{border:1px solid #e5e7eb;border-radius:12px;padding:10px;background:#fafafa}
+.th{border:1px solid var(--line);border-radius:12px;padding:10px;background:linear-gradient(180deg,#ffffff 0%,#fafcff 100%);box-shadow:var(--shadow-sm)}
 .th-h{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
 .th-title{font-size:14px;color:#111}
 .th-meta{font-size:11px;color:#6b7280}
@@ -142,9 +161,9 @@ input::placeholder{color:#bbb}
 
 
 /* ACCESS GATE */
-.gate{position:fixed;inset:0;z-index:200;background:linear-gradient(135deg,#f8fbff 0%,#eef4ff 50%,#ffffff 100%);display:flex;align-items:center;justify-content:center;padding:20px}
+.gate{position:fixed;inset:0;z-index:200;background:radial-gradient(900px 500px at 20% 0%,#e7efff 0%,#eef4ff 35%,#f8fbff 65%,#ffffff 100%);display:flex;align-items:center;justify-content:center;padding:20px}
 .gate.hide{display:none}
-.g-card{width:min(560px,100%);background:#fff;border:1px solid #e6ebf5;border-radius:18px;box-shadow:0 18px 55px rgba(17,24,39,.08);padding:26px 22px;display:flex;flex-direction:column;gap:14px}
+.g-card{width:min(560px,100%);background:linear-gradient(180deg,#ffffff 0%,#fbfdff 100%);border:1px solid #e6ebf5;border-radius:18px;box-shadow:var(--shadow-md);padding:26px 22px;display:flex;flex-direction:column;gap:14px}
 .g-k{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.45px;color:#6b7280;text-transform:uppercase}
 .g-title{font-size:30px;line-height:1.08;letter-spacing:-.3px}
 .g-sub{font-size:15px;color:#4b5563}
@@ -154,8 +173,8 @@ input::placeholder{color:#bbb}
 .gi:focus{border-color:#3b82f6;background:#fff;box-shadow:0 0 0 3px rgba(59,130,246,.14)}
 .g-actions{display:flex;align-items:center;gap:12px;justify-content:space-between;margin-top:6px}
 .g-note{font-size:12px;color:#6b7280}
-.g-btn{background:#3b82f6;color:#fff;border:none;border-radius:999px;padding:10px 16px;font-size:15px}
-.g-btn:hover{background:#2563eb}
+.g-btn{background:linear-gradient(180deg,#3b82f6 0%,var(--primary) 100%);color:#fff;border:none;border-radius:999px;padding:10px 16px;font-size:15px;box-shadow:0 8px 20px rgba(37,99,235,.28)}
+.g-btn:hover{background:linear-gradient(180deg,#4b8df8 0%,var(--primary-strong) 100%);transform:translateY(-1px)}
 .g-err{font-size:12px;color:#b91c1c;min-height:16px}
 
 /* Tablet+ */
@@ -179,7 +198,7 @@ input::placeholder{color:#bbb}
     <div class="g-title">Alternate Lender Directory</div>
     <div class="g-sub">Please provide your contact details to access the list.</div>
     <form id="gateForm" class="gf">
-      <div>
+      <div id="gNameWrap">
         <label for="gName" class="gl">Full Name</label>
         <input id="gName" name="name" class="gi" type="text" autocomplete="name" required>
       </div>
@@ -191,10 +210,15 @@ input::placeholder{color:#bbb}
         <label for="gPhone" class="gl">Phone</label>
         <input id="gPhone" name="phone" class="gi" type="tel" autocomplete="tel" required>
       </div>
+      <div>
+        <label for="gPassword" class="gl">Password</label>
+        <input id="gPassword" name="password" class="gi" type="password" autocomplete="current-password" required>
+      </div>
       <div class="g-actions">
         <div class="g-note">Please enter details to continue. Contact details are saved for follow-up.</div>
-        <button class="g-btn" type="submit">Access List</button>
+      <button class="g-btn" type="submit" id="gateSubmit">Login</button>
       </div>
+      <button class="cl" id="gateModeToggle" type="button">Need an account? Create one</button>
       <div class="g-err" id="gErr"></div>
     </form>
   </div>
@@ -618,7 +642,7 @@ var extraLendersKey='vfcl_extra_lenders';
 var extraLenders=(function(){try{return JSON.parse(localStorage.getItem(extraLendersKey)||'[]')||[];}catch(e){return [];}})();
 var remoteExtraLenders=[];
 // Paste your dedicated Apps Script "member notes" Web App URL here.
-var notesURL='https://script.google.com/macros/s/AKfycbwRYQ_4KUAdqPIpMf6zqPcblYgmAbBouR6yPZuWXAuhtGQYwsa-i4KslFfXcffaF6Nt/exec';
+var notesURL='https://script.google.com/macros/s/AKfycbwfbhYPRlPJ8RNxc7q6Or8dUyFBPJ8jVWjyYflE_L2sQyXcjER4S1RVVFYDJko6z8EX/exec';
 var memberNotes=(function(){
   try{return JSON.parse(localStorage.getItem(noteKey)||'{}')||{};}catch(e){return {};}
 })();
@@ -629,10 +653,11 @@ var localThreads=(function(){try{return JSON.parse(localStorage.getItem(localThr
 var localThreadMsgs=(function(){try{return JSON.parse(localStorage.getItem(localThreadMsgKey)||'[]')||[];}catch(e){return [];}})();
 var investorProfile=(function(){try{return JSON.parse(localStorage.getItem(investorProfileKey)||'{}')||{};}catch(e){return {};}})();
 var gateSessionKey='vfcl_gate_session';
+var gateLocalAccountsKey='vfcl_gate_accounts_local';
 var gateHours=8; // keep access for 8 hours before requiring a new login
 
 // Existing Google Apps Script endpoint used for lead capture
-var scriptURL='https://script.google.com/macros/s/AKfycbxqvRdFTUynTIhWn0h2aU5W1jouIs369XrmkZGGKBPkeursr4_UBIrlwtmdzsdBjStO/exec';
+var scriptURL='https://script.google.com/macros/s/AKfycbwfbhYPRlPJ8RNxc7q6Or8dUyFBPJ8jVWjyYflE_L2sQyXcjER4S1RVVFYDJko6z8EX/exec';
 
 function saveLeadLocal(lead){
   try{
@@ -665,6 +690,38 @@ function saveLeadRemote(lead){
   }).catch(function(){
     return false;
   });
+}
+
+function createAccountRemote(account){
+  if(!scriptURL) return Promise.reject(new Error('No signup endpoint configured.'));
+  var data=new URLSearchParams({
+    action:'account_signup',
+    name:account.name||'',
+    phone:account.phone||'',
+    email:account.email||'',
+    password:account.password||'',
+    createdAt:account.createdAt||new Date().toISOString()
+  });
+  return fetch(scriptURL,{
+    method:'POST',
+    mode:'no-cors',
+    keepalive:true,
+    body:data
+  }).then(function(){ return true; });
+}
+
+function loginAccountRemote(email,password){
+  if(!notesURL) return Promise.reject(new Error('No login endpoint configured.'));
+  return jsonpFetch({resource:'accounts',action:'login',email:email,password:password}).then(function(res){
+    if(!res || !res.ok || !res.account) throw new Error((res&&res.error)||'Invalid email or password.');
+    return res.account;
+  });
+}
+function getLocalGateAccounts(){
+  try{return JSON.parse(localStorage.getItem(gateLocalAccountsKey)||'{}')||{};}catch(e){return {};}
+}
+function saveLocalGateAccounts(accounts){
+  try{localStorage.setItem(gateLocalAccountsKey,JSON.stringify(accounts));}catch(e){}
 }
 
 
@@ -910,13 +967,23 @@ function getLatestLead(){
     return leads[leads.length-1];
   }catch(e){return null;}
 }
+
+function getGateSessionLead(){
+  try{
+    var session=JSON.parse(localStorage.getItem(gateSessionKey)||'{}');
+    if(!session || !session.expiresAt) return null;
+    if(new Date(session.expiresAt).getTime()<=Date.now()) return null;
+    return session;
+  }catch(e){return null;}
+}
+
 function prefillThreadContact(){
-  var lead=getLatestLead();
+  var lead=getGateSessionLead() || getLatestLead();
   if(!lead) return;
   var n=document.getElementById('thName');
   var c=document.getElementById('thContact');
   if(n && !n.value.trim()) n.value=(lead.name||'').trim();
-  if(c && !c.value.trim()) c.value=(lead.email||lead.phone||'').trim();
+  if(c && !c.value.trim()) c.value=(lead.phone||lead.email||'').trim();
 }
 function loadThreads(){
   var wrap=document.getElementById('threadsList');
@@ -999,29 +1066,25 @@ function loadThreads(){
     });
 }
 function postThreadCreate(){
-  var lead=getLatestLead();
+  var lead=getGateSessionLead() || getLatestLead();
   var name=(document.getElementById('thName').value||'').trim() || (lead&&lead.name)||'';
-  var contact=(document.getElementById('thContact').value||'').trim() || (lead&&(lead.email||lead.phone))||'';
+  var contact=(document.getElementById('thContact').value||'').trim() || (lead&&(lead.phone||lead.email))||'';
   var location=(document.getElementById('thLocation').value||'').trim();
   var amount=(document.getElementById('thAmount').value||'').trim();
   var ltv=(document.getElementById('thLtv').value||'').trim();
   var req=document.getElementById('thReq').value.trim();
   var msg=document.getElementById('thMsg');
   if(name.length<2||contact.length<3||location.length<2||amount.length<1||ltv.length<1){msg.textContent='Please complete name, contact, property location, requested amount, and requested LTV.';return;}
-  var localId='L'+Date.now().toString(36).toUpperCase();
-  localThreads.unshift({id:localId,requester:name,contact:contact,propertyLocation:location,requestedAmount:amount,requestedLtv:ltv,requirement:req,status:'OPEN',createdAt:new Date().toISOString()});
-  saveLocalThreads();
-  loadThreads();
   var data=new URLSearchParams({resource:'deal_threads',action:'create',requester:name,contact:contact,propertyLocation:location,requestedAmount:amount,requestedLtv:ltv,requirement:req,createdAt:new Date().toISOString()});
   fetch(notesURL,{method:'POST',mode:'no-cors',keepalive:true,headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:data.toString()})
     .then(function(){
-      msg.textContent='Thread submitted (local copy saved).';
+      msg.textContent='Thread submitted online and visible to all.';
       document.getElementById('thReq').value='';
       document.getElementById('thLocation').value='';
       document.getElementById('thAmount').value='';
       document.getElementById('thLtv').value='';
       loadThreads();
-    }).catch(function(){msg.textContent='Unable to submit thread right now.';});
+    }).catch(function(){msg.textContent='Unable to submit thread online right now. Please try again.';});
 }
 function postThreadReply(threadId,card){
   var name=(card.querySelector('.rep-name').value||'').trim();
@@ -1274,6 +1337,32 @@ function persistGateSession(lead){
 }
 
 (function initGate(){
+  var gateMode='login';
+  function setGateMode(mode){
+    gateMode=mode==='login'?'login':'signup';
+    var submit=document.getElementById('gateSubmit');
+    var toggle=document.getElementById('gateModeToggle');
+    var nameWrap=document.getElementById('gNameWrap');
+    var nameInput=document.getElementById('gName');
+    var phoneWrap=document.getElementById('gPhone').parentElement;
+    var phoneInput=document.getElementById('gPhone');
+    if(gateMode==='login'){
+      submit.textContent='Login';
+      toggle.textContent='Need an account? Create one';
+      nameWrap.style.display='none';
+      nameInput.required=false;
+      phoneWrap.style.display='none';
+      phoneInput.required=false;
+    }else{
+      submit.textContent='Create Account';
+      toggle.textContent='Already have an account? Login';
+      nameWrap.style.display='';
+      nameInput.required=true;
+      phoneWrap.style.display='';
+      phoneInput.required=true;
+    }
+    document.getElementById('gErr').textContent='';
+  }
   function syncAll(){
     verifyNotesEndpoint().then(function(){
       flushPendingOps();
@@ -1293,35 +1382,81 @@ function persistGateSession(lead){
     return;
   }
   showGate();
+  setGateMode('login');
   startSyncLoop();
+  document.getElementById('gateModeToggle').addEventListener('click',function(){
+    setGateMode(gateMode==='signup'?'login':'signup');
+  });
   document.getElementById('gateForm').addEventListener('submit',function(e){
     e.preventDefault();
     var name=document.getElementById('gName').value.trim();
     var email=document.getElementById('gEmail').value.trim();
     var phone=document.getElementById('gPhone').value.trim();
+    var password=document.getElementById('gPassword').value;
     var digits=phone.replace(/\D/g,'');
     var err='';
 
-    if(name.length<2) err='Please enter your full name.';
-    else if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) err='Please enter a valid email address.';
-    else if(digits.length<10) err='Please enter a valid phone number.';
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) err='Please enter a valid email address.';
+    else if(password.length<6) err='Password must be at least 6 characters.';
+    else if(gateMode==='signup' && name.length<2) err='Please enter your full name.';
+    else if(gateMode==='signup' && digits.length<10) err='Please enter a valid phone number.';
 
     document.getElementById('gErr').textContent=err;
     if(err) return;
-
-    var lead={
-      name:name,
-      email:email,
-      phone:phone,
-      grantedAt:new Date().toISOString(),
-      source:'alternate-lender-list'
-    };
-
-    saveLeadLocal(lead);
-    persistGateSession(lead);
-    saveLeadRemote(lead).finally(function(){
-      unlockList();
-    });
+    var lead={name:name,email:email,phone:phone,grantedAt:new Date().toISOString(),source:'alternate-lender-list'};
+    if(gateMode==='signup'){
+      createAccountRemote({name:name,email:email,phone:phone,password:password,createdAt:new Date().toISOString()})
+        .then(function(){
+          saveLeadLocal(lead);
+          saveLeadRemote(lead);
+          persistGateSession(lead);
+          unlockList();
+        })
+        .catch(function(){
+          var accounts=getLocalGateAccounts();
+          var k=email.toLowerCase();
+          if(accounts[k]){
+            document.getElementById('gErr').textContent='Account already exists. Please login.';
+            return;
+          }
+          accounts[k]={name:name,email:email,phone:phone,password:password,createdAt:new Date().toISOString()};
+          saveLocalGateAccounts(accounts);
+          saveLeadLocal(lead);
+          persistGateSession(lead);
+          document.getElementById('gErr').textContent='Apps Script unavailable. Account saved locally on this device.';
+          unlockList();
+        });
+	    }else{
+	      loginAccountRemote(email,password)
+        .then(function(account){
+          lead.name=(account.name||name);
+          lead.email=(account.email||email);
+          lead.phone=(account.phone||'');
+          persistGateSession(lead);
+          unlockList();
+        })
+	        .catch(function(err){
+	          var errMsg=(err&&err.message)||'Login failed.';
+	          if(/account does not exist/i.test(errMsg)){
+	            setGateMode('signup');
+	            document.getElementById('gName').focus();
+	            document.getElementById('gErr').textContent='No account found for this email. Please create an account first.';
+	            return;
+	          }
+	          var accounts=getLocalGateAccounts();
+	          var acct=accounts[email.toLowerCase()];
+          if(acct && acct.password===password){
+            lead.name=(acct.name||name);
+            lead.email=(acct.email||email);
+            lead.phone=(acct.phone||'');
+            persistGateSession(lead);
+            document.getElementById('gErr').textContent='Logged in using local account (Apps Script unavailable).';
+            unlockList();
+            return;
+          }
+	          document.getElementById('gErr').textContent=errMsg;
+	        });
+	    }
   });
 })();
 </script>
