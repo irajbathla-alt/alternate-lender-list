@@ -179,7 +179,7 @@ input::placeholder{color:#bbb}
     <div class="g-title">Alternate Lender Directory</div>
     <div class="g-sub">Please provide your contact details to access the list.</div>
     <form id="gateForm" class="gf">
-      <div>
+      <div id="gNameWrap">
         <label for="gName" class="gl">Full Name</label>
         <input id="gName" name="name" class="gi" type="text" autocomplete="name" required>
       </div>
@@ -948,13 +948,23 @@ function getLatestLead(){
     return leads[leads.length-1];
   }catch(e){return null;}
 }
+
+function getGateSessionLead(){
+  try{
+    var session=JSON.parse(localStorage.getItem(gateSessionKey)||'{}');
+    if(!session || !session.expiresAt) return null;
+    if(new Date(session.expiresAt).getTime()<=Date.now()) return null;
+    return session;
+  }catch(e){return null;}
+}
+
 function prefillThreadContact(){
-  var lead=getLatestLead();
+  var lead=getGateSessionLead() || getLatestLead();
   if(!lead) return;
   var n=document.getElementById('thName');
   var c=document.getElementById('thContact');
   if(n && !n.value.trim()) n.value=(lead.name||'').trim();
-  if(c && !c.value.trim()) c.value=(lead.email||lead.phone||'').trim();
+  if(c && !c.value.trim()) c.value=(lead.phone||lead.email||'').trim();
 }
 function loadThreads(){
   var wrap=document.getElementById('threadsList');
@@ -1037,9 +1047,9 @@ function loadThreads(){
     });
 }
 function postThreadCreate(){
-  var lead=getLatestLead();
+  var lead=getGateSessionLead() || getLatestLead();
   var name=(document.getElementById('thName').value||'').trim() || (lead&&lead.name)||'';
-  var contact=(document.getElementById('thContact').value||'').trim() || (lead&&(lead.email||lead.phone))||'';
+  var contact=(document.getElementById('thContact').value||'').trim() || (lead&&(lead.phone||lead.email))||'';
   var location=(document.getElementById('thLocation').value||'').trim();
   var amount=(document.getElementById('thAmount').value||'').trim();
   var ltv=(document.getElementById('thLtv').value||'').trim();
@@ -1313,16 +1323,22 @@ function persistGateSession(lead){
     gateMode=mode==='login'?'login':'signup';
     var submit=document.getElementById('gateSubmit');
     var toggle=document.getElementById('gateModeToggle');
+    var nameWrap=document.getElementById('gNameWrap');
+    var nameInput=document.getElementById('gName');
     var phoneWrap=document.getElementById('gPhone').parentElement;
     var phoneInput=document.getElementById('gPhone');
     if(gateMode==='login'){
       submit.textContent='Login';
       toggle.textContent='Need an account? Create one';
+      nameWrap.style.display='none';
+      nameInput.required=false;
       phoneWrap.style.display='none';
       phoneInput.required=false;
     }else{
       submit.textContent='Create Account';
       toggle.textContent='Already have an account? Login';
+      nameWrap.style.display='';
+      nameInput.required=true;
       phoneWrap.style.display='';
       phoneInput.required=true;
     }
