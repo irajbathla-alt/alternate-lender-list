@@ -24,10 +24,12 @@ var THREAD_MSG_SHEET = 'deal_thread_messages';
 var THREAD_MSG_HEADERS = ['threadId', 'fromName', 'fromContact', 'message', 'createdAt'];
 var EXTRA_LENDER_SHEET = 'extra_lenders';
 var EXTRA_LENDER_HEADERS = ['id', 'tab', 'name', 'phone', 'website', 'provinces', 'createdAt'];
+var ACCOUNT_SHEET = 'accounts';
+var ACCOUNT_HEADERS = ['email', 'name', 'phone', 'passwordHash', 'loginCount', 'lastLoginAt', 'createdAt', 'updatedAt'];
 
 function doGet(e) {
+  var p = (e && e.parameter) || {};
   try {
-    var p = (e && e.parameter) || {};
     var resource = String(p.resource || '');
     if (resource === 'deal_threads') {
       var ts = getSheetBySchema_(THREAD_SHEET, THREAD_HEADERS);
@@ -44,6 +46,9 @@ function doGet(e) {
       var es = getSheetBySchema_(EXTRA_LENDER_SHEET, EXTRA_LENDER_HEADERS);
       var lenders = getRowsByHeaders_(es, EXTRA_LENDER_HEADERS);
       return jsonWithCallback_({ ok: true, lenders: lenders }, p);
+    }
+    if (resource === 'accounts') {
+      return handleAccountGet_(p);
     }
     if (resource !== 'member_notes') return jsonWithCallback_({ ok: false, error: 'Unknown resource' }, p);
 
@@ -63,19 +68,25 @@ function doGet(e) {
 
     return jsonWithCallback_({ ok: true, notes: notes, count: Object.keys(notes).length }, p);
   } catch (err) {
-    return json_({ ok: false, error: String(err) });
+    return jsonWithCallback_({ ok: false, error: String(err) }, p);
   }
 }
 
 function doPost(e) {
   try {
     var p = getParams_(e);
+    if (String(p.action || '').toLowerCase() === 'account_signup') {
+      return handleAccountSignup_(p);
+    }
     var resource = String(p.resource || '');
     if (resource === 'deal_threads') {
       return handleThreadPost_(p);
     }
     if (resource === 'extra_lenders') {
       return handleExtraLenderPost_(p);
+    }
+    if (resource === 'accounts') {
+      return handleAccountPost_(p);
     }
     if (resource !== 'member_notes') return json_({ ok: false, error: 'Unknown resource' });
 
@@ -106,6 +117,83 @@ function doPost(e) {
   } catch (err) {
     return json_({ ok: false, error: String(err) });
   }
+}
+
+function handleAccountGet_(p) {
+  var action = String(p.action || '').toLowerCase();
+  if (action !== 'login') return jsonWithCallback_({ ok: false, error: 'Unknown account action' }, p);
+  var email = String(p.email || '').trim().toLowerCase();
+  var password = String(p.password || '');
+  if (!email || !password) return jsonWithCallback_({ ok: false, error: 'Email/password required' }, p);
+  var as = getSheetBySchema_(ACCOUNT_SHEET, ACCOUNT_HEADERS);
+  var rows = getRowsByHeaders_(as, ACCOUNT_HEADERS);
+  var acct = null;
+  for (var i = 0; i < rows.length; i++) {
+    if (String(rows[i].email || '').trim().toLowerCase() === email) {
+      acct = rows[i];
+      break;
+    }
+  }
+  if (!acct) return jsonWithCallback_({ ok: false, error: 'Invalid email or password' }, p);
+  if (String(acct.passwordHash || '') !== hashPassword_(password, email)) {
+    return jsonWithCallback_({ ok: false, error: 'Invalid email or password' }, p);
+  }
+  var newCount = Math.max(0, parseInt(String(acct.loginCount || '0'), 10) || 0) + 1;
+  var now = new Date().toISOString();
+  var rowIndex = findRowByEmail_(as, email);
+  if (rowIndex > 0) {
+    as.getRange(rowIndex, 5).setValue(String(newCount));
+    as.getRange(rowIndex, 6).setValue(now);
+    as.getRange(rowIndex, 8).setValue(now);
+  }
+  return jsonWithCallback_({
+    ok: true,
+    account: { email: acct.email, name: acct.name, phone: acct.phone, loginCount: String(newCount), lastLoginAt: now }
+  }, p);
+}
+
+function handleAccountPost_(p) {
+  var action = String(p.action || '').toLowerCase();
+  if (action === 'signup') return handleAccountSignup_(p);
+  return json_({ ok: false, error: 'Unknown account action' });
+}
+
+function handleAccountSignup_(p) {
+  var email = String(p.email || '').trim().toLowerCase();
+  var name = String(p.name || '').trim();
+  var phone = String(p.phone || '').trim();
+  var password = String(p.password || '');
+  var now = String(p.createdAt || new Date().toISOString());
+  if (!email || !name || !phone || !password) return json_({ ok: false, error: 'Missing signup fields' });
+  var as = getSheetBySchema_(ACCOUNT_SHEET, ACCOUNT_HEADERS);
+  var rows = getRowsByHeaders_(as, ACCOUNT_HEADERS);
+  for (var i = 0; i < rows.length; i++) {
+    if (String(rows[i].email || '').trim().toLowerCase() === email) {
+      return json_({ ok: false, error: 'Account already exists' });
+    }
+  }
+  as.appendRow([email, name, phone, hashPassword_(password, email), '0', '', now, now]);
+  return json_({ ok: true, action: 'signup', email: email });
+}
+
+function findRowByEmail_(sh, email) {
+  var lastRow = sh.getLastRow();
+  if (lastRow < 2) return -1;
+  var emails = sh.getRange(2, 1, lastRow - 1, 1).getValues();
+  var target = String(email || '').trim().toLowerCase();
+  for (var i = 0; i < emails.length; i++) {
+    if (String(emails[i][0] || '').trim().toLowerCase() === target) return i + 2;
+  }
+  return -1;
+}
+
+function hashPassword_(password, email) {
+  var raw = String(email || '').toLowerCase() + '::' + String(password || '');
+  var bytes = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, raw, Utilities.Charset.UTF_8);
+  return bytes.map(function (b) {
+    var v = (b < 0) ? b + 256 : b;
+    return ('0' + v.toString(16)).slice(-2);
+  }).join('');
 }
 
 function handleExtraLenderPost_(p) {
@@ -265,4 +353,5 @@ function setupAllSheets_() {
   getSheetBySchema_(THREAD_SHEET, THREAD_HEADERS);
   getSheetBySchema_(THREAD_MSG_SHEET, THREAD_MSG_HEADERS);
   getSheetBySchema_(EXTRA_LENDER_SHEET, EXTRA_LENDER_HEADERS);
+  getSheetBySchema_(ACCOUNT_SHEET, ACCOUNT_HEADERS);
 }
