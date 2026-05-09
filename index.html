@@ -179,7 +179,7 @@ input::placeholder{color:#bbb}
     <div class="g-title">Alternate Lender Directory</div>
     <div class="g-sub">Please provide your contact details to access the list.</div>
     <form id="gateForm" class="gf">
-      <div>
+      <div id="gNameWrap">
         <label for="gName" class="gl">Full Name</label>
         <input id="gName" name="name" class="gi" type="text" autocomplete="name" required>
       </div>
@@ -191,10 +191,15 @@ input::placeholder{color:#bbb}
         <label for="gPhone" class="gl">Phone</label>
         <input id="gPhone" name="phone" class="gi" type="tel" autocomplete="tel" required>
       </div>
+      <div>
+        <label for="gPassword" class="gl">Password</label>
+        <input id="gPassword" name="password" class="gi" type="password" autocomplete="current-password" required>
+      </div>
       <div class="g-actions">
         <div class="g-note">Please enter details to continue. Contact details are saved for follow-up.</div>
-        <button class="g-btn" type="submit">Access List</button>
+      <button class="g-btn" type="submit" id="gateSubmit">Login</button>
       </div>
+      <button class="cl" id="gateModeToggle" type="button">Need an account? Create one</button>
       <div class="g-err" id="gErr"></div>
     </form>
   </div>
@@ -618,7 +623,7 @@ var extraLendersKey='vfcl_extra_lenders';
 var extraLenders=(function(){try{return JSON.parse(localStorage.getItem(extraLendersKey)||'[]')||[];}catch(e){return [];}})();
 var remoteExtraLenders=[];
 // Paste your dedicated Apps Script "member notes" Web App URL here.
-var notesURL='https://script.google.com/macros/s/AKfycbwRYQ_4KUAdqPIpMf6zqPcblYgmAbBouR6yPZuWXAuhtGQYwsa-i4KslFfXcffaF6Nt/exec';
+var notesURL='https://script.google.com/macros/s/AKfycbyO3inP2i6gqmuicYG25TFz_IHEiPI2ZZavxGU3hbDkzNEv-cPzoIxyC40kASJdGr2N/exec';
 var memberNotes=(function(){
   try{return JSON.parse(localStorage.getItem(noteKey)||'{}')||{};}catch(e){return {};}
 })();
@@ -629,10 +634,11 @@ var localThreads=(function(){try{return JSON.parse(localStorage.getItem(localThr
 var localThreadMsgs=(function(){try{return JSON.parse(localStorage.getItem(localThreadMsgKey)||'[]')||[];}catch(e){return [];}})();
 var investorProfile=(function(){try{return JSON.parse(localStorage.getItem(investorProfileKey)||'{}')||{};}catch(e){return {};}})();
 var gateSessionKey='vfcl_gate_session';
+var gateLocalAccountsKey='vfcl_gate_accounts_local';
 var gateHours=8; // keep access for 8 hours before requiring a new login
 
 // Existing Google Apps Script endpoint used for lead capture
-var scriptURL='https://script.google.com/macros/s/AKfycbxqvRdFTUynTIhWn0h2aU5W1jouIs369XrmkZGGKBPkeursr4_UBIrlwtmdzsdBjStO/exec';
+var scriptURL='https://script.google.com/macros/s/AKfycbyO3inP2i6gqmuicYG25TFz_IHEiPI2ZZavxGU3hbDkzNEv-cPzoIxyC40kASJdGr2N/exec';
 
 function saveLeadLocal(lead){
   try{
@@ -665,6 +671,38 @@ function saveLeadRemote(lead){
   }).catch(function(){
     return false;
   });
+}
+
+function createAccountRemote(account){
+  if(!scriptURL) return Promise.reject(new Error('No signup endpoint configured.'));
+  var data=new URLSearchParams({
+    action:'account_signup',
+    name:account.name||'',
+    phone:account.phone||'',
+    email:account.email||'',
+    password:account.password||'',
+    createdAt:account.createdAt||new Date().toISOString()
+  });
+  return fetch(scriptURL,{
+    method:'POST',
+    mode:'no-cors',
+    keepalive:true,
+    body:data
+  }).then(function(){ return true; });
+}
+
+function loginAccountRemote(email,password){
+  if(!notesURL) return Promise.reject(new Error('No login endpoint configured.'));
+  return jsonpFetch({resource:'accounts',action:'login',email:email,password:password}).then(function(res){
+    if(!res || !res.ok || !res.account) throw new Error((res&&res.error)||'Invalid email or password.');
+    return res.account;
+  });
+}
+function getLocalGateAccounts(){
+  try{return JSON.parse(localStorage.getItem(gateLocalAccountsKey)||'{}')||{};}catch(e){return {};}
+}
+function saveLocalGateAccounts(accounts){
+  try{localStorage.setItem(gateLocalAccountsKey,JSON.stringify(accounts));}catch(e){}
 }
 
 
@@ -910,13 +948,23 @@ function getLatestLead(){
     return leads[leads.length-1];
   }catch(e){return null;}
 }
+
+function getGateSessionLead(){
+  try{
+    var session=JSON.parse(localStorage.getItem(gateSessionKey)||'{}');
+    if(!session || !session.expiresAt) return null;
+    if(new Date(session.expiresAt).getTime()<=Date.now()) return null;
+    return session;
+  }catch(e){return null;}
+}
+
 function prefillThreadContact(){
-  var lead=getLatestLead();
+  var lead=getGateSessionLead() || getLatestLead();
   if(!lead) return;
   var n=document.getElementById('thName');
   var c=document.getElementById('thContact');
   if(n && !n.value.trim()) n.value=(lead.name||'').trim();
-  if(c && !c.value.trim()) c.value=(lead.email||lead.phone||'').trim();
+  if(c && !c.value.trim()) c.value=(lead.phone||lead.email||'').trim();
 }
 function loadThreads(){
   var wrap=document.getElementById('threadsList');
@@ -999,29 +1047,25 @@ function loadThreads(){
     });
 }
 function postThreadCreate(){
-  var lead=getLatestLead();
+  var lead=getGateSessionLead() || getLatestLead();
   var name=(document.getElementById('thName').value||'').trim() || (lead&&lead.name)||'';
-  var contact=(document.getElementById('thContact').value||'').trim() || (lead&&(lead.email||lead.phone))||'';
+  var contact=(document.getElementById('thContact').value||'').trim() || (lead&&(lead.phone||lead.email))||'';
   var location=(document.getElementById('thLocation').value||'').trim();
   var amount=(document.getElementById('thAmount').value||'').trim();
   var ltv=(document.getElementById('thLtv').value||'').trim();
   var req=document.getElementById('thReq').value.trim();
   var msg=document.getElementById('thMsg');
   if(name.length<2||contact.length<3||location.length<2||amount.length<1||ltv.length<1){msg.textContent='Please complete name, contact, property location, requested amount, and requested LTV.';return;}
-  var localId='L'+Date.now().toString(36).toUpperCase();
-  localThreads.unshift({id:localId,requester:name,contact:contact,propertyLocation:location,requestedAmount:amount,requestedLtv:ltv,requirement:req,status:'OPEN',createdAt:new Date().toISOString()});
-  saveLocalThreads();
-  loadThreads();
   var data=new URLSearchParams({resource:'deal_threads',action:'create',requester:name,contact:contact,propertyLocation:location,requestedAmount:amount,requestedLtv:ltv,requirement:req,createdAt:new Date().toISOString()});
   fetch(notesURL,{method:'POST',mode:'no-cors',keepalive:true,headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:data.toString()})
     .then(function(){
-      msg.textContent='Thread submitted (local copy saved).';
+      msg.textContent='Thread submitted online and visible to all.';
       document.getElementById('thReq').value='';
       document.getElementById('thLocation').value='';
       document.getElementById('thAmount').value='';
       document.getElementById('thLtv').value='';
       loadThreads();
-    }).catch(function(){msg.textContent='Unable to submit thread right now.';});
+    }).catch(function(){msg.textContent='Unable to submit thread online right now. Please try again.';});
 }
 function postThreadReply(threadId,card){
   var name=(card.querySelector('.rep-name').value||'').trim();
@@ -1274,6 +1318,32 @@ function persistGateSession(lead){
 }
 
 (function initGate(){
+  var gateMode='login';
+  function setGateMode(mode){
+    gateMode=mode==='login'?'login':'signup';
+    var submit=document.getElementById('gateSubmit');
+    var toggle=document.getElementById('gateModeToggle');
+    var nameWrap=document.getElementById('gNameWrap');
+    var nameInput=document.getElementById('gName');
+    var phoneWrap=document.getElementById('gPhone').parentElement;
+    var phoneInput=document.getElementById('gPhone');
+    if(gateMode==='login'){
+      submit.textContent='Login';
+      toggle.textContent='Need an account? Create one';
+      nameWrap.style.display='none';
+      nameInput.required=false;
+      phoneWrap.style.display='none';
+      phoneInput.required=false;
+    }else{
+      submit.textContent='Create Account';
+      toggle.textContent='Already have an account? Login';
+      nameWrap.style.display='';
+      nameInput.required=true;
+      phoneWrap.style.display='';
+      phoneInput.required=true;
+    }
+    document.getElementById('gErr').textContent='';
+  }
   function syncAll(){
     verifyNotesEndpoint().then(function(){
       flushPendingOps();
@@ -1293,35 +1363,81 @@ function persistGateSession(lead){
     return;
   }
   showGate();
+  setGateMode('login');
   startSyncLoop();
+  document.getElementById('gateModeToggle').addEventListener('click',function(){
+    setGateMode(gateMode==='signup'?'login':'signup');
+  });
   document.getElementById('gateForm').addEventListener('submit',function(e){
     e.preventDefault();
     var name=document.getElementById('gName').value.trim();
     var email=document.getElementById('gEmail').value.trim();
     var phone=document.getElementById('gPhone').value.trim();
+    var password=document.getElementById('gPassword').value;
     var digits=phone.replace(/\D/g,'');
     var err='';
 
-    if(name.length<2) err='Please enter your full name.';
-    else if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) err='Please enter a valid email address.';
-    else if(digits.length<10) err='Please enter a valid phone number.';
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) err='Please enter a valid email address.';
+    else if(password.length<6) err='Password must be at least 6 characters.';
+    else if(gateMode==='signup' && name.length<2) err='Please enter your full name.';
+    else if(gateMode==='signup' && digits.length<10) err='Please enter a valid phone number.';
 
     document.getElementById('gErr').textContent=err;
     if(err) return;
-
-    var lead={
-      name:name,
-      email:email,
-      phone:phone,
-      grantedAt:new Date().toISOString(),
-      source:'alternate-lender-list'
-    };
-
-    saveLeadLocal(lead);
-    persistGateSession(lead);
-    saveLeadRemote(lead).finally(function(){
-      unlockList();
-    });
+    var lead={name:name,email:email,phone:phone,grantedAt:new Date().toISOString(),source:'alternate-lender-list'};
+    if(gateMode==='signup'){
+      createAccountRemote({name:name,email:email,phone:phone,password:password,createdAt:new Date().toISOString()})
+        .then(function(){
+          saveLeadLocal(lead);
+          saveLeadRemote(lead);
+          persistGateSession(lead);
+          unlockList();
+        })
+        .catch(function(){
+          var accounts=getLocalGateAccounts();
+          var k=email.toLowerCase();
+          if(accounts[k]){
+            document.getElementById('gErr').textContent='Account already exists. Please login.';
+            return;
+          }
+          accounts[k]={name:name,email:email,phone:phone,password:password,createdAt:new Date().toISOString()};
+          saveLocalGateAccounts(accounts);
+          saveLeadLocal(lead);
+          persistGateSession(lead);
+          document.getElementById('gErr').textContent='Apps Script unavailable. Account saved locally on this device.';
+          unlockList();
+        });
+	    }else{
+	      loginAccountRemote(email,password)
+        .then(function(account){
+          lead.name=(account.name||name);
+          lead.email=(account.email||email);
+          lead.phone=(account.phone||'');
+          persistGateSession(lead);
+          unlockList();
+        })
+	        .catch(function(err){
+	          var errMsg=(err&&err.message)||'Login failed.';
+	          if(/account does not exist/i.test(errMsg)){
+	            setGateMode('signup');
+	            document.getElementById('gName').focus();
+	            document.getElementById('gErr').textContent='No account found for this email. Please create an account first.';
+	            return;
+	          }
+	          var accounts=getLocalGateAccounts();
+	          var acct=accounts[email.toLowerCase()];
+          if(acct && acct.password===password){
+            lead.name=(acct.name||name);
+            lead.email=(acct.email||email);
+            lead.phone=(acct.phone||'');
+            persistGateSession(lead);
+            document.getElementById('gErr').textContent='Logged in using local account (Apps Script unavailable).';
+            unlockList();
+            return;
+          }
+	          document.getElementById('gErr').textContent=errMsg;
+	        });
+	    }
   });
 })();
 </script>
