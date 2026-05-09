@@ -191,10 +191,15 @@ input::placeholder{color:#bbb}
         <label for="gPhone" class="gl">Phone</label>
         <input id="gPhone" name="phone" class="gi" type="tel" autocomplete="tel" required>
       </div>
+      <div>
+        <label for="gPassword" class="gl">Password</label>
+        <input id="gPassword" name="password" class="gi" type="password" autocomplete="current-password" required>
+      </div>
       <div class="g-actions">
         <div class="g-note">Please enter details to continue. Contact details are saved for follow-up.</div>
-        <button class="g-btn" type="submit">Access List</button>
+        <button class="g-btn" type="submit" id="gateSubmit">Create Account</button>
       </div>
+      <button class="cl" id="gateModeToggle" type="button">Already have an account? Login</button>
       <div class="g-err" id="gErr"></div>
     </form>
   </div>
@@ -664,6 +669,32 @@ function saveLeadRemote(lead){
     return true;
   }).catch(function(){
     return false;
+  });
+}
+
+function createAccountRemote(account){
+  if(!scriptURL) return Promise.reject(new Error('No signup endpoint configured.'));
+  var data=new URLSearchParams({
+    action:'account_signup',
+    name:account.name||'',
+    phone:account.phone||'',
+    email:account.email||'',
+    password:account.password||'',
+    createdAt:account.createdAt||new Date().toISOString()
+  });
+  return fetch(scriptURL,{
+    method:'POST',
+    mode:'no-cors',
+    keepalive:true,
+    body:data
+  }).then(function(){ return true; });
+}
+
+function loginAccountRemote(email,password){
+  if(!notesURL) return Promise.reject(new Error('No login endpoint configured.'));
+  return jsonpFetch({resource:'accounts',action:'login',email:email,password:password}).then(function(res){
+    if(!res || !res.ok || !res.account) throw new Error((res&&res.error)||'Invalid email or password.');
+    return res.account;
   });
 }
 
@@ -1270,6 +1301,26 @@ function persistGateSession(lead){
 }
 
 (function initGate(){
+  var gateMode='signup';
+  function setGateMode(mode){
+    gateMode=mode==='login'?'login':'signup';
+    var submit=document.getElementById('gateSubmit');
+    var toggle=document.getElementById('gateModeToggle');
+    var phoneWrap=document.getElementById('gPhone').parentElement;
+    var phoneInput=document.getElementById('gPhone');
+    if(gateMode==='login'){
+      submit.textContent='Login';
+      toggle.textContent='Need an account? Create one';
+      phoneWrap.style.display='none';
+      phoneInput.required=false;
+    }else{
+      submit.textContent='Create Account';
+      toggle.textContent='Already have an account? Login';
+      phoneWrap.style.display='';
+      phoneInput.required=true;
+    }
+    document.getElementById('gErr').textContent='';
+  }
   function syncAll(){
     verifyNotesEndpoint().then(function(){
       flushPendingOps();
@@ -1289,35 +1340,52 @@ function persistGateSession(lead){
     return;
   }
   showGate();
+  setGateMode('signup');
   startSyncLoop();
+  document.getElementById('gateModeToggle').addEventListener('click',function(){
+    setGateMode(gateMode==='signup'?'login':'signup');
+  });
   document.getElementById('gateForm').addEventListener('submit',function(e){
     e.preventDefault();
     var name=document.getElementById('gName').value.trim();
     var email=document.getElementById('gEmail').value.trim();
     var phone=document.getElementById('gPhone').value.trim();
+    var password=document.getElementById('gPassword').value;
     var digits=phone.replace(/\D/g,'');
     var err='';
 
-    if(name.length<2) err='Please enter your full name.';
-    else if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) err='Please enter a valid email address.';
-    else if(digits.length<10) err='Please enter a valid phone number.';
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) err='Please enter a valid email address.';
+    else if(password.length<6) err='Password must be at least 6 characters.';
+    else if(gateMode==='signup' && name.length<2) err='Please enter your full name.';
+    else if(gateMode==='signup' && digits.length<10) err='Please enter a valid phone number.';
 
     document.getElementById('gErr').textContent=err;
     if(err) return;
-
-    var lead={
-      name:name,
-      email:email,
-      phone:phone,
-      grantedAt:new Date().toISOString(),
-      source:'alternate-lender-list'
-    };
-
-    saveLeadLocal(lead);
-    persistGateSession(lead);
-    saveLeadRemote(lead).finally(function(){
-      unlockList();
-    });
+    var lead={name:name,email:email,phone:phone,grantedAt:new Date().toISOString(),source:'alternate-lender-list'};
+    if(gateMode==='signup'){
+      createAccountRemote({name:name,email:email,phone:phone,password:password,createdAt:new Date().toISOString()})
+        .then(function(){
+          saveLeadLocal(lead);
+          saveLeadRemote(lead);
+          persistGateSession(lead);
+          unlockList();
+        })
+        .catch(function(){
+          document.getElementById('gErr').textContent='Could not create account in Google Sheet right now.';
+        });
+    }else{
+      loginAccountRemote(email,password)
+        .then(function(account){
+          lead.name=(account.name||name);
+          lead.email=(account.email||email);
+          lead.phone=(account.phone||'');
+          persistGateSession(lead);
+          unlockList();
+        })
+        .catch(function(err){
+          document.getElementById('gErr').textContent=(err&&err.message)||'Login failed.';
+        });
+    }
   });
 })();
 </script>
