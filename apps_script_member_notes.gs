@@ -134,7 +134,7 @@ function handleAccountGet_(p) {
       break;
     }
   }
-  if (!acct) return jsonWithCallback_({ ok: false, error: 'Invalid email or password' }, p);
+  if (!acct) return jsonWithCallback_({ ok: false, error: 'Account does not exist. Please create an account first.' }, p);
   if (String(acct.passwordHash || '') !== hashPassword_(password, email)) {
     return jsonWithCallback_({ ok: false, error: 'Invalid email or password' }, p);
   }

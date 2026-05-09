@@ -1407,8 +1407,8 @@ function persistGateSession(lead){
           document.getElementById('gErr').textContent='Apps Script unavailable. Account saved locally on this device.';
           unlockList();
         });
-    }else{
-      loginAccountRemote(email,password)
+	    }else{
+	      loginAccountRemote(email,password)
         .then(function(account){
           lead.name=(account.name||name);
           lead.email=(account.email||email);
@@ -1416,9 +1416,16 @@ function persistGateSession(lead){
           persistGateSession(lead);
           unlockList();
         })
-        .catch(function(err){
-          var accounts=getLocalGateAccounts();
-          var acct=accounts[email.toLowerCase()];
+	        .catch(function(err){
+	          var errMsg=(err&&err.message)||'Login failed.';
+	          if(/account does not exist/i.test(errMsg)){
+	            setGateMode('signup');
+	            document.getElementById('gName').focus();
+	            document.getElementById('gErr').textContent='No account found for this email. Please create an account first.';
+	            return;
+	          }
+	          var accounts=getLocalGateAccounts();
+	          var acct=accounts[email.toLowerCase()];
           if(acct && acct.password===password){
             lead.name=(acct.name||name);
             lead.email=(acct.email||email);
@@ -1428,9 +1435,9 @@ function persistGateSession(lead){
             unlockList();
             return;
           }
-          document.getElementById('gErr').textContent=(err&&err.message)||'Login failed.';
-        });
-    }
+	          document.getElementById('gErr').textContent=errMsg;
+	        });
+	    }
   });
 })();
 </script>
