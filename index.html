@@ -6,21 +6,8 @@
 <title>Vancouver Finance Company Inc.</title>
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
 <style>
-:root{
-  --bg:#f6f8fc;
-  --surface:#ffffff;
-  --surface-soft:#f8fafc;
-  --text:#0f172a;
-  --muted:#64748b;
-  --border:#dbe4f0;
-  --primary:#2563eb;
-  --primary-strong:#1d4ed8;
-  --success:#047857;
-  --shadow-sm:0 6px 20px rgba(15,23,42,.06);
-  --shadow-lg:0 24px 65px rgba(15,23,42,.16);
-}
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:radial-gradient(1200px 600px at 20% -10%,#eef4ff 0,var(--bg) 45%,#f9fbff 100%);color:var(--text);font-family:'EB Garamond',Georgia,serif;font-size:16px;-webkit-font-smoothing:antialiased;min-height:100vh}
+body{background:#fff;color:#111;font-family:'EB Garamond',Georgia,serif;font-size:16px;-webkit-font-smoothing:antialiased;min-height:100vh}
 
 /* HEADER */
 .hd{text-align:center;padding:24px 16px 0}
@@ -41,7 +28,6 @@ button{font-family:'EB Garamond',Georgia,serif;border:none;cursor:pointer;border
 
 /* SEARCH */
 .sb{position:sticky;top:0;z-index:99;background:rgba(255,255,255,.95);backdrop-filter:blur(10px);border-bottom:1px solid #ebebeb;padding:10px 16px;display:flex;align-items:center;gap:8px}
-.sb.scrolled{box-shadow:0 10px 28px rgba(15,23,42,.08)}
 .sw{position:relative;flex:1}
 .sw svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#bbb;pointer-events:none}
 input{width:100%;border:1px solid #e0e0e0;background:#fafafa;color:#111;padding:8px 12px 8px 32px;font-family:'EB Garamond',Georgia,serif;font-size:15px;outline:none;border-radius:8px;-webkit-appearance:none}
@@ -54,8 +40,6 @@ input::placeholder{color:#bbb}
 
 /* LIST */
 #list{padding-bottom:60px}
-#list.ready .c{animation:fadeUp .16s ease both}
-@keyframes fadeUp{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
 
 /* Alpha */
 .ag{margin-top:0}
@@ -64,8 +48,7 @@ input::placeholder{color:#bbb}
 .cl-list{}
 
 /* Card */
-.c{padding:9px 16px;border-bottom:1px solid #edf2f8;display:flex;flex-direction:column;gap:3px;transition:transform .16s ease,box-shadow .16s ease,background .16s ease}
-.c:hover{transform:translateY(-1px);box-shadow:var(--shadow-sm);background:#fff}
+.c{padding:9px 16px;border-bottom:1px solid #f0f0f0;display:flex;flex-direction:column;gap:3px}
 .c:active{background:#f8f8f8}
 .ct2{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
 .cn{font-size:15px;font-weight:500;color:#111;line-height:1.3;flex:1}
@@ -97,8 +80,8 @@ input::placeholder{color:#bbb}
 
 /* Notes + admin */
 .admin-wrap{display:flex;justify-content:center;padding:10px 16px 0}
-.admin-btn{font-size:13px;color:#fff;background:var(--primary);border:1px solid var(--primary);padding:8px 14px;box-shadow:var(--shadow-sm)}
-.admin-btn:hover{background:var(--primary-strong)}
+.admin-btn{font-size:13px;color:#2563eb;background:#eef4ff;border:1px solid #cfe0ff;padding:7px 14px}
+.admin-btn:hover{background:#dceaff}
 .cnote{margin-top:2px;padding:6px 8px;background:#f8fafc;border:1px dashed #d6dee9;border-radius:6px;font-size:12px;color:#334155;line-height:1.35}
 .cnote.locked{filter:blur(3px);user-select:none;pointer-events:none}
 .cnote details{margin-top:4px}
@@ -125,16 +108,16 @@ input::placeholder{color:#bbb}
 .ad-auth-btn{font-size:12px;padding:7px 12px;background:#111827;color:#fff}
 .ad-auth-state{font-size:12px;color:#475569}
 .ad-sync{font-size:12px;color:#64748b}
-.tb-btn{font-size:13px;color:#fff;background:var(--success);border:1px solid var(--success);padding:8px 14px;box-shadow:var(--shadow-sm)}
-.tb-btn:hover{filter:brightness(.95)}
+.tb-btn{font-size:13px;color:#065f46;background:#ecfdf5;border:1px solid #a7f3d0;padding:7px 14px}
+.tb-btn:hover{background:#d1fae5}
 .tm{position:fixed;inset:0;z-index:230;background:rgba(2,6,23,.5);display:none;align-items:center;justify-content:center;padding:16px}
 .tm.show{display:flex}
-.tm-card{width:min(860px,100%);max-height:min(88vh,900px);overflow:auto;background:linear-gradient(180deg,#fff 0,#fcfdff 100%);border:1px solid var(--border);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--shadow-lg)}
+.tm-card{width:min(860px,100%);max-height:min(88vh,900px);overflow:auto;background:#fff;border:1px solid #dbe3f2;border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px}
 .tm-row{display:grid;gap:8px}
 .tm-grid{display:grid;gap:8px;grid-template-columns:1fr 1fr}
 .tm-input,.tm-area{width:100%;border:1px solid #d5deec;border-radius:10px;padding:9px 10px;font-family:'JetBrains Mono',monospace;font-size:12px}
 .tm-area{min-height:84px;resize:vertical}
-.tm-submit{background:var(--success);color:#fff;padding:9px 14px;font-size:13px;box-shadow:var(--shadow-sm)}
+.tm-submit{background:#047857;color:#fff;padding:9px 14px;font-size:13px}
 .th-wrap{display:grid;gap:10px}
 .th{border:1px solid #e5e7eb;border-radius:12px;padding:10px;background:#fafafa}
 .th-h{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
@@ -161,7 +144,7 @@ input::placeholder{color:#bbb}
 /* ACCESS GATE */
 .gate{position:fixed;inset:0;z-index:200;background:linear-gradient(135deg,#f8fbff 0%,#eef4ff 50%,#ffffff 100%);display:flex;align-items:center;justify-content:center;padding:20px}
 .gate.hide{display:none}
-.g-card{width:min(560px,100%);background:linear-gradient(180deg,#fff 0,#fbfdff 100%);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow-lg);padding:26px 22px;display:flex;flex-direction:column;gap:14px}
+.g-card{width:min(560px,100%);background:#fff;border:1px solid #e6ebf5;border-radius:18px;box-shadow:0 18px 55px rgba(17,24,39,.08);padding:26px 22px;display:flex;flex-direction:column;gap:14px}
 .g-k{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.45px;color:#6b7280;text-transform:uppercase}
 .g-title{font-size:30px;line-height:1.08;letter-spacing:-.3px}
 .g-sub{font-size:15px;color:#4b5563}
@@ -170,12 +153,10 @@ input::placeholder{color:#bbb}
 .gi{width:100%;border:1px solid #d9e2f2;background:#f8faff;padding:11px 12px;border-radius:10px;font-size:15px;font-family:'JetBrains Mono',monospace;outline:none}
 .gi:focus{border-color:#3b82f6;background:#fff;box-shadow:0 0 0 3px rgba(59,130,246,.14)}
 .g-actions{display:flex;align-items:center;gap:12px;justify-content:space-between;margin-top:6px}
-.g-note{font-size:12px;color:var(--muted)}
-.g-btn{background:var(--primary);color:#fff;border:none;border-radius:999px;padding:10px 16px;font-size:15px;box-shadow:var(--shadow-sm)}
-.g-btn:hover{background:var(--primary-strong)}
+.g-note{font-size:12px;color:#6b7280}
+.g-btn{background:#3b82f6;color:#fff;border:none;border-radius:999px;padding:10px 16px;font-size:15px}
+.g-btn:hover{background:#2563eb}
 .g-err{font-size:12px;color:#b91c1c;min-height:16px}
-.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(12px);background:#0f172a;color:#fff;padding:10px 14px;border-radius:999px;font-size:13px;box-shadow:var(--shadow-lg);opacity:0;pointer-events:none;transition:opacity .2s ease,transform .2s ease;z-index:500}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
 /* Tablet+ */
 @media(min-width:600px){
@@ -287,7 +268,6 @@ input::placeholder{color:#bbb}
 </div>
 
 <div id="list"></div>
-<div id="toast" class="toast"></div>
 <div class="ad" id="adminModal">
   <div class="ad-card">
     <div class="ad-top">
@@ -1080,7 +1060,6 @@ function postThreadCreate(){
   fetch(notesURL,{method:'POST',mode:'no-cors',keepalive:true,headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:data.toString()})
     .then(function(){
       msg.textContent='Thread submitted online and visible to all.';
-      showToast('Thread submitted.');
       document.getElementById('thReq').value='';
       document.getElementById('thLocation').value='';
       document.getElementById('thAmount').value='';
@@ -1173,17 +1152,6 @@ function draw(){
   });
   html+='<div class="ft"><div class="ft-name">Vancouver Finance Company Inc. · 2025–2026</div><a href="https://www.vancouverfinancecompany.com" target="_blank">www.vancouverfinancecompany.com</a><a href="mailto:vancouverfinancecompany@gmail.com">vancouverfinancecompany@gmail.com</a></div>';
   el.innerHTML=html;
-  el.classList.remove('ready');
-  requestAnimationFrame(function(){el.classList.add('ready');});
-}
-
-function showToast(text){
-  var t=document.getElementById('toast');
-  if(!t) return;
-  t.textContent=text||'Done';
-  t.classList.add('show');
-  if(showToast._timer) clearTimeout(showToast._timer);
-  showToast._timer=setTimeout(function(){t.classList.remove('show');},1800);
 }
 
 // Tab clicks
@@ -1256,11 +1224,6 @@ document.getElementById('threadsList').addEventListener('click',function(e){
   postThreadReply(card.getAttribute('data-thread'),card);
 });
 document.getElementById('adminMember').addEventListener('change',onAdminPick);
-window.addEventListener('scroll',function(){
-  var bar=document.querySelector('.sb');
-  if(!bar) return;
-  bar.classList.toggle('scrolled',window.scrollY>8);
-});
 document.getElementById('adminUnlock').addEventListener('click',function(){
   var entered=(document.getElementById('adminPassword').value||'').trim();
   if(entered===ADMIN_PASSWORD){
@@ -1428,7 +1391,6 @@ function persistGateSession(lead){
           saveLeadLocal(lead);
           saveLeadRemote(lead);
           persistGateSession(lead);
-          showToast('Account created. Welcome!');
           unlockList();
         })
         .catch(function(){
@@ -1443,7 +1405,6 @@ function persistGateSession(lead){
           saveLeadLocal(lead);
           persistGateSession(lead);
           document.getElementById('gErr').textContent='Apps Script unavailable. Account saved locally on this device.';
-          showToast('Local account created.');
           unlockList();
         });
 	    }else{
@@ -1453,7 +1414,6 @@ function persistGateSession(lead){
           lead.email=(account.email||email);
           lead.phone=(account.phone||'');
           persistGateSession(lead);
-          showToast('Login successful.');
           unlockList();
         })
 	        .catch(function(err){
@@ -1472,7 +1432,6 @@ function persistGateSession(lead){
             lead.phone=(acct.phone||'');
             persistGateSession(lead);
             document.getElementById('gErr').textContent='Logged in using local account (Apps Script unavailable).';
-            showToast('Logged in (local account).');
             unlockList();
             return;
           }
