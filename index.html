@@ -730,8 +730,14 @@ function jsonpFetch(params){
     };
     s.src=notesURL+'?'+q.toString();
     document.body.appendChild(s);
-    setTimeout(function(){ if(!done){ try{ delete window[cb]; }catch(e){ window[cb]=undefined; } reject(new Error('JSONP timeout')); } },8000);
+    setTimeout(function(){ if(!done){ try{ delete window[cb]; }catch(e){ window[cb]=undefined; } reject(new Error('JSONP timeout')); } },12000);
   });
+}
+function prettyAuthError(err){
+  var msg=(err&&err.message)||'Login failed.';
+  if(/jsonp timeout/i.test(msg)) return 'Login timed out. Please try again in a few seconds.';
+  if(/jsonp failed/i.test(msg)) return 'Could not reach the login server. Please try again.';
+  return msg;
 }
 function esc(s){
   return String(s||'').replace(/[&<>"']/g,function(c){
@@ -1417,7 +1423,7 @@ function persistGateSession(lead){
           unlockList();
         })
 	        .catch(function(err){
-	          var errMsg=(err&&err.message)||'Login failed.';
+	          var errMsg=prettyAuthError(err);
 	          if(/account does not exist/i.test(errMsg)){
 	            setGateMode('signup');
 	            document.getElementById('gName').focus();
