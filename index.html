@@ -691,12 +691,27 @@ function createAccountRemote(account){
   }).then(function(){ return true; });
 }
 
+function parseAccountLoginResponse(res){
+  if(!res || !res.ok || !res.account) throw new Error((res&&res.error)||'Invalid email or password.');
+  return res.account;
+}
 function loginAccountRemote(email,password){
   if(!notesURL) return Promise.reject(new Error('No login endpoint configured.'));
-  return jsonpFetch({resource:'accounts',action:'login',email:email,password:password}).then(function(res){
-    if(!res || !res.ok || !res.account) throw new Error((res&&res.error)||'Invalid email or password.');
-    return res.account;
-  });
+  var q=new URLSearchParams({resource:'accounts',action:'login',email:email,password:password,t:Date.now()});
+  return fetch(notesURL+'?'+q.toString(),{method:'GET'})
+    .then(function(resp){
+      if(!resp.ok) throw new Error('Login server returned '+resp.status+'.');
+      return resp.json();
+    })
+    .then(parseAccountLoginResponse)
+    .catch(function(fetchErr){
+      return jsonpFetch({resource:'accounts',action:'login',email:email,password:password})
+        .then(parseAccountLoginResponse)
+        .catch(function(jsonpErr){
+          if(/invalid email or password|account does not exist/i.test((jsonpErr&&jsonpErr.message)||'')) throw jsonpErr;
+          throw fetchErr;
+        });
+    });
 }
 function getLocalGateAccounts(){
   try{return JSON.parse(localStorage.getItem(gateLocalAccountsKey)||'{}')||{};}catch(e){return {};}
@@ -736,7 +751,7 @@ function jsonpFetch(params){
 function prettyAuthError(err){
   var msg=(err&&err.message)||'Login failed.';
   if(/jsonp timeout/i.test(msg)) return 'Login timed out. Please try again in a few seconds.';
-  if(/jsonp failed/i.test(msg)) return 'Could not reach the login server. Please try again.';
+  if(/jsonp failed/i.test(msg)) return 'Could not reach the login server right now. Please try again.';
   return msg;
 }
 function esc(s){
