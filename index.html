@@ -622,7 +622,7 @@ var pendingLenderOpsKey='vfcl_extra_lender_pending_ops';
 var localThreadKey='vfcl_deal_threads_local';
 var localThreadMsgKey='vfcl_deal_thread_messages_local';
 var investorProfileKey='vfcl_investor_profile';
-var ADMIN_PASSWORD='VFC2026!';
+var adminToken='';
 var extraLendersKey='vfcl_extra_lenders';
 var extraLenders=(function(){try{return JSON.parse(localStorage.getItem(extraLendersKey)||'[]')||[];}catch(e){return [];}})();
 var remoteExtraLenders=[];
@@ -631,7 +631,7 @@ var notesURL='https://script.google.com/macros/s/AKfycbwfbhYPRlPJ8RNxc7q6Or8dUyF
 var memberNotes=(function(){
   try{return JSON.parse(localStorage.getItem(noteKey)||'{}')||{};}catch(e){return {};}
 })();
-var adminUnlocked=(function(){try{return localStorage.getItem(adminSessionKey)==='1';}catch(e){return false;}})();
+var adminUnlocked=false;
 var pendingOps=(function(){try{return JSON.parse(localStorage.getItem(pendingOpsKey)||'[]')||[];}catch(e){return [];}})();
 var pendingLenderOps=(function(){try{return JSON.parse(localStorage.getItem(pendingLenderOpsKey)||'[]')||[];}catch(e){return [];}})();
 var localThreads=(function(){try{return JSON.parse(localStorage.getItem(localThreadKey)||'[]')||[];}catch(e){return [];}})();
@@ -850,7 +850,8 @@ function postNoteOp(op){
     tab:op.tab||'R',
     member:op.member||'',
     note:op.note||'',
-    updatedAt:op.updatedAt||new Date().toISOString()
+    updatedAt:op.updatedAt||new Date().toISOString(),
+    adminToken:adminToken
   });
   return fetch(notesURL,{
     method:'POST',
@@ -891,7 +892,8 @@ function postExtraLenderOp(op){
     phone:op.phone||'',
     website:op.website||'',
     provinces:Array.isArray(op.provinces)?op.provinces.join(','):String(op.provinces||''),
-    createdAt:op.createdAt||new Date().toISOString()
+    createdAt:op.createdAt||new Date().toISOString(),
+    adminToken:adminToken
   });
   return fetch(notesURL,{
     method:'POST',
@@ -1268,20 +1270,33 @@ document.getElementById('threadsList').addEventListener('click',function(e){
   postThreadReply(card.getAttribute('data-thread'),card);
 });
 document.getElementById('adminMember').addEventListener('change',onAdminPick);
-document.getElementById('adminUnlock').addEventListener('click',function(){
-  var entered=(document.getElementById('adminPassword').value||'').trim();
-  if(entered===ADMIN_PASSWORD){
+async function adminSha256_(value) {
+  var bytes=new TextEncoder().encode(value);
+  var digest=await crypto.subtle.digest('SHA-256',bytes);
+  return Array.from(new Uint8Array(digest)).map(function(x){return x.toString(16).padStart(2,'0');}).join('');
+}
+document.getElementById('adminUnlock').addEventListener('click',async function(){
+  var entered=document.getElementById('adminPassword').value||'';
+  var btn=document.getElementById('adminUnlock');
+  btn.disabled=true;
+  try {
+    if(!window.crypto || !crypto.subtle) throw new Error('Secure HTTPS connection required');
+    var challenge=await jsonpFetch({resource:'admin_auth',action:'challenge'});
+    if(!challenge.ok) throw new Error(challenge.error||'Authentication unavailable');
+    var proof=await adminSha256_(entered+':'+challenge.nonce);
+    var result=await jsonpFetch({resource:'admin_auth',action:'login',nonce:challenge.nonce,proof:proof});
+    if(!result.ok || !result.token) throw new Error(result.error||'Incorrect password');
+    adminToken=result.token;
     adminUnlocked=true;
-    try{localStorage.setItem(adminSessionKey,'1');}catch(e){}
     document.getElementById('adminPassword').value='';
     setAuthUI();
     document.getElementById('adminMsg').textContent='Admin access granted.';
-  }else{
+  }catch(err){
+    adminToken='';
     adminUnlocked=false;
-    try{localStorage.removeItem(adminSessionKey);}catch(e){}
     setAuthUI();
-    document.getElementById('adminMsg').textContent='Incorrect password.';
-  }
+    document.getElementById('adminMsg').textContent=err.message||'Unable to unlock admin.';
+  }finally{btn.disabled=false;}
 });
 document.getElementById('adminSave').addEventListener('click',function(){
   if(!adminUnlocked){document.getElementById('adminMsg').textContent='Password required to edit notes.';return;}
