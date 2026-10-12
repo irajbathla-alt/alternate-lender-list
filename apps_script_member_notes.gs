@@ -27,10 +27,42 @@ var EXTRA_LENDER_HEADERS = ['id', 'tab', 'name', 'phone', 'website', 'provinces'
 var ACCOUNT_SHEET = 'accounts';
 var ACCOUNT_HEADERS = ['email', 'name', 'phone', 'passwordHash', 'loginCount', 'lastLoginAt', 'createdAt', 'updatedAt'];
 
+function adminHash_(value) {
+  var bytes = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, String(value), Utilities.Charset.UTF_8);
+  return bytes.map(function(b){return ('0'+(b<0?b+256:b).toString(16)).slice(-2);}).join('');
+}
+function adminAuthGet_(p) {
+  var action = String(p.action || '');
+  var cache = CacheService.getScriptCache();
+  if (action === 'challenge') {
+    var nonce = Utilities.getUuid().replace(/-/g,'') + Utilities.getUuid().replace(/-/g,'');
+    cache.put('admin_nonce_'+nonce, '1', 120);
+    return jsonWithCallback_({ok:true,nonce:nonce},p);
+  }
+  if (action === 'login') {
+    var nonce = String(p.nonce || '');
+    var proof = String(p.proof || '').toLowerCase();
+    var password = PropertiesService.getScriptProperties().getProperty('ADMIN_PASSWORD');
+    if (!password || !nonce || !cache.get('admin_nonce_'+nonce)) return jsonWithCallback_({ok:false,error:'Invalid or expired login challenge'},p);
+    cache.remove('admin_nonce_'+nonce);
+    if (adminHash_(password+':'+nonce) !== proof) return jsonWithCallback_({ok:false,error:'Incorrect password'},p);
+    var token = Utilities.getUuid().replace(/-/g,'') + Utilities.getUuid().replace(/-/g,'');
+    cache.put('admin_session_'+token,'1',21600);
+    return jsonWithCallback_({ok:true,token:token,expiresIn:21600},p);
+  }
+  if (action === 'validate') return jsonWithCallback_({ok:adminAuthorized_(p)},p);
+  return jsonWithCallback_({ok:false,error:'Unknown admin action'},p);
+}
+function adminAuthorized_(p) {
+  var token=String(p.adminToken||'');
+  return !!token && CacheService.getScriptCache().get('admin_session_'+token)==='1';
+}
+
 function doGet(e) {
   var p = (e && e.parameter) || {};
   try {
     var resource = String(p.resource || '');
+    if (resource === 'admin_auth') return adminAuthGet_(p);
     if (resource === 'deal_threads') {
       var ts = getSheetBySchema_(THREAD_SHEET, THREAD_HEADERS);
       var ms = getSheetBySchema_(THREAD_MSG_SHEET, THREAD_MSG_HEADERS);
@@ -83,12 +115,14 @@ function doPost(e) {
       return handleThreadPost_(p);
     }
     if (resource === 'extra_lenders') {
+      if (!adminAuthorized_(p)) return json_({ok:false,error:'Admin authorization required'});
       return handleExtraLenderPost_(p);
     }
     if (resource === 'accounts') {
       return handleAccountPost_(p);
     }
     if (resource !== 'member_notes') return json_({ ok: false, error: 'Unknown resource' });
+    if (!adminAuthorized_(p)) return json_({ok:false,error:'Admin authorization required'});
 
     var action = String(p.action || 'upsert').toLowerCase();
     var tab = String(p.tab || '').trim();
