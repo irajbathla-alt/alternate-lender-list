@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>VFC Construction Client Cash Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#111;--muted:#8d8d8d;--line:#e7e7e7;--blue:#3b82f6;--blue2:#2f7df2;--blue-soft:#eef5ff;--blue-line:#cfe0ff;--warn:#8a5a13;--warn-bg:#fff8e8}
+*{box-sizing:border-box}html,body{margin:0;background:#fff;color:var(--ink)}
+body{font-family:"Cormorant Garamond",Georgia,"Times New Roman",serif;line-height:1.25;-webkit-text-size-adjust:100%}
+button,input,select,textarea{font:inherit}.shell{max-width:900px;margin:0 auto;padding:14px 16px 40px}.brand{text-align:center;padding:16px 0 18px;border-bottom:1px solid var(--line)}.brand h1{font-size:clamp(31px,6vw,47px);font-weight:500;line-height:1;margin:0}.brand p{margin:7px 0 0;color:#999;font-size:clamp(18px,3.8vw,24px)}
+.top-tabs{display:flex;justify-content:center;padding:18px 0 4px}.tabs{display:inline-flex;background:#f1f1f1;border-radius:999px;padding:5px;gap:4px;width:min(100%,520px)}.tab{flex:1;border:0;background:transparent;border-radius:999px;min-height:45px;padding:9px 14px;font-size:18px;cursor:pointer;color:#555}.tab.active{background:linear-gradient(180deg,#4f97ff,#2f7df2);color:#fff;box-shadow:0 3px 10px rgba(59,130,246,.2)}
+.panel{display:none}.panel.active{display:block}.section{padding:22px 0;border-bottom:1px solid var(--line)}.section h2{font-size:30px;font-weight:600;margin:0 0 4px}.section p.sub{font-size:18px;color:#777;margin:0 0 17px}.fields{display:grid;grid-template-columns:1fr 1fr;gap:15px 18px}.full{grid-column:1/-1}label{display:block;font-size:17px}.req:after{content:" *";color:var(--blue)}input,select{display:block;width:100%;margin-top:7px;border:1px solid #dadada;border-radius:13px;background:#fff;color:#111;padding:13px 14px;font-size:18px;min-height:50px;outline:none}input:focus,select:focus{border-color:#8dbaff;box-shadow:0 0 0 3px rgba(59,130,246,.09)}input::placeholder{color:#b7b7b7}.note{display:block;margin-top:5px;color:#999;font-size:14px;line-height:1.3}
+.mode{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:15px}.mode button{border:1px solid #ddd;background:#fff;border-radius:12px;padding:10px 12px;min-height:46px;font-size:17px;cursor:pointer}.mode button.active{border-color:var(--blue);background:var(--blue-soft);color:#235da9}.hidden{display:none!important}
+.primary{width:100%;border:0;border-radius:13px;min-height:54px;background:linear-gradient(180deg,#4f97ff,#2f7df2);color:#fff;font-size:20px;font-weight:600;cursor:pointer;padding:12px 16px}.secondary{width:100%;border:1px solid #ddd;border-radius:13px;min-height:50px;background:#fff;color:#111;font-size:18px;cursor:pointer;padding:11px 16px}.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
+.hero{padding:25px 0 18px;text-align:center;border-bottom:1px solid #111}.eyebrow{font-size:14px;color:#777;letter-spacing:.8px;text-transform:uppercase}.big{font-size:clamp(44px,10vw,72px);line-height:1;font-weight:600;margin:7px 0}.hero .desc{font-size:18px;color:#777;max-width:620px;margin:0 auto}.summary{border-top:1px solid #111;margin-top:22px}.row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;padding:12px 2px;border-bottom:1px solid var(--line);align-items:start}.row .label{font-size:19px}.row .hint{font-size:14px;color:#929292;margin-top:3px}.row .value{font-size:21px;font-weight:600;text-align:right;white-space:nowrap}.row.total{padding:16px 8px;background:linear-gradient(90deg,var(--blue-soft),#fff)}.row.total .label,.row.total .value{font-size:26px;font-weight:700}.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:17px}.card{border:1px solid #e1e1e1;border-radius:14px;padding:14px}.card.blue{background:var(--blue-soft);border-color:var(--blue-line)}.card .k{font-size:15px;color:#777}.card .v{font-size:28px;font-weight:600;margin-top:4px}.card .n{font-size:13px;color:#929292;margin-top:4px;line-height:1.3}.warning{display:none;margin-top:14px;padding:12px 14px;border-left:3px solid #c6881b;background:var(--warn-bg);color:#704f17;font-size:16px;line-height:1.35}.details{padding:18px 0}.details summary{list-style:none;cursor:pointer;font-size:22px;font-weight:600;display:flex;justify-content:space-between;gap:12px}.details summary::-webkit-details-marker{display:none}.details summary:after{content:"+";color:var(--blue);font-size:28px}.details[open] summary:after{content:"−"}.details-body{padding-top:15px}.footer{margin-top:26px;border-top:1px solid var(--line);padding-top:14px;color:#999;font-size:13px;line-height:1.4}.msg{margin-top:12px;color:#a06a12;font-size:16px}.pdf-note{margin-top:10px;color:#888;font-size:14px;text-align:center}.budget-intro{font-size:15px;color:#777;line-height:1.4;margin:0 0 12px}.budget-category{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;padding:10px 2px;border-bottom:1px solid var(--line)}.budget-category strong{font-size:17px}.budget-category span{font-size:18px;font-weight:600;white-space:nowrap}.budget-table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:13px;margin-top:12px}.budget-table{width:100%;border-collapse:collapse;min-width:620px}.budget-table th{background:#f8f8f8;text-align:left;padding:10px 12px;font-size:14px;color:#666;border-bottom:1px solid var(--line)}.budget-table td{padding:9px 12px;border-bottom:1px solid #eee;font-size:15px;vertical-align:top}.budget-table tr:last-child td{border-bottom:0}.budget-table td.num,.budget-table th.num{text-align:right;white-space:nowrap}.budget-group td{background:var(--blue-soft);font-weight:700;color:#285f9f}.budget-total td{font-weight:700;border-top:1px solid #111;background:#fafafa}.basis-pill{display:inline-block;border:1px solid var(--blue-line);background:var(--blue-soft);color:#285f9f;border-radius:999px;padding:5px 9px;font-size:13px;margin-top:8px}
+@media(max-width:700px){.shell{padding:10px 14px 30px}.fields,.actions,.cards,.mode{grid-template-columns:1fr}.full{grid-column:auto}.section h2{font-size:27px}.row .label{font-size:17px}.row .value{font-size:19px}.row.total .label,.row.total .value{font-size:22px}.tab{font-size:16px;padding:9px 10px}.card .v{font-size:29px}.budget-table{min-width:0;width:100%;table-layout:fixed}.budget-table th,.budget-table td{padding:8px 9px;font-size:14px}.budget-table .pct{display:none}.budget-table th:first-child,.budget-table td:first-child{width:66%;word-break:break-word}.budget-table th:last-child,.budget-table td:last-child{width:34%}}
+@media print{.top-tabs,.actions,.details,.footer{display:none!important}.panel{display:block!important}.shell{max-width:none;padding:0 18px}}
+</style>
+</head>
+<body>
+<div class="shell" id="app">
+<header class="brand"><h1>Vancouver Finance Company Inc.</h1><p>Construction Client Cash Calculator</p></header>
+<div class="top-tabs"><nav class="tabs"><button class="tab active" data-tab="project" type="button">Project</button><button class="tab" data-tab="estimate" type="button">Estimate</button></nav></div>
+
+<section class="panel active" data-panel="project">
+  <div class="section">
+    <h2>Project</h2><p class="sub">Only the numbers needed to estimate the client's total project contribution.</p>
+    <div class="fields">
+      <label>Client / Project Name<input id="clientName" type="text" placeholder="Optional"></label>
+      <label>Property Address<input id="address" type="text" placeholder="Optional"></label>
+      <label>Land Size (sq. ft.)<input id="landSqft" type="number" min="0" step="1" inputmode="decimal" placeholder="Optional"></label>
+      <label class="req">Land / Purchase Price<input id="purchasePrice" type="text" inputmode="decimal" data-money="0" placeholder="Enter purchase price"></label>
+      <label>GST / Purchase Tax (%)<input id="gstRate" type="number" min="0" max="30" step="0.1" inputmode="decimal" placeholder="Enter if applicable"></label>
+      <label class="req">Planned Build Area (sq. ft.)<input id="buildSqft" type="number" min="0" step="1" inputmode="decimal" placeholder="Enter total build area"></label>
+      <label class="req">As-Complete Value<input id="asComplete" type="text" inputmode="decimal" data-money="0" placeholder="Enter completed appraised value"></label>
+      <label class="req">Lender % of As-Complete Value<input id="ltv" type="number" min="0" max="100" step="0.25" inputmode="decimal" placeholder="e.g. 65"></label>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Construction Cost</h2><p class="sub">Use the actual budget when available. Otherwise estimate by square foot. A detailed cost schedule is generated automatically from the VFC historical budget mix.</p>
+    <div class="mode"><button id="budgetBtn" class="active" type="button">Enter Total Budget</button><button id="rateBtn" type="button">Use $ / Sq. Ft.</button></div>
+    <div id="budgetMode"><label class="req">Total Construction Cost<input id="constructionBudget" type="text" inputmode="decimal" data-money="0" placeholder="Enter total construction budget"></label></div>
+    <div id="rateMode" class="hidden"><div class="fields"><label class="req">Cost / Sq. Ft.<input id="costPerSqft" type="text" inputmode="decimal" data-money="2" placeholder="Enter cost per sq. ft."></label><label>Calculated Construction Cost<input id="calculatedConstruction" type="text" readonly placeholder="$0"></label></div></div>
+  </div>
+
+  <details class="details">
+    <summary>Optional project costs</summary>
+    <div class="details-body fields">
+      <label>Lender Fee ($)<input id="lenderFee" type="text" inputmode="decimal" data-money="0" placeholder="Optional"></label>
+      <label>Broker / Consulting Fee ($)<input id="brokerFee" type="text" inputmode="decimal" data-money="0" placeholder="Optional"></label>
+      <label>Legal / Closing Costs ($)<input id="legal" type="text" inputmode="decimal" data-money="0" placeholder="Optional"></label>
+      <label>Other Project Costs Not Included in Construction Budget ($)<input id="otherCosts" type="text" inputmode="decimal" data-money="0" placeholder="Optional"></label>
+      <label>Contingency (%)<input id="contingencyRate" type="number" min="0" max="50" step="0.5" inputmode="decimal" placeholder="Optional"></label>
+      <label>Interest / Carry Reserve ($)<input id="carryReserve" type="text" inputmode="decimal" data-money="0" placeholder="Optional"></label>
+    </div>
+  </details>
+
+  <div class="actions"><button id="clearBtn" class="secondary" type="button">Clear</button><button id="calculateBtn" class="primary" type="button">Calculate Client Funds</button></div>
+  <div id="projectMsg" class="msg"></div>
+</section>
+
+<section class="panel" data-panel="estimate">
+  <div id="emptyEstimate" class="section"><h2>Estimate</h2><p class="sub">Enter the project numbers first, then calculate.</p></div>
+  <div id="estimateContent" class="hidden">
+    <div class="hero">
+      <div class="eyebrow">Estimated Client Funds Required</div>
+      <div class="big" id="clientFunds">$0</div>
+      <div class="desc">Estimated amount the client must contribute to the project after the modeled lender facility.</div>
+    </div>
+    <div class="cards">
+      <div class="card"><div class="k">Total Project Cost</div><div class="v" id="projectCostCard">$0</div><div class="n">Land + tax + construction + entered optional costs.</div></div>
+      <div class="card blue"><div class="k">Estimated Lender Facility</div><div class="v" id="facilityCard">$0</div><div class="n">As-complete value × entered lender percentage.</div></div>
+    </div>
+    <div class="summary">
+      <div class="row"><div><div class="label">Land / purchase price</div></div><div class="value" id="landOut">$0</div></div>
+      <div class="row"><div><div class="label">GST / purchase tax</div></div><div class="value" id="taxOut">$0</div></div>
+      <div class="row"><div><div class="label">Construction cost</div><div class="hint" id="constructionHint"></div></div><div class="value" id="constructionOut">$0</div></div>
+      <div class="row"><div><div class="label">Optional fees / soft costs / reserves</div></div><div class="value" id="extrasOut">$0</div></div>
+      <div class="row"><div><div class="label">Total project cost</div></div><div class="value" id="projectCostOut">$0</div></div>
+      <div class="row"><div><div class="label">As-complete value</div></div><div class="value" id="asCompleteOut">$0</div></div>
+      <div class="row"><div><div class="label">Lender factor</div></div><div class="value" id="ltvOut">0%</div></div>
+      <div class="row"><div><div class="label">Estimated lender facility</div><div class="hint">As-complete value × lender factor</div></div><div class="value" id="facilityOut">$0</div></div>
+      <div class="row total"><div><div class="label">Client Funds Required</div><div class="hint">Total project cost − estimated lender facility</div></div><div class="value" id="clientFundsOut">$0</div></div>
+    </div>
+    <div id="facilityWarning" class="warning"></div>
+    <details class="details" open>
+      <summary>Detailed Construction Cost Estimate</summary>
+      <div class="details-body">
+        <p class="budget-intro" id="detailBasis">The entered construction total is allocated across a blended historical cost schedule from VFC sample construction budgets. This is a planning estimate, not a contractor quote.</p>
+        <div class="basis-pill" id="detailRate">$0 / sq. ft.</div>
+        <div id="categoryEstimate" style="margin-top:12px"></div>
+        <div class="budget-table-wrap">
+          <table class="budget-table" aria-label="Detailed construction cost estimate">
+            <thead><tr><th>Description</th><th class="num pct">% of Build</th><th class="num">Estimated Cost</th></tr></thead>
+            <tbody id="detailedEstimateTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </details>
+    <div class="actions"><button id="backBtn" class="secondary" type="button">Edit Project</button><button id="pdfBtn" class="primary" type="button">Download PDF Estimate</button></div>
+    <div id="pdfMsg" class="pdf-note"></div>
+  </div>
+</section>
+
+<div class="footer">Preliminary planning estimate only. Final lender approval, eligible costs, appraisal values, fees, holdbacks, taxes and draw mechanics may change the actual funds required.</div>
+</div>
+<script>
+(()=>{
+const root=document.getElementById('app'); const $=id=>root.querySelector('#'+id);
+const money=(n,d=0)=>new Intl.NumberFormat('en-CA',{style:'currency',currency:'CAD',minimumFractionDigits:d,maximumFractionDigits:d}).format(Number.isFinite(n)?n:0);
+const rawNumber=v=>Number(String(v??'').replace(/,/g,''));
+const num=id=>Math.max(0,rawNumber($(id).value)||0); let mode='budget',last=null;
+
+// Blended planning allocation derived from the two VFC sample construction budgets.
+// The percentages sum to 100% of the construction budget entered/calculated above.
+const COST_MODEL=[
+ ['Professional / permits / project administration','Surveyor',0.001018],
+ ['Professional / permits / project administration','Architect / energy consultant',0.003053],
+ ['Professional / permits / project administration','Structural / civil engineering',0.002239],
+ ['Professional / permits / project administration','DCC / ACC / permits',0.038675],
+ ['Professional / permits / project administration','Insurance',0.003053],
+ ['Professional / permits / project administration','Construction management',0.018320],
+ ['Site & civil','Off-sites / on-sites (storm, sanitary, water)',0.021660],
+ ['Site & civil','Site preparation / excavation / grading',0.038988],
+ ['Site & civil','Landscaping / fencing / pavers',0.064980],
+ ['Foundation & structure','Foundations / concrete',0.024757],
+ ['Foundation & structure','Lumber / framing materials',0.133686],
+ ['Foundation & structure','Framing labour',0.039611],
+ ['Foundation & structure','Trusses / engineered roof structure',0.018320],
+ ['Foundation & structure','Masonry / blocks / brick / stone',0.039611],
+ ['Envelope & exterior','Windows',0.015514],
+ ['Envelope & exterior','Garage doors',0.003989],
+ ['Envelope & exterior','Interior / exterior doors',0.016400],
+ ['Envelope & exterior','Roofing / sundecks / gutters',0.016400],
+ ['Envelope & exterior','Exterior cladding / trim',0.039892],
+ ['Envelope & exterior','Railings',0.013297],
+ ['Interior finishes & millwork','Interior flooring / tile / hardwood / carpet',0.077651],
+ ['Interior finishes & millwork','Drywall',0.038825],
+ ['Interior finishes & millwork','Insulation',0.015121],
+ ['Interior finishes & millwork','Cabinets / vanities',0.042912],
+ ['Interior finishes & millwork','Countertops',0.020434],
+ ['Interior finishes & millwork','Shower doors / closets',0.015121],
+ ['Interior finishes & millwork','Painting',0.016348],
+ ['Interior finishes & millwork','Finish carpentry / trim / stairs',0.020434],
+ ['Interior finishes & millwork','Millwork',0.024113],
+ ['Interior finishes & millwork','Appliances',0.044956],
+ ['Mechanical','HVAC / heating / heat pump',0.017131],
+ ['Mechanical','Plumbing & gas',0.035976],
+ ['Mechanical','Plumbing fixtures',0.015418],
+ ['Electrical & low voltage','Lighting fixtures',0.016332],
+ ['Electrical & low voltage','Electrical installation',0.037786],
+ ['Electrical & low voltage','Security / low voltage',0.007977]
+];
+const CATEGORY_ORDER=['Professional / permits / project administration','Site & civil','Foundation & structure','Envelope & exterior','Interior finishes & millwork','Mechanical','Electrical & low voltage'];
+
+function buildDetail(total){
+ const target=Math.max(0,Math.round(total)); let used=0;
+ const items=COST_MODEL.map((r,i)=>{
+   let amount=i===COST_MODEL.length-1?target-used:Math.round(target*r[2]);
+   if(amount<0) amount=0; used+=amount;
+   return {category:r[0],name:r[1],weight:r[2],amount};
+ });
+ const categories=CATEGORY_ORDER.map(category=>({category,amount:items.filter(x=>x.category===category).reduce((a,b)=>a+b.amount,0)}));
+ return {items,categories,total:target};
+}
+
+function formatMoneyField(input){
+  const decimals=Math.max(0,Number(input.dataset.money)||0);
+  let v=String(input.value||'').replace(/,/g,'').replace(/[^0-9.]/g,'');
+  const firstDot=v.indexOf('.');
+  if(firstDot>=0) v=v.slice(0,firstDot+1)+v.slice(firstDot+1).replace(/\./g,'');
+  let [whole='',frac='']=v.split('.');
+  whole=whole.replace(/^0+(?=\d)/,'');
+  if(decimals===0){frac='';} else frac=frac.slice(0,decimals);
+  const grouped=whole?Number(whole).toLocaleString('en-CA'):'';
+  input.value=grouped+(decimals>0&&firstDot>=0?'.'+frac:'');
+}
+root.querySelectorAll('input[data-money]').forEach(input=>{
+  input.addEventListener('input',()=>{formatMoneyField(input);recalc();});
+  input.addEventListener('blur',()=>{
+    if(!input.value)return;
+    const decimals=Math.max(0,Number(input.dataset.money)||0),n=rawNumber(input.value);
+    if(!Number.isFinite(n))return;
+    input.value=n.toLocaleString('en-CA',{minimumFractionDigits:0,maximumFractionDigits:decimals}); recalc();
+  });
+});
+function setTab(name){root.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));root.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.dataset.panel===name));}
+root.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>setTab(b.dataset.tab)));
+function setMode(m){mode=m;$('budgetBtn').classList.toggle('active',m==='budget');$('rateBtn').classList.toggle('active',m==='rate');$('budgetMode').classList.toggle('hidden',m!=='budget');$('rateMode').classList.toggle('hidden',m!=='rate');recalc();}
+$('budgetBtn').addEventListener('click',()=>setMode('budget'));$('rateBtn').addEventListener('click',()=>setMode('rate'));
+
+function recalc(){
+ const purchase=num('purchasePrice'),gstRate=num('gstRate')/100,tax=purchase*gstRate,buildSqft=num('buildSqft'),costPerSqft=num('costPerSqft');
+ const construction=mode==='budget'?num('constructionBudget'):buildSqft*costPerSqft;
+ $('calculatedConstruction').value=construction?money(construction):'';
+ const asComplete=num('asComplete'),ltv=num('ltv')/100,facility=asComplete*ltv;
+ const lenderFee=num('lenderFee'),brokerFee=num('brokerFee'),legal=num('legal'),other=num('otherCosts'),carry=num('carryReserve'),contingency=construction*(num('contingencyRate')/100);
+ const extras=lenderFee+brokerFee+legal+other+carry+contingency;
+ const projectCost=purchase+tax+construction+extras;
+ const clientFunds=Math.max(0,projectCost-facility),unused=Math.max(0,facility-projectCost);
+ const detail=buildDetail(construction);
+ last={clientName:$('clientName').value.trim(),address:$('address').value.trim(),landSqft:num('landSqft'),purchase,tax,buildSqft,construction,costPerSqft,asComplete,ltv,facility,lenderFee,brokerFee,legal,other,carry,contingency,extras,projectCost,clientFunds,unused,mode,detail};
+ return last;
+}
+['gstRate','buildSqft','ltv','contingencyRate'].forEach(id=>$(id).addEventListener('input',recalc));
+function ready(){const d=recalc();return d.purchase>0&&d.buildSqft>0&&d.construction>0&&d.asComplete>0&&d.ltv>0;}
+
+function renderDetail(d){
+ const rate=d.buildSqft>0?d.construction/d.buildSqft:0;
+ $('detailRate').textContent=money(rate,2)+' / sq. ft. modeled construction cost';
+ $('detailBasis').textContent='The '+money(d.construction)+' construction total is allocated across a blended VFC historical cost schedule based on the two sample construction budgets. Optional project costs entered above are added separately and should only be used for costs not already included in the construction budget.';
+ $('categoryEstimate').innerHTML=d.detail.categories.map(c=>`<div class="budget-category"><strong>${c.category}</strong><span>${money(c.amount)}</span></div>`).join('');
+ let html='',current='';
+ for(const item of d.detail.items){
+   if(item.category!==current){current=item.category;html+=`<tr class="budget-group"><td colspan="3">${current}</td></tr>`;}
+   html+=`<tr><td>${item.name}</td><td class="num pct">${(item.weight*100).toFixed(1)}%</td><td class="num">${money(item.amount)}</td></tr>`;
+ }
+ html+=`<tr class="budget-total"><td>Total Estimated Construction Cost</td><td class="num pct">100.0%</td><td class="num">${money(d.detail.total)}</td></tr>`;
+ $('detailedEstimateTable').innerHTML=html;
+}
+
+function render(){
+ const d=recalc();
+ $('clientFunds').textContent=money(d.clientFunds);$('projectCostCard').textContent=money(d.projectCost);$('facilityCard').textContent=money(d.facility);
+ $('landOut').textContent=money(d.purchase);$('taxOut').textContent=money(d.tax);$('constructionOut').textContent=money(d.construction);
+ $('constructionHint').textContent=d.mode==='rate'?`${d.buildSqft.toLocaleString('en-CA')} sq. ft. x ${money(d.costPerSqft,2)} / sq. ft.`:`Entered construction budget (${money(d.construction/d.buildSqft,2)} / sq. ft.)`;
+ $('extrasOut').textContent=money(d.extras);$('projectCostOut').textContent=money(d.projectCost);$('asCompleteOut').textContent=money(d.asComplete);$('ltvOut').textContent=(d.ltv*100).toFixed(2).replace(/\.00$/,'')+'%';$('facilityOut').textContent=money(d.facility);$('clientFundsOut').textContent=money(d.clientFunds);
+ const w=$('facilityWarning');if(d.unused>0){w.style.display='block';w.textContent='The calculated lender facility is '+money(d.unused)+' higher than the modeled project cost. This calculator shows client funds as $0; the actual lender may cap advances based on cost or other rules.';}else w.style.display='none';
+ renderDetail(d);$('emptyEstimate').classList.add('hidden');$('estimateContent').classList.remove('hidden');
+}
+$('calculateBtn').addEventListener('click',()=>{if(!ready()){$('projectMsg').textContent='Please enter purchase price, build area, construction cost, as-complete value and lender percentage.';return;}$('projectMsg').textContent='';render();setTab('estimate');});
+$('backBtn').addEventListener('click',()=>setTab('project'));
+$('clearBtn').addEventListener('click',()=>{root.querySelectorAll('input').forEach(i=>i.value='');setMode('budget');$('projectMsg').textContent='';$('pdfMsg').textContent='';$('estimateContent').classList.add('hidden');$('emptyEstimate').classList.remove('hidden');setTab('project');recalc();});
+function esc(s){return String(s||'').replace(/[\\()]/g,m=>'\\'+m).replace(/[\r\n]+/g,' ').replace(/[^\x20-\x7E]/g,'-')}
+
+function pdf(){
+ const d=recalc();if(!ready()){$('pdfMsg').textContent='Complete the required project fields first.';return;}
+ const W=612,H=792,LM=46,RM=46;let pages=[],cmd=[],y=744,pageNo=0;
+ const line=(x1,y1,x2,y2,w=.5)=>cmd.push(`${w} w ${x1} ${y1} m ${x2} ${y2} l S`);
+ const text=(x,yy,size,str,bold=false)=>cmd.push(`BT /${bold?'F2':'F1'} ${size} Tf ${x} ${yy} Td (${esc(str)}) Tj ET`);
+ const footer=()=>{line(LM,34,W-RM,34,.35);text(LM,20,7,'Vancouver Finance Company Inc. - Preliminary construction estimate');text(W-RM-35,20,7,'Page '+pageNo);};
+ const finish=()=>{footer();pages.push(cmd.join('\n'));};
+ const newPage=(title,sub='')=>{if(cmd.length)finish();cmd=[];y=744;pageNo++;text(LM,y,20,title,true);y-=22;if(sub){text(LM,y,8,sub);y-=18;}line(LM,y,W-RM,y,.6);y-=18;};
+ const ensure=(h,title='Detailed Construction Cost Estimate')=>{if(y-h<48)newPage(title,'Continued - amounts are preliminary planning estimates.');};
+ const row=(label,value,note='')=>{ensure(note?40:28,'Construction Client Cash Estimate');text(LM,y,9,label);text(455,y,9,value,true);y-=12;if(note){text(LM,y,7.5,note);y-=11}line(LM,y,W-RM,y,.25);y-=11;};
+ const total=(label,value)=>{ensure(48,'Construction Client Cash Estimate');line(LM,y,W-RM,y,.7);y-=18;if(label)text(LM,y,13,label,true);text(445,y,13,value,true);y-=24;};
+
+ newPage('Vancouver Finance Company Inc.','Construction Client Cash Estimate');
+ if(d.clientName){text(LM,y,9,'Client / Project: '+d.clientName);y-=14}if(d.address){text(LM,y,9,'Property: '+d.address);y-=14}if(d.landSqft){text(LM,y,9,'Land Size: '+d.landSqft.toLocaleString('en-CA')+' sq. ft.');y-=14}text(LM,y,9,'Planned Build Area: '+d.buildSqft.toLocaleString('en-CA')+' sq. ft.');y-=25;
+ text(LM,y,15,'Estimated Client Funds Required',true);y-=18;total('',money(d.clientFunds));
+ text(LM,y,14,'Project Cost',true);y-=18;row('Land / purchase price',money(d.purchase));row('GST / purchase tax',money(d.tax));row('Construction cost',money(d.construction),d.mode==='rate'?d.buildSqft.toLocaleString('en-CA')+' sq. ft. x '+money(d.costPerSqft,2)+' / sq. ft.':'Entered construction budget - '+money(d.construction/d.buildSqft,2)+' / sq. ft.');
+ if(d.lenderFee)row('Lender fee',money(d.lenderFee));if(d.brokerFee)row('Broker / consulting fee',money(d.brokerFee));if(d.legal)row('Legal / closing costs',money(d.legal));if(d.other)row('Other project costs not in construction budget',money(d.other));if(d.contingency)row('Contingency',money(d.contingency));if(d.carry)row('Interest / carry reserve',money(d.carry));total('Total Project Cost',money(d.projectCost));
+ text(LM,y,14,'Financing',true);y-=18;row('As-complete value',money(d.asComplete));row('Lender factor',(d.ltv*100).toFixed(2).replace(/\.00$/,'')+'%');row('Estimated lender facility',money(d.facility),'As-complete value x lender factor');total('Estimated Client Funds Required',money(d.clientFunds));
+ ensure(44,'Construction Client Cash Estimate');text(LM,y,7.5,'Formula: Total Project Cost - Estimated Lender Facility = Estimated Client Funds Required.');y-=12;text(LM,y,7.5,'Detailed construction allocation is a VFC planning estimate based on historical sample budgets and scaled to the construction total.');
+
+ newPage('Detailed Construction Cost Estimate','Historical VFC allocation model scaled to '+money(d.construction)+' total construction cost.');
+ text(LM,y,9,'Planned Build Area');text(455,y,9,d.buildSqft.toLocaleString('en-CA')+' sq. ft.',true);y-=15;text(LM,y,9,'Modeled Cost / Sq. Ft.');text(455,y,9,money(d.construction/d.buildSqft,2),true);y-=20;
+ text(LM,y,13,'Category Summary',true);y-=18;
+ for(const c of d.detail.categories){ensure(22);text(LM,y,8.7,c.category);text(455,y,8.7,money(c.amount),true);y-=13;line(LM,y,W-RM,y,.2);y-=7;}
+ total('Total Construction Cost',money(d.construction));
+ text(LM,y,13,'Detailed Cost Schedule',true);y-=18;
+ let current='';
+ for(const item of d.detail.items){
+   if(item.category!==current){ensure(30);current=item.category;text(LM,y,9.2,current,true);y-=15;line(LM,y,W-RM,y,.35);y-=7;}
+   ensure(19);text(LM+8,y,8.2,item.name);text(395,y,7.8,(item.weight*100).toFixed(1)+'%');text(455,y,8.2,money(item.amount),true);y-=17;
+ }
+ ensure(45);line(LM,y,W-RM,y,.7);y-=18;text(LM,y,11,'Total Estimated Construction Cost',true);text(455,y,11,money(d.detail.total),true);y-=24;
+ text(LM,y,7.5,'Planning allocation only. Actual trade pricing, specifications, site conditions, permits and contractor quotes may differ.');
+ finish();
+
+ const objs=[];objs[1]='<< /Type /Catalog /Pages 2 0 R >>';const pn=[],cn=[];let obj=5;for(let i=0;i<pages.length;i++){pn.push(obj++);cn.push(obj++)}
+ objs[2]=`<< /Type /Pages /Kids [${pn.map(n=>n+' 0 R').join(' ')}] /Count ${pages.length} >>`;objs[3]='<< /Type /Font /Subtype /Type1 /BaseFont /Times-Roman >>';objs[4]='<< /Type /Font /Subtype /Type1 /BaseFont /Times-Bold >>';
+ for(let i=0;i<pages.length;i++){objs[pn[i]]=`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${W} ${H}] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ${cn[i]} 0 R >>`;const ps=pages[i];objs[cn[i]]=`<< /Length ${ps.length} >>\nstream\n${ps}\nendstream`}
+ let out='%PDF-1.4\n',offs=[0];for(let i=1;i<objs.length;i++){offs[i]=out.length;out+=`${i} 0 obj\n${objs[i]}\nendobj\n`}const xr=out.length;out+=`xref\n0 ${objs.length}\n0000000000 65535 f \n`;for(let i=1;i<objs.length;i++)out+=String(offs[i]).padStart(10,'0')+' 00000 n \n';out+=`trailer\n<< /Size ${objs.length} /Root 1 0 R >>\nstartxref\n${xr}\n%%EOF`;
+ const blob=new Blob([out],{type:'application/pdf'}),url=URL.createObjectURL(blob),a=document.createElement('a');const base=(d.clientName||d.address||'Construction_Estimate').replace(/[^A-Za-z0-9_-]+/g,'_').replace(/^_+|_+$/g,'');a.href=url;a.download=base+'_VFC_Client_Cash_and_Construction_Estimate.pdf';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000);$('pdfMsg').textContent='PDF generated with detailed construction cost schedule.';
+}
+$('pdfBtn').addEventListener('click',pdf);recalc();
+})();
+</script>
+</body>
+</html>
