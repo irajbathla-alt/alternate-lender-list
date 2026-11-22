@@ -693,7 +693,19 @@ function createAccountRemote(account){
     mode:'no-cors',
     keepalive:true,
     body:data
-  }).then(function(){ return true; });
+  }).then(function(){
+    return waitForOnlineAccount_(account.email,account.password);
+  });
+}
+function waitForOnlineAccount_(email,password){
+  var tries=0;
+  function check(){
+    return loginAccountRemote(email,password).then(function(){return true;}).catch(function(){
+      if(++tries>=5) throw new Error('Account not confirmed online. Please try logging in before signing up again.');
+      return new Promise(function(resolve){setTimeout(resolve,1000*tries);}).then(check);
+    });
+  }
+  return check();
 }
 
 function parseAccountLoginResponse(res){
@@ -822,7 +834,8 @@ function verifyNotesEndpoint(){
     return fetch(notesURL+'?resource=member_notes&check=1&t='+(Date.now()),{method:'GET'})
       .then(function(r){ if(!r.ok) throw new Error('offline'); return r.json(); });
   })
-    .then(function(){
+    .then(function(data){
+      if(!data || data.ok!==true) throw new Error('Health check failed');
       setSyncStatus('connected');
       return true;
     })
@@ -837,6 +850,7 @@ function loadExtraLendersRemote(){
     return fetch(notesURL+'?resource=extra_lenders&t='+(Date.now()),{method:'GET'})
       .then(function(r){ if(!r.ok) throw new Error('offline'); return r.json(); });
   }).then(function(data){
+    if(!data || data.ok!==true) throw new Error('Online lender read failed');
     remoteExtraLenders=((data&&data.lenders)||[]).map(normalizeExtraLender);
     refreshCounts();
     draw();
@@ -949,7 +963,7 @@ function loadNotesRemote(){
       .then(function(r){ if(!r.ok) throw new Error('offline'); return r.json(); });
   })
     .then(function(data){
-      if(!data) return false;
+      if(!data || data.ok!==true) throw new Error('Online notes read failed');
       var obj=(Array.isArray(data)?data.reduce(function(acc,row){
         if(row&&row.key)acc[row.key]=row.note||''; return acc;
       },{}):data.notes)||data;
@@ -1330,7 +1344,7 @@ document.getElementById('adminSave').addEventListener('click',function(){
   queueNoteOp('upsert',name,note);
   flushPendingOps();
   loadNotesRemote();
-  document.getElementById('adminMsg').textContent='Note saved for '+name+'.';
+  document.getElementById('adminMsg').textContent='Note queued; checking online save for '+name+'.';
   draw();
 });
 document.getElementById('adminDelete').addEventListener('click',function(){
@@ -1343,7 +1357,7 @@ document.getElementById('adminDelete').addEventListener('click',function(){
   flushPendingOps();
   loadNotesRemote();
   document.getElementById('adminNote').value='';
-  document.getElementById('adminMsg').textContent='Note deleted for '+name+'.';
+  document.getElementById('adminMsg').textContent='Note deletion queued; checking online save for '+name+'.';
   draw();
 });
 document.getElementById('addLenderBtn').addEventListener('click',function(){
@@ -1354,9 +1368,10 @@ document.getElementById('addLenderBtn').addEventListener('click',function(){
   var w=(document.getElementById('newLenderWeb').value||'').trim();
   var prov=(document.getElementById('newLenderProv').value||'').split(',').map(function(x){return x.trim().toUpperCase();}).filter(Boolean);
   if(n.length<2 || !prov.length){document.getElementById('adminMsg').textContent='Please add lender name and at least one province.';return;}
-  extraLenders.push({t:t,n:n,p:p,w:w,v:prov,createdAt:new Date().toISOString()});
+  var lenderCreatedAt=new Date().toISOString();
+  extraLenders.push({t:t,n:n,p:p,w:w,v:prov,createdAt:lenderCreatedAt});
   saveExtraLenders();
-  queueExtraLenderOp({t:t,n:n,p:p,w:w,v:prov,createdAt:new Date().toISOString()});
+  queueExtraLenderOp({t:t,n:n,p:p,w:w,v:prov,createdAt:lenderCreatedAt});
   flushPendingLenderOps();
   refreshCounts();
   draw();
@@ -1365,7 +1380,7 @@ document.getElementById('addLenderBtn').addEventListener('click',function(){
   document.getElementById('newLenderPhone').value='';
   document.getElementById('newLenderWeb').value='';
   document.getElementById('newLenderProv').value='';
-  document.getElementById('adminMsg').textContent='New lender added.';
+  document.getElementById('adminMsg').textContent='New lender queued; checking online save.';
 });
 
 function showGate(){
@@ -1474,19 +1489,8 @@ function persistGateSession(lead){
           persistGateSession(lead);
           unlockList();
         })
-        .catch(function(){
-          var accounts=getLocalGateAccounts();
-          var k=email.toLowerCase();
-          if(accounts[k]){
-            document.getElementById('gErr').textContent='Account already exists. Please login.';
-            return;
-          }
-          accounts[k]={name:name,email:email,phone:phone,password:password,createdAt:new Date().toISOString()};
-          saveLocalGateAccounts(accounts);
-          saveLeadLocal(lead);
-          persistGateSession(lead);
-          document.getElementById('gErr').textContent='Apps Script unavailable. Account saved locally on this device.';
-          unlockList();
+        .catch(function(err){
+          document.getElementById('gErr').textContent=(err&&err.message)||'Signup not confirmed online. Please try again.';
         });
 	    }else{
 	      loginAccountRemote(email,password)
@@ -1505,17 +1509,6 @@ function persistGateSession(lead){
 	            document.getElementById('gErr').textContent='No account found for this email. Please create an account first.';
 	            return;
 	          }
-	          var accounts=getLocalGateAccounts();
-	          var acct=accounts[email.toLowerCase()];
-          if(acct && acct.password===password){
-            lead.name=(acct.name||name);
-            lead.email=(acct.email||email);
-            lead.phone=(acct.phone||'');
-            persistGateSession(lead);
-            document.getElementById('gErr').textContent='Logged in using local account (Apps Script unavailable).';
-            unlockList();
-            return;
-          }
 	          document.getElementById('gErr').textContent=errMsg;
 	        });
 	    }
