@@ -843,25 +843,42 @@ function loadExtraLendersRemote(){
     return true;
   }).catch(function(){ return false; });
 }
+function readOnline_(resource){
+  return jsonpFetch({resource:resource}).then(function(data){
+    if(!data || data.ok!==true) throw new Error((data&&data.error)||'Online read failed');
+    return data;
+  });
+}
+function waitForOnline_(resource,predicate){
+  var attempts=0;
+  function check(){
+    return readOnline_(resource).then(function(data){
+      if(predicate(data)) return data;
+      throw new Error('Not yet confirmed in Google Sheets');
+    }).catch(function(err){
+      if(++attempts>=5) throw err;
+      return new Promise(function(resolve){setTimeout(resolve,1000*attempts);}).then(check);
+    });
+  }
+  return check();
+}
+function sendOnline_(data){
+  return fetch(notesURL,{method:'POST',mode:'no-cors',keepalive:true,
+    headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:data.toString()});
+}
 function postNoteOp(op){
+  if(!adminToken) return Promise.reject(new Error('Unlock Admin Portal to synchronize'));
   var data=new URLSearchParams({
-    resource:'member_notes',
-    action:op.action||'upsert',
-    tab:op.tab||'R',
-    member:op.member||'',
-    note:op.note||'',
-    updatedAt:op.updatedAt||new Date().toISOString(),
+    resource:'member_notes',action:op.action||'upsert',tab:op.tab||'R',
+    member:op.member||'',note:op.note||'',updatedAt:op.updatedAt||new Date().toISOString(),
     adminToken:adminToken
   });
-  return fetch(notesURL,{
-    method:'POST',
-    mode:'no-cors',
-    keepalive:true,
-    headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},
-    body:data.toString()
-  }).then(function(){
-    setSyncStatus('write sent');
-    return true;
+  var key=String(op.tab||'R').trim().toUpperCase()+'::'+String(op.member||'').trim().toLowerCase();
+  return sendOnline_(data).then(function(){
+    return waitForOnline_('member_notes',function(result){
+      var notes=result.notes||{};
+      return op.action==='delete'?!Object.prototype.hasOwnProperty.call(notes,key):notes[key]===op.note;
+    });
   });
 }
 function queueNoteOp(action,name,note){
@@ -870,39 +887,33 @@ function queueNoteOp(action,name,note){
 }
 function flushPendingOps(){
   if(!pendingOps.length) return Promise.resolve(true);
+  if(!adminToken){setSyncStatus('admin unlock required to sync queued notes');return Promise.resolve(false);}
   var ops=pendingOps.slice();
   return ops.reduce(function(p,op){
-    return p.then(function(){ return postNoteOp(op); });
+    return p.then(function(){return postNoteOp(op).then(function(){
+      var index=pendingOps.indexOf(op);
+      if(index>=0){pendingOps.splice(index,1);savePendingOps();}
+    });});
   },Promise.resolve()).then(function(){
-    pendingOps=[];
-    savePendingOps();
-    setSyncStatus('connected');
-    return true;
+    setSyncStatus('online verified');return true;
   }).catch(function(){
-    setSyncStatus('offline (changes queued locally)');
-    return false;
+    setSyncStatus('not confirmed online (changes queued locally)');return false;
   });
 }
 function postExtraLenderOp(op){
+  if(!adminToken) return Promise.reject(new Error('Unlock Admin Portal to synchronize'));
   var data=new URLSearchParams({
-    resource:'extra_lenders',
-    action:'create',
-    tab:op.tab||'R',
-    name:op.name||'',
-    phone:op.phone||'',
-    website:op.website||'',
+    resource:'extra_lenders',action:'create',tab:op.tab||'R',
+    name:op.name||'',phone:op.phone||'',website:op.website||'',
     provinces:Array.isArray(op.provinces)?op.provinces.join(','):String(op.provinces||''),
-    createdAt:op.createdAt||new Date().toISOString(),
-    adminToken:adminToken
+    createdAt:op.createdAt||new Date().toISOString(),adminToken:adminToken
   });
-  return fetch(notesURL,{
-    method:'POST',
-    mode:'no-cors',
-    keepalive:true,
-    headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},
-    body:data.toString()
-  }).then(function(){
-    return true;
+  return sendOnline_(data).then(function(){
+    return waitForOnline_('extra_lenders',function(result){
+      return (result.lenders||[]).some(function(x){
+        return x.tab===(op.tab||'R')&&x.name===op.name&&x.createdAt===op.createdAt;
+      });
+    });
   });
 }
 function queueExtraLenderOp(lender){
@@ -918,17 +929,17 @@ function queueExtraLenderOp(lender){
 }
 function flushPendingLenderOps(){
   if(!pendingLenderOps.length) return Promise.resolve(true);
+  if(!adminToken){setSyncStatus('admin unlock required to sync queued lenders');return Promise.resolve(false);}
   var ops=pendingLenderOps.slice();
   return ops.reduce(function(p,op){
-    return p.then(function(){ return postExtraLenderOp(op); });
+    return p.then(function(){return postExtraLenderOp(op).then(function(){
+      var index=pendingLenderOps.indexOf(op);
+      if(index>=0){pendingLenderOps.splice(index,1);savePendingLenderOps();}
+    });});
   },Promise.resolve()).then(function(){
-    pendingLenderOps=[];
-    savePendingLenderOps();
-    setSyncStatus('connected');
-    return loadExtraLendersRemote().then(function(){ return true; });
+    setSyncStatus('online verified');return loadExtraLendersRemote();
   }).catch(function(){
-    setSyncStatus('offline (new lenders queued locally)');
-    return false;
+    setSyncStatus('not confirmed online (new lenders queued locally)');return false;
   });
 }
 function loadNotesRemote(){
@@ -1084,34 +1095,45 @@ function postThreadCreate(){
   var req=document.getElementById('thReq').value.trim();
   var msg=document.getElementById('thMsg');
   if(name.length<2||contact.length<3||location.length<2||amount.length<1||ltv.length<1){msg.textContent='Please complete name, contact, property location, requested amount, and requested LTV.';return;}
-  var data=new URLSearchParams({resource:'deal_threads',action:'create',requester:name,contact:contact,propertyLocation:location,requestedAmount:amount,requestedLtv:ltv,requirement:req,createdAt:new Date().toISOString()});
-  fetch(notesURL,{method:'POST',mode:'no-cors',keepalive:true,headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:data.toString()})
-    .then(function(){
-      msg.textContent='Thread submitted online and visible to all.';
-      document.getElementById('thReq').value='';
-      document.getElementById('thLocation').value='';
-      document.getElementById('thAmount').value='';
-      document.getElementById('thLtv').value='';
-      loadThreads();
-    }).catch(function(){msg.textContent='Unable to submit thread online right now. Please try again.';});
+  var createdAt=new Date().toISOString();
+  var data=new URLSearchParams({resource:'deal_threads',action:'create',requester:name,contact:contact,propertyLocation:location,requestedAmount:amount,requestedLtv:ltv,requirement:req,createdAt:createdAt});
+  msg.textContent='Publishing online…';
+  sendOnline_(data).then(function(){
+    return waitForOnline_('deal_threads',function(result){
+      return (result.threads||[]).some(function(t){
+        return t.createdAt===createdAt&&t.requester===name&&t.contact===contact&&t.propertyLocation===location&&t.requestedAmount===amount;
+      });
+    });
+  }).then(function(){
+    msg.textContent='Thread published online and available to other users.';
+    document.getElementById('thReq').value='';
+    document.getElementById('thLocation').value='';
+    document.getElementById('thAmount').value='';
+    document.getElementById('thLtv').value='';
+    loadThreads();
+  }).catch(function(){msg.textContent='Online publication could not be confirmed. Check the shared thread list before submitting again.';});
 }
 function postThreadReply(threadId,card){
   var name=(card.querySelector('.rep-name').value||'').trim();
   var contact=(card.querySelector('.rep-contact').value||'').trim();
-  var text=(card.querySelector('.rep-msg').value||'').trim();
-  if(name.length<2||contact.length<3||text.length<2){
-    alert('Please enter investor name, contact, and reply.');
-    return;
-  }
-  investorProfile={name:name,contact:contact};
-  saveInvestorProfile();
-  localThreadMsgs.push({threadId:threadId,fromName:name,fromContact:contact,message:text,createdAt:new Date().toISOString()});
-  saveLocalThreads();
-  loadThreads();
-  var data=new URLSearchParams({resource:'deal_threads',action:'reply',threadId:threadId,fromName:name,fromContact:contact,message:text,createdAt:new Date().toISOString()});
-  fetch(notesURL,{method:'POST',mode:'no-cors',keepalive:true,headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:data.toString()})
-    .then(function(){ loadThreads(); })
-    .catch(function(){});
+  var message=(card.querySelector('.rep-msg').value||'').trim();
+  if(name.length<2||contact.length<3||message.length<2){alert('Please enter investor name, contact, and reply.');return;}
+  investorProfile={name:name,contact:contact};saveInvestorProfile();
+  var createdAt=new Date().toISOString();
+  var data=new URLSearchParams({resource:'deal_threads',action:'reply',threadId:threadId,fromName:name,fromContact:contact,message:message,createdAt:createdAt});
+  var button=card.querySelector('.rep-send');
+  if(button)button.disabled=true;
+  sendOnline_(data).then(function(){
+    return waitForOnline_('deal_threads',function(result){
+      return (result.messages||[]).some(function(m){
+        return m.threadId===threadId&&m.createdAt===createdAt&&m.fromName===name&&m.message===message;
+      });
+    });
+  }).then(function(){
+    loadThreads();
+  }).catch(function(){
+    alert('Your comment could not be confirmed online. Check the thread before trying again.');
+  }).then(function(){if(button)button.disabled=false;});
 }
 function currentData(){return mergedData(tab);}
 function updateAdminList(){
