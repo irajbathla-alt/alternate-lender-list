@@ -1,0 +1,1504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Vancouver Finance Company Inc.</title>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#fff;color:#111;font-family:'EB Garamond',Georgia,serif;font-size:16px;-webkit-font-smoothing:antialiased;min-height:100vh}
+
+/* HEADER */
+.hd{text-align:center;padding:24px 16px 0}
+.hd-name{font-size:24px;font-weight:400;letter-spacing:-0.2px;line-height:1.2}
+.hd-sub{font-size:13px;color:#999;margin-top:2px}
+
+/* PILLS */
+.pills{display:flex;justify-content:center;padding:14px 16px 0}
+.pill-wrap{display:inline-flex;align-items:center;background:#f0f0f0;border-radius:100px;padding:3px;gap:1px}
+.sep{width:1px;height:14px;background:#d0d0d0;margin:0 2px}
+button{font-family:'EB Garamond',Georgia,serif;border:none;cursor:pointer;border-radius:100px;white-space:nowrap;transition:all .15s;line-height:1}
+.t-btn{font-size:15px;color:#555;background:none;padding:7px 20px 8px}
+.p-btn{font-size:13px;color:#555;background:none;padding:7px 0 8px;flex:1;text-align:center;letter-spacing:.3px}
+.pill-wrap.prow{display:flex;width:calc(100vw - 32px);max-width:480px}
+.t-btn.on,.p-btn.on{background:#3b82f6;color:#fff;box-shadow:0 1px 6px rgba(59,130,246,.3)}
+.t-btn:not(.on):hover,.p-btn:not(.on):hover{background:rgba(0,0,0,.07);color:#111}
+.tc{font-family:'JetBrains Mono',monospace;font-size:9px;margin-left:3px;opacity:.55}
+
+/* SEARCH */
+.sb{position:sticky;top:0;z-index:99;background:rgba(255,255,255,.95);backdrop-filter:blur(10px);border-bottom:1px solid #ebebeb;padding:10px 16px;display:flex;align-items:center;gap:8px}
+.sw{position:relative;flex:1}
+.sw svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#bbb;pointer-events:none}
+input{width:100%;border:1px solid #e0e0e0;background:#fafafa;color:#111;padding:8px 12px 8px 32px;font-family:'EB Garamond',Georgia,serif;font-size:15px;outline:none;border-radius:8px;-webkit-appearance:none}
+input:focus{border-color:#3b82f6;background:#fff}
+input::placeholder{color:#bbb}
+.ct{font-family:'JetBrains Mono',monospace;font-size:10px;color:#aaa;flex-shrink:0}
+.ct em{color:#111;font-style:normal}
+.cl{font-family:'EB Garamond',Georgia,serif;font-size:13px;color:#bbb;background:none;border:none;cursor:pointer;padding:0;flex-shrink:0;border-radius:0}
+.cl:hover{color:#3b82f6}
+
+/* LIST */
+#list{padding-bottom:60px}
+
+/* Alpha */
+.ag{margin-top:0}
+.ah{padding:14px 16px 3px;border-bottom:1px solid #111;display:flex;align-items:baseline;gap:8px}
+.al{font-size:26px;font-weight:400;line-height:1}
+.cl-list{}
+
+/* Card */
+.c{padding:9px 16px;border-bottom:1px solid #f0f0f0;display:flex;flex-direction:column;gap:3px}
+.c:active{background:#f8f8f8}
+.ct2{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.cn{font-size:15px;font-weight:500;color:#111;line-height:1.3;flex:1}
+.pts{display:flex;gap:2px;flex-wrap:wrap;justify-content:flex-end;flex-shrink:0;max-width:94px}
+.pt{font-family:'JetBrains Mono',monospace;font-size:7px;padding:2px 4px;border-radius:3px}
+.pt.BC{background:#e8f5ee;color:#1a7a45}
+.pt.AB{background:#e8f0fb;color:#1a4a8a}
+.pt.SK{background:#fdf6e0;color:#7a5c00}
+.pt.MB{background:#f4e8fc;color:#6b1a8a}
+.pt.ON{background:#fde8e8;color:#8a1a1a}
+.pt.QC{background:#fde8f5;color:#8a1a5c}
+.pt.ATL{background:#e8f8f8;color:#1a6b6b}
+.cm{display:flex;flex-direction:column;gap:2px}
+.calc-link{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:4px;padding:9px 11px;border:1px solid #cfe0ff;background:#eef5ff;border-radius:9px;color:#1d4ed8;text-decoration:none;font-size:14px;font-weight:500}
+.calc-link:hover{background:#dceaff}
+.calc-link span:last-child{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.2px}
+.mr{display:flex;align-items:center;gap:5px}
+.mr svg{color:#ccc;flex-shrink:0}
+.ph{font-family:'JetBrains Mono',monospace;font-size:11px;color:#666}
+.mr a{font-family:'JetBrains Mono',monospace;font-size:11px;color:#3b82f6;text-decoration:none}
+
+/* Empty */
+.em{text-align:center;padding:60px 20px}
+.em-w{font-size:28px;color:#ddd}
+.em-s{font-size:13px;color:#bbb;margin-top:6px}
+
+/* Footer */
+.ft{text-align:center;padding:20px 16px 40px;border-top:1px solid #ddd;margin:8px 16px 0}
+.ft-name{font-size:13px;color:#999;margin-bottom:6px}
+.ft a{font-family:'JetBrains Mono',monospace;font-size:11px;color:#3b82f6;text-decoration:none;display:block;margin-top:3px}
+.ft a:hover{text-decoration:underline}
+
+/* Notes + admin */
+.admin-wrap{display:flex;justify-content:center;padding:10px 16px 0}
+.admin-btn{font-size:13px;color:#2563eb;background:#eef4ff;border:1px solid #cfe0ff;padding:7px 14px}
+.admin-btn:hover{background:#dceaff}
+.cnote{margin-top:2px;padding:6px 8px;background:#f8fafc;border:1px dashed #d6dee9;border-radius:6px;font-size:12px;color:#334155;line-height:1.35}
+.cnote.locked{filter:blur(3px);user-select:none;pointer-events:none}
+.cnote details{margin-top:4px}
+.cnote summary{cursor:pointer;color:#1d4ed8;font-weight:700;outline:none}
+.cnote .note-full{margin-top:6px;white-space:pre-wrap}
+.ad{position:fixed;inset:0;z-index:220;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;padding:16px}
+.ad.show{display:flex}
+.ad-card{width:min(640px,100%);background:#fff;border:1px solid #dbe3f2;border-radius:16px;padding:18px;box-shadow:0 20px 55px rgba(2,6,23,.22);display:flex;flex-direction:column;gap:10px}
+.ad-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.ad-title{font-size:24px}
+.ad-x{font-size:13px;color:#6b7280;background:#f3f4f6;padding:6px 10px}
+.ad-x:hover{background:#e5e7eb}
+.ad-help{font-size:13px;color:#475569}
+.ad-label{font-size:13px;color:#334155}
+.ad-select,.ad-note{width:100%;border:1px solid #d5deec;border-radius:10px;padding:9px 10px;font-family:'JetBrains Mono',monospace;font-size:12px}
+.ad-note{min-height:140px;resize:vertical}
+.ad-actions{display:flex;flex-wrap:wrap;gap:8px}
+.ad-save{background:#3b82f6;color:#fff;padding:8px 14px;font-size:13px}
+.ad-del{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;padding:8px 14px;font-size:13px}
+.ad-save[disabled],.ad-del[disabled]{opacity:.45;cursor:not-allowed}
+.ad-msg{font-size:12px;color:#64748b;min-height:16px}
+.ad-auth{display:grid;gap:6px;padding:8px;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc}
+.ad-auth-row{display:flex;gap:8px;align-items:center}
+.ad-auth-btn{font-size:12px;padding:7px 12px;background:#111827;color:#fff}
+.ad-auth-state{font-size:12px;color:#475569}
+.ad-sync{font-size:12px;color:#64748b}
+.tb-btn{font-size:13px;color:#065f46;background:#ecfdf5;border:1px solid #a7f3d0;padding:7px 14px}
+.tb-btn:hover{background:#d1fae5}
+.tm{position:fixed;inset:0;z-index:230;background:rgba(2,6,23,.5);display:none;align-items:center;justify-content:center;padding:16px}
+.tm.show{display:flex}
+.tm-card{width:min(860px,100%);max-height:min(88vh,900px);overflow:auto;background:#fff;border:1px solid #dbe3f2;border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px}
+.tm-row{display:grid;gap:8px}
+.tm-grid{display:grid;gap:8px;grid-template-columns:1fr 1fr}
+.tm-input,.tm-area{width:100%;border:1px solid #d5deec;border-radius:10px;padding:9px 10px;font-family:'JetBrains Mono',monospace;font-size:12px}
+.tm-area{min-height:84px;resize:vertical}
+.tm-submit{background:#047857;color:#fff;padding:9px 14px;font-size:13px}
+.th-wrap{display:grid;gap:10px}
+.th{border:1px solid #e5e7eb;border-radius:12px;padding:10px;background:#fafafa}
+.th-h{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.th-title{font-size:14px;color:#111}
+.th-meta{font-size:11px;color:#6b7280}
+.th-req{font-size:13px;color:#1f2937;margin-top:6px;white-space:pre-wrap}
+.msg-wrap{display:grid;gap:6px;margin-top:8px}
+.msg{background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:7px}
+.msg-meta{font-size:10px;color:#64748b}
+.msg-body{font-size:12px;color:#0f172a;white-space:pre-wrap}
+.th-reply{display:grid;gap:6px;margin-top:8px}
+.th-top{display:grid;grid-template-columns:1.1fr .9fr .8fr auto;gap:8px;align-items:center}
+.th-col{background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:6px}
+.th-k{font-size:10px;color:#64748b}
+.th-v{font-size:12px;color:#0f172a}
+.th-toggle{background:#0f766e;color:#fff;padding:7px 12px;font-size:12px}
+.th-body{display:none}
+.th.open .th-body{display:block}
+.rep-table{width:100%;border-collapse:collapse;font-size:12px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden}
+.rep-table th,.rep-table td{border-bottom:1px solid #eef2f7;padding:6px;vertical-align:top;text-align:left}
+.rep-table th{font-size:10px;color:#64748b;background:#f8fafc}
+
+
+/* ACCESS GATE */
+.gate{position:fixed;inset:0;z-index:200;background:linear-gradient(135deg,#f8fbff 0%,#eef4ff 50%,#ffffff 100%);display:flex;align-items:center;justify-content:center;padding:20px}
+.gate.hide{display:none}
+.g-card{width:min(560px,100%);background:#fff;border:1px solid #e6ebf5;border-radius:18px;box-shadow:0 18px 55px rgba(17,24,39,.08);padding:26px 22px;display:flex;flex-direction:column;gap:14px}
+.g-k{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.45px;color:#6b7280;text-transform:uppercase}
+.g-title{font-size:30px;line-height:1.08;letter-spacing:-.3px}
+.g-sub{font-size:15px;color:#4b5563}
+.gf{display:grid;gap:10px;margin-top:4px}
+.gl{font-size:13px;color:#374151;margin-bottom:3px;display:block}
+.gi{width:100%;border:1px solid #d9e2f2;background:#f8faff;padding:11px 12px;border-radius:10px;font-size:15px;font-family:'JetBrains Mono',monospace;outline:none}
+.gi:focus{border-color:#3b82f6;background:#fff;box-shadow:0 0 0 3px rgba(59,130,246,.14)}
+.g-actions{display:flex;align-items:center;gap:12px;justify-content:space-between;margin-top:6px}
+.g-note{font-size:12px;color:#6b7280}
+.g-btn{background:#3b82f6;color:#fff;border:none;border-radius:999px;padding:10px 16px;font-size:15px}
+.g-btn:hover{background:#2563eb}
+.g-err{font-size:12px;color:#b91c1c;min-height:16px}
+
+/* Tablet+ */
+@media(min-width:600px){
+  .hd-name{font-size:30px}
+  .cl-list{display:grid;grid-template-columns:1fr 1fr}
+  .c{padding:9px 20px}
+  .ah{padding:14px 20px 3px}
+}
+@media(min-width:960px){
+  .cl-list{grid-template-columns:1fr 1fr 1fr}
+  .hd-name{font-size:34px}
+}
+</style>
+</head>
+<body>
+
+<div class="gate" id="gate">
+  <div class="g-card">
+    <div class="g-k">Secure Access</div>
+    <div class="g-title">Alternate Lender Directory</div>
+    <div class="g-sub">Please provide your contact details to access the list.</div>
+    <form id="gateForm" class="gf">
+      <div id="gNameWrap">
+        <label for="gName" class="gl">Full Name</label>
+        <input id="gName" name="name" class="gi" type="text" autocomplete="name" required>
+      </div>
+      <div>
+        <label for="gEmail" class="gl">Email</label>
+        <input id="gEmail" name="email" class="gi" type="email" autocomplete="email" required>
+      </div>
+      <div>
+        <label for="gPhone" class="gl">Phone</label>
+        <input id="gPhone" name="phone" class="gi" type="tel" autocomplete="tel" required>
+      </div>
+      <div>
+        <label for="gPassword" class="gl">Password</label>
+        <input id="gPassword" name="password" class="gi" type="password" autocomplete="current-password" required>
+      </div>
+      <div class="g-actions">
+        <div class="g-note">Please enter details to continue. Contact details are saved for follow-up.</div>
+      <button class="g-btn" type="submit" id="gateSubmit">Login</button>
+      </div>
+      <button class="cl" id="gateModeToggle" type="button">Need an account? Create one</button>
+      <div class="g-err" id="gErr"></div>
+    </form>
+  </div>
+</div>
+
+
+<div class="hd">
+  <div class="hd-name">Vancouver Finance Company Inc.</div>
+  <div class="hd-sub">Alternate Lender List (2025–2026)</div>
+  <div class="pills">
+    <div class="pill-wrap">
+      <button class="t-btn on" data-tab="R">Residential<span class="tc" id="rc"></span></button>
+      <button class="t-btn" data-tab="C">Commercial<span class="tc" id="cc"></span></button>
+    </div>
+  </div>
+  <div class="pills" style="padding-top:10px">
+    <div class="pill-wrap prow">
+      <button class="p-btn" data-p="BC">BC</button>
+      <button class="p-btn" data-p="AB">AB</button>
+      <button class="p-btn" data-p="SK">SK</button>
+      <button class="p-btn" data-p="MB">MB</button>
+      <button class="p-btn" data-p="ON">ON</button>
+      <button class="p-btn" data-p="QC">QC</button>
+      <button class="p-btn" data-p="ATL">ATL</button>
+    </div>
+  </div>
+  <div class="admin-wrap">
+    <button class="admin-btn" id="adminOpen">Admin Portal</button>
+    <button class="tb-btn" id="threadOpen" style="margin-left:8px">Deal Threads</button>
+  </div>
+</div>
+
+<div class="sb">
+  <div class="sw">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input id="q" type="text" placeholder="Search lender…" autocomplete="off">
+  </div>
+  <span class="ct"><em id="n">0</em></span>
+  <button class="cl" id="clr">Clear</button>
+</div>
+<div class="tm" id="threadModal">
+  <div class="tm-card">
+    <div class="ad-top">
+      <div class="ad-title">Deal Threads</div>
+      <button class="ad-x" id="threadClose">Close</button>
+    </div>
+    <div class="ad-help">Post a funding request. Each deal becomes a unique thread. Investors can review and contact directly.</div>
+    <div class="tm-row">
+      <div class="tm-grid">
+        <input id="thName" class="tm-input" placeholder="Your name">
+        <input id="thContact" class="tm-input" placeholder="Email or phone">
+      </div>
+      <div class="tm-grid">
+        <input id="thLocation" class="tm-input" placeholder="Property location">
+        <input id="thAmount" class="tm-input" placeholder="Requested amount (e.g. 850000)">
+      </div>
+      <input id="thLtv" class="tm-input" placeholder="Requested LTV (e.g. 75%)">
+      <textarea id="thReq" class="tm-area" placeholder="Extra deal details / notes (optional)"></textarea>
+      <div>
+        <button id="thCreate" class="tm-submit">Create Thread</button>
+        <span id="thMsg" class="ad-msg"></span>
+      </div>
+    </div>
+    <div id="threadsList" class="th-wrap"></div>
+  </div>
+</div>
+
+<div id="list"></div>
+<div class="ad" id="adminModal">
+  <div class="ad-card">
+    <div class="ad-top">
+      <div class="ad-title">Admin Portal</div>
+      <button class="ad-x" id="adminClose">Close</button>
+    </div>
+    <div class="ad-help">Add internal deal notes for each member. Notes are visible to all users and will sync online when the configured endpoint is available.</div>
+    <div class="ad-auth">
+      <div class="ad-label">Admin password required to edit notes</div>
+      <div class="ad-auth-row">
+        <input id="adminPassword" class="ad-select" type="password" placeholder="Enter admin password">
+        <button id="adminUnlock" class="ad-auth-btn">Unlock</button>
+      </div>
+      <div id="adminAuthState" class="ad-auth-state">Locked (view only).</div>
+      <div id="adminSyncStatus" class="ad-sync">Sync status: checking…</div>
+    </div>
+    <label class="ad-label" for="adminMember">Member</label>
+    <select id="adminMember" class="ad-select"></select>
+    <label class="ad-label" for="adminNote">Notes</label>
+    <textarea id="adminNote" class="ad-note" placeholder="Add your deal experience, strengths, red flags, and contact preferences..."></textarea>
+    <div class="ad-actions">
+      <button class="ad-save" id="adminSave">Save note</button>
+      <button class="ad-del" id="adminDelete">Delete note</button>
+    </div>
+    <div class="ad-help" style="margin-top:6px">Add New Lender (Admin)</div>
+    <div class="tm-grid">
+      <select id="newLenderTab" class="ad-select">
+        <option value="R">Residential</option>
+        <option value="C">Commercial</option>
+      </select>
+      <input id="newLenderName" class="ad-select" placeholder="Lender name">
+    </div>
+    <div class="tm-grid">
+      <input id="newLenderPhone" class="ad-select" placeholder="Phone (optional)">
+      <input id="newLenderWeb" class="ad-select" placeholder="Website (optional, no https://)">
+    </div>
+    <input id="newLenderProv" class="ad-select" placeholder="Provinces comma-separated (e.g. BC,AB,ON)">
+    <div class="ad-actions">
+      <button class="ad-save" id="addLenderBtn">Add Lender</button>
+    </div>
+    <div class="ad-msg" id="adminMsg"></div>
+  </div>
+</div>
+
+<script>
+var R=[
+  {n:"1 City Financial Ltd.",p:"604.912.0207",w:"1city.ca",v:["BC","AB","ON"]},
+  {n:"460 Mortgage Investment Corporation",p:"250.501.4601",w:"460mic.com",v:["BC"]},
+  {n:"AAREA Private Lending Inc.",p:"855.830.7452",w:"aarea.ca",v:["BC","ON"]},
+  {n:"Accepted Financial Corporation",p:"604.937.7269",w:"acceptedmic.com",v:["BC"]},
+  {n:"Accountable Mortgage Investment Corp.",p:"778.681.1972",w:"accountablemic.com",v:["BC"]},
+  {n:"Advanced MIC",p:"613.656.0869",w:"advancedmic.com",v:["ON"]},
+  {n:"Align Mortgage Corporation",p:"888.848.1878",w:"alignmortgage.ca",v:["BC"]},
+  {n:"All Harmony Financial Services Ltd.",p:"778.829.8766",w:"",v:["BC"]},
+  {n:"All Island Equity MIC",p:"250.244.9700",w:"allislandequitymic.com",v:["BC"]},
+  {n:"ALT Mortgages",p:"778.840.7464",w:"altmortgages.ca",v:["BC","AB","MB","QC"]},
+  {n:"Alta West Capital",p:"888.554.9075",w:"awcapital.ca",v:["BC","AB","ON"]},
+  {n:"Alterman Financial Inc.",p:"778.990.5781",w:"altermanfinancial.com",v:["BC","SK"]},
+  {n:"Alternative Financing Options",p:"855.459.4061",w:"alternativefinancingoptions.ca",v:["ON","ATL"]},
+  {n:"Alternative Mortgage Solutions",p:"506.854.5626",w:"amortgages.co",v:["ATL"]},
+  {n:"Amber Financial Services Corp.",p:"778.297.4999",w:"amberfinancial.ca",v:["BC","SK"]},
+  {n:"Antrim Investments Ltd.",p:"604.530.2301",w:"antriminvestments.com",v:["BC","SK","ON"]},
+  {n:"AP Capital Mortgage Investment Corp.",p:"778.328.7401",w:"apcapital.ca",v:["BC","AB"]},
+  {n:"Armada Mortgage Corporation",p:"888.467.6449",w:"armadamortgage.com",v:["BC","AB","ON"]},
+  {n:"Aroi Mortgage Investment Corporation",p:"902.681.1100",w:"mic.aroi.ca",v:["ATL"]},
+  {n:"Astina Mortgages Group Ltd.",p:"604.726.1424",w:"astina.ca",v:["BC"]},
+  {n:"Atlantic Signature Mortgage & Loan",p:"902.406.1250",w:"atlanticsignature.com",v:["ATL"]},
+  {n:"Atrium Investment Corporation",p:"416.607.4209",w:"atriummic.com",v:["BC","SK","ON"]},
+  {n:"Aveo by CMLS Financial",p:"",w:"cmls.ca/brokers/aveo",v:["BC","AB","SK","MB","ON","QC"]},
+  {n:"B-Smart Home Loans Limited Partnership",p:"250.590.6525",w:"b-smarthomeloans.com",v:["BC","AB","ON","ATL"]},
+  {n:"B2B Bank",p:"800.263.8349",w:"b2bbank.com",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"Bancorp Financial Services Inc.",p:"888.966.2717",w:"bancorpfinancial.com",v:["BC","AB"]},
+  {n:"Bayfield Mortgage Professionals",p:"604.533.4478",w:"bayfield.ca",v:["BC","AB","SK"]},
+  {n:"BDP Capital Limited",p:"647.952.0828",w:"feintuchlaw.com",v:["ON"]},
+  {n:"Benson Capital",p:"647.505.5677",w:"bensoncapital.ca",v:["ON","QC","ATL"]},
+  {n:"Bloom Finance Company",p:"866.882.5666",w:"bloomfin.ca",v:["ON"]},
+  {n:"BlueShore Pacifica Alternative Mortgage Centre",p:"604.909.3780",w:"blueshorepacifica.com",v:["BC"]},
+  {n:"Breakwater Investments Inc.",p:"905.806.2292",w:"breakwaterinvestments.ca",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"Bridgewater Bank",p:"",w:"bwbrokermfo.ca",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"Brightpath Capital Corporation",p:"519.500.3330",w:"brightpath.ca",v:["ON"]},
+  {n:"Brilliant Phoenix Mortgage Investment Corp.",p:"778.386.2362",w:"phoenixmortgage.ca",v:["BC"]},
+  {n:"Brookstreet Mortgage Investment Corp.",p:"416.922.1200",w:"brookstreetmic.com",v:["ON"]},
+  {n:"Builder's Capital Management Corp.",p:"403.685.9888",w:"builderscapital.ca",v:["AB","SK","MB"]},
+  {n:"Burke Financial Corp.",p:"905.770.0036",w:"burkefinancial.ca",v:["ON"]},
+  {n:"Calvert Home Mortgage Investment Corp.",p:"403.278.0249",w:"chmic.ca",v:["AB","MB"]},
+  {n:"Cambridge MIC",p:"778.319.2661",w:"cambridgemic.com",v:["BC","AB","ON"]},
+  {n:"Can Terra Financial Inc.",p:"888.869.4912",w:"canterra.net",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"Canada Mortgage and Financial Group",p:"888.501.2076",w:"CMFG.ca",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"Canada Penfund Mortgage Corporation",p:"604.127.3500",w:"canadapenfund.ca",v:["BC"]},
+  {n:"Canadian Mortgage Capital Corporation",p:"416.867.1053",w:"cmcapitalcorp.com",v:["BC","ON"]},
+  {n:"Canadian Northwest Mortgage Corp.",p:"604.698.1265",w:"northwestmortgage.ca",v:["BC","AB"]},
+  {n:"Canfund Mortgages Corporation",p:"778.706.6690",w:"canfundmortgages.com",v:["BC"]},
+  {n:"Canguard Mortgage Investment Corporation",p:"604.679.7968",w:"canguard.ca",v:["BC","AB"]},
+  {n:"Capital Direct Atlantic",p:"855.571.7700",w:"capitaldirect.ca",v:["ATL"]},
+  {n:"Capital Direct Lending Corp.",p:"800.625.7747",w:"capitaldirect.ca",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"Caplink Financial Corporation",p:"888.429.0114",w:"caplink.ca",v:["BC","AB","SK","MB","ON","QC"]},
+  {n:"Cash Management Group Inc.",p:"519.640.2502",w:"cashmanagemntgroup.com",v:["ON"]},
+  {n:"Cash Loans Canada Inc.",p:"844.291.9300",w:"cashloanscanadainc.com",v:["BC","AB","ON"]},
+  {n:"Castleton Mortgages",p:"877.245.4646",w:"castletonmortgages.com",v:["ON","ATL"]},
+  {n:"Cedar Peaks Mortgage",p:"403.850.3373",w:"cedarpeaksmortgage.ca",v:["BC","AB"]},
+  {n:"Central Financial",p:"604.831.7670",w:"centrofinancial.ca",v:["BC"]},
+  {n:"Centum One Financial Group Inc.",p:"",w:"centum.ca/onefinancialgroup",v:["ON"]},
+  {n:"Centurion Mortgage Capital Corporation",p:"416.733.5600",w:"centurion.ca",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"Cherokee Financial Inc.",p:"416.262.9000",w:"",v:["ON"]},
+  {n:"CLN Finance",p:"416.494.1144",w:"clnfinance.com",v:["BC","AB","SK","MB","ON"]},
+  {n:"CMI Canadian Mortgages Inc.",p:"1.888.465.7888",w:"canadianlending.ca/brokers",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"Comat Mortgage Corporation",p:"604.558.3360",w:"comat.ca",v:["BC"]},
+  {n:"Community Trust Company",p:"800.268.1576",w:"communitytrust.ca",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"Consumers Choice Mortgages Inc.",p:"604.996.4629",w:"consumerschoicemortgages.ca",v:["BC"]},
+  {n:"Cooper Pacific MIC",p:"877.475.2669",w:"cooperpacific.ca",v:["BC"]},
+  {n:"Corwin Mortgage Capital Inc.",p:"416.727.2003",w:"corwincapital.ca",v:["ON"]},
+  {n:"Cove Mortgage Ltd.",p:"604.929.8156",w:"covemortgage.com",v:["BC"]},
+  {n:"CWB Optimum Mortgage",p:"437.248.6345",w:"optimummortgage.ca",v:["BC","AB","SK","MB","ON","QC"]},
+  {n:"CWB Trust Services",p:"800.663.1124",w:"cwt.ca",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"CYR Funding Inc.",p:"905.731.1111",w:"cyrfunding.com",v:["ON"]},
+  {n:"Domain Funding",p:"604.681.3000",w:"domainfunding.ca",v:["BC","AB"]},
+  {n:"Donald William Kam",p:"416.960.2236",w:"",v:["ON","ATL"]},
+  {n:"Drake Financial Ltd.",p:"604.855.6661",w:"drakefinancial.com",v:["BC","AB"]},
+  {n:"DUCA Financial Services Credit Union",p:"866.900.3822",w:"duca.com",v:["ON"]},
+  {n:"Dundarave Mortgage Investment Corporation",p:"604.985.5626",w:"dmic.ca",v:["BC"]},
+  {n:"DV Capital",p:"416.318.6850",w:"dvcapitalcorp.com",v:["ON"]},
+  {n:"East Coast Mortgage Brokers",p:"709.754.0422",w:"",v:["ATL"]},
+  {n:"Eclipse Mortgages",p:"1.866.260.3786",w:"eclipsemortgages.ca",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"Editions Mortgage",p:"866.269.3786",w:"edypsmortgages.ca",v:["BC","SK","MB","ON","QC","ATL"]},
+  {n:"Effort Trust",p:"416.924.4680",w:"efforttrust.ca",v:["ON"]},
+  {n:"Elle Mortgage Corporation",p:"416.961.0001",w:"ecmb.ca",v:["ON"]},
+  {n:"Equitable Bank",p:"866.407.0004",w:"equitablebank.ca",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"Equity Financial Trust Company",p:"855.272.0050",w:"equityfinancialtrust.com",v:["BC","ON"]},
+  {n:"Farm Lending Canada",p:"844.833.2276",w:"farmlending.ca/mortgage-brokers",v:["BC","AB","SK","MB","ON","ATL"]},
+  {n:"Fast Access Financial",p:"855.367.9101",w:"fastaccess.ca",v:["ON"]},
+  {n:"FC Mortgage",p:"833.FC.LENDS",w:"fcmortgages.ca",v:["ON"]},
+  {n:"Finn Larsen Mortgage Services",p:"250.809.9999",w:"",v:["BC","SK"]},
+  {n:"Firm Capital Corporation",p:"416.635.0221",w:"firmcapital.com",v:["BC","SK","MB","ON","QC","ATL"]},
+  {n:"First Capital Corp.",p:"416.456.2588",w:"firstcapitalcorp.com",v:["ON"]},
+  {n:"First Circle Financial Services Ltd.",p:"604.986.3200",w:"firstcircle.ca",v:["BC"]},
+  {n:"First Island Financial Services Ltd.",p:"250.388.5441",w:"firstisland.com",v:["BC","SK"]},
+  {n:"First National Financial LP",p:"800.465.0039",w:"firstnational.ca",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"First Source Mortgage Corporation",p:"416.221.2238",w:"firstsourcemortgage.ca",v:["ON"]},
+  {n:"First West Credit Union",p:"844.223.0931",w:"firstwestcu.ca",v:["BC"]},
+  {n:"Fisgard Asset Management",p:"888.382.9256",w:"fisgard.com",v:["BC","AB","SK","MB","ON"]},
+  {n:"Foremost Financial",p:"416.488.5300",w:"foremostfinancial.com",v:["ON"]},
+  {n:"Freedom Capital",p:"866.944.7778",w:"freedomcapital.com",v:["BC","SK","ON"]},
+  {n:"Funding Centre",p:"604.830.7080",w:"fundingcentre.ca",v:["BC","SK"]},
+  {n:"Funds2Go Inc.",p:"416.444.4252",w:"Funds2Go.ca",v:["ON"]},
+  {n:"Gentai Capital Corporation",p:"604.638.1580",w:"GentaiCapital.com",v:["BC","AB","ON","QC","ATL"]},
+  {n:"Ginko Mortgage Investment Corporation",p:"855.901.5133",w:"gnkogmic.com",v:["BC","SK","ON","QC"]},
+  {n:"Glengarry Farm Finance",p:"1.844.458.3276",w:"glengarry.ca",v:["BC","AB","SK","MB","ON","QC"]},
+  {n:"GNE Mortgages Inc.",p:"905.757.1900",w:"gnemortgages.com",v:["ON"]},
+  {n:"Gold Capital Corp.",p:"778.386.7264",w:"GoldCapital.ca",v:["BC"]},
+  {n:"Graysbrook Capital Ltd.",p:"902.222.2670",w:"graysbrookcapital.ca",v:["ON","ATL"]},
+  {n:"Great Pacific Mortgage & Investments Ltd.",p:"800.667.0440",w:"greatpacificmortgage.com",v:["BC"]},
+  {n:"HarbourEdge Mortgage Investment Corporation",p:"705.443.8156",w:"harbouedge.com",v:["ON"]},
+  {n:"Haventree Bank",p:"855.272.0058",w:"haventreebank.com",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"Hera Investment Funds Inc.",p:"604.339.4422",w:"herafunds.com",v:["BC"]},
+  {n:"Hi-Rise Capital",p:"416.865.3398",w:"hntscapital.com",v:["BC"]},
+  {n:"Highland Mortgage Investment Corp.",p:"604.986.1002",w:"highlandmortgages.ca",v:["BC"]},
+  {n:"Hillmount Capital Inc.",p:"416.849.0322",w:"hillmount.ca",v:["ON"]},
+  {n:"Home Trust",p:"855.270.3630",w:"hometrust.ca",v:["BC","SK","MB","ON","QC"]},
+  {n:"HomeEquity Bank (CHIP)",p:"855.925.2447",w:"chipadviser.ca",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"Hosper Mortgage Investment Corp.",p:"888.495.4906",w:"hospermortgage.com",v:["ON"]},
+  {n:"IC Savings",p:"647.668.2907",w:"icssmb.ca",v:["ON","QC","ATL"]},
+  {n:"ICICI Bank Canada",p:"844.484.8497",w:"icicibank.ca",v:["BC","SK","ON"]},
+  {n:"IEC - Interior Equities Corp.",p:"800.663.1575",w:"interiorequities.com",v:["ON"]},
+  {n:"iMortgage Canada",p:"604.649.0419",w:"iMortgagecanada.com",v:["BC"]},
+  {n:"Indigoblue Mortgage Investment Corporation",p:"416.400.3977",w:"ibmic.ca",v:["ON","ATL"]},
+  {n:"Indocan (Ontario) Investment Corporation",p:"416.918.4751",w:"",v:["ON"]},
+  {n:"Infinity Mortgage Fund Ltd.",p:"250.878.0445",w:"infinitylending.ca",v:["BC"]},
+  {n:"InstaFund Financial Services Ltd.",p:"604.687.2020",w:"instafund.com",v:["ON"]},
+  {n:"Integrity Mortgage Inc.",p:"848.399.8890",w:"kimstrynaika.ca",v:["BC","SK"]},
+  {n:"Interfinance Mortgage Corporation",p:"416.445.4890",w:"interfinance.ca",v:["ON"]},
+  {n:"Invis-Mortgage Network",p:"604.868.0902",w:"mortgagenetworkcanada.com",v:["BC"]},
+  {n:"Jaycap Financial Ltd.",p:"780.641.0555",w:"jaycapfinancial.com",v:["AB","SK","MB"]},
+  {n:"Jin-Ocean Mortgage Investment Corporation",p:"778.384.0930",w:"jin-oceanmic.com",v:["BC"]},
+  {n:"JV Capital",p:"416.572.7337",w:"jvcapital.ca",v:["ON"]},
+  {n:"JW Capital Inc.",p:"902.456.6525",w:"jwcapital.ca",v:["ATL"]},
+  {n:"King Capital Mortgage Investment Corporation",p:"888.341.5464",w:"kingcapitalmic.ca",v:["BC","AB","ON"]},
+  {n:"Kingsmen Capital Investments",p:"800.822.3998",w:"kingsmen-capital.com",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"Kokanee Mortgage MIC Ltd.",p:"250.628.2849",w:"kokaneemortgagemic.com",v:["BC","ATL"]},
+  {n:"KV Capital Inc.",p:"780.433.1222",w:"kvcapital.ca",v:["AB"]},
+  {n:"Lanyard Financial Corporation",p:"778.227.9434",w:"lanyardgroup.com",v:["BC","AB","ON","QC"]},
+  {n:"Liahona Mortgage Investment Corp.",p:"905.588.2749",w:"liahona.ca",v:["ON"]},
+  {n:"Lisbona Mortgage Investment Corp.",p:"905.588.2749",w:"liahona.ca",v:["ON"]},
+  {n:"M12 Capital MIC",p:"416.778.1914",w:"m12mic.com",v:["ON"]},
+  {n:"Macquarie Financial Ltd.",p:"604.605.3944",w:"macquariefinancial.com",v:["BC","AB","SK","ON"]},
+  {n:"Magenta Capital Corporation",p:"888.267.1744",w:"magentainvestment.ca",v:["BC","AB","SK","MB","ON"]},
+  {n:"Magnum Mortgage & Realty Corp.",p:"780.467.6393",w:"mmrc.ca",v:["AB"]},
+  {n:"Mandate Management Corporation",p:"604.813.7532",w:"mandatemortgage.com",v:["BC","AB","SK","MB","ON","QC"]},
+  {n:"MCAP",p:"",w:"MCAP.com",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"MCF Mortgages",p:"416.272.0494",w:"mcfmortgages.com",v:["ON"]},
+  {n:"Mercury Mortgages",p:"905.273.4234",w:"kothargroup.com",v:["ON","AB"]},
+  {n:"Meridian Credit Union",p:"866.592.2100",w:"meridiancu.ca",v:["ON"]},
+  {n:"Merit Valor Asset Management Corp",p:"416.283.2377",w:"mertivaor.com",v:["BC","AB","MB","ON"]},
+  {n:"MERIX Financial",p:"888.637.4920",w:"merixfinancial.com",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"MIP Mortgage and Investment Professionals Inc.",p:"403.253.2022",w:"MIPMortgage.com",v:["BC","AB"]},
+  {n:"Morrison Financial Mortgage Corporation",p:"",w:"morrisonfinancial.com",v:["BC","ON"]},
+  {n:"Mortgage Alliance Mortgage Solutions",p:"416.617.7300",w:"",v:["ON"]},
+  {n:"Mortgage Broker Store",p:"416.499.2122",w:"mortgagebrokerstore.com",v:["ON"]},
+  {n:"Mortgage Power Canada",p:"647.647.2424",w:"mortgagepower.ca",v:["ON"]},
+  {n:"MortgageMaster.com Ltd.",p:"416.635.1010",w:"mortgagemaster.com",v:["ON"]},
+  {n:"MortgagePRO Ltd.",p:"403.253.2022",w:"mymortgagepros.com",v:["ON"]},
+  {n:"Moskowtz Capital",p:"",w:"moskowitzcapital.com",v:["BC","SK","MB","ON","QC","ATL"]},
+  {n:"Mountain Investment Corp.",p:"403.764.0517",w:"micorp.ca",v:["BC","AB","ON"]},
+  {n:"Nation Capital Corp.",p:"604.681.7772",w:"nationcapital.ca",v:["BC"]},
+  {n:"National Equity Lending Corp.",p:"604.800.1660",w:"nationalending.ca",v:["BC","AB"]},
+  {n:"Neighbourhood Holdings",p:"604.731.3899",w:"neighbourhoodholdings.com",v:["BC","AB","SK","MB","QC","ATL"]},
+  {n:"Neufeld Capital Inc.",p:"403.531.2513",w:"neufelcapital.com",v:["AB"]},
+  {n:"New City Financial Corp.",p:"778.308.5422",w:"newcityfinancialgroup.com",v:["BC"]},
+  {n:"New Haven Mortgage Corporation",p:"416.636.0000",w:"newhavenmortgage.com",v:["ON"]},
+  {n:"Ninth Avenue Capital Ltd.",p:"833.527.4153",w:"ninthavenuecapital.ca",v:["AB"]},
+  {n:"Northland Mortgage & Investment Corp.",p:"250.923.0719",w:"northlandmortgage.ca",v:["BC","MB"]},
+  {n:"Novus Investment Corp.",p:"604.464.7075",w:"noussinvestment.ca",v:["BC"]},
+  {n:"NPX (a product of MERIX Financial)",p:"647.355.0794",w:"merixfinancial.com",v:["BC","SK","ON","QC"]},
+  {n:"Olympia Trust Company",p:"403.261.0900",w:"olympiatrust.com",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"Ontario Wealth Management Corporation",p:"866.901.1555",w:"owmanco.com",v:["ON"]},
+  {n:"Oppono Lending Company",p:"416.669.9274",w:"oppono.com",v:["BC"]},
+  {n:"Overland Capital Canada Inc.",p:"604.343.3711",w:"overlandcapital.ca",v:["BC"]},
+  {n:"OZ Capital",p:"905.532.9288",w:"ozcapital.ca",v:["BC","ON"]},
+  {n:"Peet & Cowan Financial Services",p:"604.684.6420",w:"peetcowan.com",v:["BC","SK"]},
+  {n:"Peoples Group",p:"647.214.1934",w:"peoplesgroup.com",v:["BC","ON","QC"]},
+  {n:"Peoples Trust Company",p:"855.683.2881",w:"peoplestrust.com",v:["BC"]},
+  {n:"PHL",p:"604.579.0847",w:"phlcapital.com",v:["BC","AB","ON"]},
+  {n:"Phoenix Financial Inc.",p:"902.406.7616",w:"phoenixfinancialinc.net",v:["ATL"]},
+  {n:"Pillar Financial Services Inc.",p:"877.279.2116",w:"pillarfinancial.ca",v:["ON"]},
+  {n:"Premiere Home Mortgage Ltd.",p:"",w:"premierecanadian.ca",v:["BC","AB","ON"]},
+  {n:"Pineapple",p:"833.347.7799",w:"gopineapple.ca",v:["BC","SK","MB","ON","QC","ATL"]},
+  {n:"Pacifica Mortgage Investment Corp.",p:"",w:"pacificamortgage.ca",v:["BC"]},
+  {n:"Pioneer West Acceptance Corp.",p:"604.679.9447",w:"pioneerwest.com",v:["BC","SK"]},
+  {n:"PMB Professional Mortgage Brokers Inc.",p:"905.985.4029",w:"pmbmortgages.ca",v:["ON"]},
+  {n:"Pocmit Realty Advisors Inc.",p:"905.522.7936",w:"pracommercial.com",v:["ON"]},
+  {n:"Premiera Mortgage Inc.",p:"866.460.4409",w:"mortgagecanada.net",v:["BC","MB"]},
+  {n:"Private Lending Hub",p:"855.553.8637",w:"privatelendinhghub.com",v:["BC","SK","MB","ON","QC","ATL"]},
+  {n:"Prospera Credit Union",p:"888.440.4480",w:"prospera.ca",v:["BC"]},
+  {n:"Providus Mortgage Investment Corporation",p:"604.662.8003",w:"providus.ca",v:["BC"]},
+  {n:"Qualhold Corporation",p:"416.214.1114",w:"qualhold.ca",v:["ON"]},
+  {n:"Radius Financial Inc.",p:"877.369.6308",w:"radiusfinancial.ca",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"Rala Investments Ltd.",p:"866.732.5865",w:"ralainvestments.com",v:["BC"]},
+  {n:"Raven Financial Services",p:"905.361.7122",w:"ravenfinancialservices.ca",v:["ON"]},
+  {n:"REA Lending Corp.",p:"905.856.4220",w:"REAlending.ca",v:["ON"]},
+  {n:"Ready Capital Mortgage Investment Trust",p:"905.305.8499",w:"readycapital.ca",v:["BC","AB","ON"]},
+  {n:"Real Capital Corp.",p:"587.430.0658",w:"realfastcapital.com",v:["SK"]},
+  {n:"Reciprocal Opportunities Inc.",p:"519.755.6252",w:"roigroup.ca",v:["ON"]},
+  {n:"Reliable Mortgages Ltd.",p:"778.293.1912",w:"reliablemortgages.ca",v:["BC","ON"]},
+  {n:"RESCO Mortgage Investment Corporation",p:"905.886.8786",w:"rescomic.ca",v:["BC","ON","QC"]},
+  {n:"RFA Bank of Canada",p:"647.259.7873",w:"rfa.ca",v:["BC","SK","MB","ON","QC","ATL"]},
+  {n:"Richview Capital MIC Inc.",p:"416.307.2336",w:"richviewcapitalmic.com",v:["BC","ON"]},
+  {n:"RiverRock Mortgage Investment Corporation",p:"416.504.1886",w:"rveinrockmic.com",v:["BC"]},
+  {n:"RMG Mortgages",p:"",w:"RMGMortgages.ca",v:["BC","MB","ON","QC","ATL"]},
+  {n:"Rompas Investment Corporation",p:"800.494.0389",w:"rompas.com",v:["BC","SK","ON"]},
+  {n:"Royal Canadian Asset Management Inc.",p:"289.264.2473",w:"royalcanadianmortgage.com",v:["ON"]},
+  {n:"Rydan Private Lending",p:"416.453.7826",w:"rydanprivatelending.com",v:["ON"]},
+  {n:"Secure Capital MIC Inc.",p:"905.709.8633",w:"securecapitalmic.com",v:["SK","ON","QC","ATL"]},
+  {n:"Sequence Capital Inc.",p:"888.228.3834",w:"sequencecapital.ca",v:["BC","AB","ON","QC"]},
+  {n:"Seven Lending",p:"604.260.6900",w:"sevenlending.ca",v:["BC"]},
+  {n:"Shelter Lending Corporation",p:"866.777.9567",w:"shelterlending.ca",v:["BC","SK","MB"]},
+  {n:"Shorkey Mortgage Corp.",p:"250.818.0894",w:"shorkey.ca",v:["BC"]},
+  {n:"Sierra Mortgage Fund Ltd.",p:"250.558.1111",w:"sierramortgage.ca",v:["BC","SK"]},
+  {n:"Spectrum Canada Mortgage Services Inc.",p:"877.253.4377",w:"spectrum.canada.com",v:["BC","SK","ON"]},
+  {n:"Sterling Bridge Mortgage Corp.",p:"403.298.0638",w:"sterlingbridge.ca",v:["SK"]},
+  {n:"Stewart Mortgage Corp.",p:"250.372.1995",w:"stewartmortgage.ca",v:["BC"]},
+  {n:"Tekamar Mortgage Fund Ltd.",p:"",w:"tekfund.ca",v:["BC"]},
+  {n:"Strive Capital",p:"403.633.7340",w:"strivecapital.ca",v:["BC","AB","SK","MB","QC","ATL"]},
+  {n:"Sun Micro Financial - The Mortgage Centre",p:"905.212.1099",w:"sunmicrofinancial.ca",v:["BC","AB","ON"]},
+  {n:"Syndicate Lending Corporation",p:"604.829.7007",w:"syndicatelending.com",v:["BC"]},
+  {n:"Tallinn Capital Partners Corp.",p:"604.329.8732",w:"tallinncapital.com",v:["BC","AB"]},
+  {n:"Tembo Financial",p:"416.238.6717",w:"tembofinancial.com",v:["ON"]},
+  {n:"Terrafund Financial Inc.",p:"604.684.8394",w:"terrafund.com",v:["BC","AB","MB","ON"]},
+  {n:"Terrapin Mortgage Investment Corp.",p:"604.684.8394",w:"TMIC.ca",v:["BC","AB","MB","ON"]},
+  {n:"The Nova Team",p:"604.831.6682",w:"wemortgagecanada.ca",v:["BC"]},
+  {n:"Three Point Capital",p:"800.979.2911",w:"threepointcapital.ca",v:["BC","AB","ON"]},
+  {n:"Timbercreek Financial Corporation",p:"844.304.9967",w:"timbercreekfinancial.com",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"Timberlee Financial Ltd.",p:"250.769.7490",w:"",v:["BC"]},
+  {n:"Titus Financial Inc.",p:"778.786.7225",w:"titusfinance.com",v:["BC","AB"]},
+  {n:"Tri City Mortgage Fund Ltd.",p:"604.569.2015",w:"tricitygroup.ca",v:["BC","AB","ON"]},
+  {n:"Tribecca Finance Corporation",p:"416.225.6900",w:"tribecca.ca",v:["ON"]},
+  {n:"TriLend Inc.",p:"905.851.5565",w:"trilend.com",v:["ON"]},
+  {n:"Tudor Mortgage Investment Corp.",p:"604.536.0503",w:"",v:["BC"]},
+  {n:"Unimor Capital Corporation",p:"519.255.9505",w:"unimorcapital.com",v:["AB","ON"]},
+  {n:"Union Capital Lending",p:"289.371.3300",w:"unioncapital.ca",v:["ON"]},
+  {n:"Vanmortgage Capital Management Corp.",p:"604.336.7876",w:"vanmortgage.com",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"Vault Mortgage Corporation",p:"416.571.6980",w:"vaultmortgage.ca",v:["ON"]},
+  {n:"Vector Pacific Mortgage Corporation",p:"604.986.3377",w:"vpmc.ca",v:["BC"]},
+  {n:"Verifund Capital Corp.",p:"604.757.9460",w:"verifundcapital.com",v:["BC"]},
+  {n:"Versatile Mortgage Corporation",p:"403.538.6666",w:"",v:["AB"]},
+  {n:"Vita Lending Corp.",p:"604.780.5177",w:"vitalending.ca",v:["BC"]},
+  {n:"VWR Capital Corp.",p:"866.907.5407",w:"vwrcapital.com",v:["BC","AB","SK","MB","ON"]},
+  {n:"Westboro Mortgage Investment Corp",p:"844.729.5764",w:"westboromic.com",v:["ON"]},
+  {n:"WestCan Mortgage Solutions Inc.",p:"877.559.1005",w:"westcanmortgage.ca",v:["BC","AB"]},
+  {n:"Westpoint Capital Corporation",p:"780.433.5516",w:"westpointcapital.ca",v:["AB"]},
+  {n:"XMC Mortgage Corporation",p:"888.811.6660",w:"xmcmortgage.com",v:["BC","AB","SK","MB","ON"]}
+];
+
+var C=[
+  {n:"All Harmony Financial Services Ltd.",p:"778.829.8766",w:"",v:["BC"]},
+  {n:"Benson Capital",p:"647.505.5677",w:"bensoncapital.ca",v:["ON"]},
+  {n:"BT Advisory / Briez Taylor Investments Ltd.",p:"416.830.9167",w:"btinvest.ca",v:["ON"]},
+  {n:"Construction Calculator",p:"",w:"construction-calculator.html",v:["BC","AB","SK","MB","ON","QC","ATL"],calc:true},
+  {n:"Cedar Peaks Mortgage Services Ltd.",p:"403.850.3373",w:"cedarpeaksmortgage.ca",v:["BC","AB"]},
+  {n:"Centurion Mortgage Capital Corporation",p:"416.733.5600",w:"centurion.ca",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"City Mortgage Investment Corporation",p:"604.763.3346",w:"citymortgage.ca",v:["BC"]},
+  {n:"Cove Mortgage Ltd.",p:"",w:"covemortgage.com",v:["BC"]},
+  {n:"Community Trust Company",p:"800.268.1576",w:"communitytrust.ca",v:["BC","AB","ON"]},
+  {n:"Domain Funding",p:"604.681.0000",w:"domainfunding.ca",v:["BC","AB"]},
+  {n:"East Coast Mortgage Brokers",p:"709.754.0422",w:"ecmb.ca",v:["ATL"]},
+  {n:"Fisgard Capital Corporation",p:"866.382.9255",w:"fisgard.com",v:["BC","AB"]},
+  {n:"Force 10 Capital Management Inc.",p:"905.815.9062",w:"force10capital.com",v:["ON"]},
+  {n:"Foremost Financial Corporation",p:"416.488.5300",w:"foremostfinancial.com",v:["ON"]},
+  {n:"First Capital Corp.",p:"416.456.2588",w:"firstcapitalcorp.com",v:["ON"]},
+  {n:"First Source Mortgage Corp",p:"416.221.2238",w:"firstsourcemortgage.ca",v:["ON"]},
+  {n:"Funds2Go Inc.",p:"416.444.4252",w:"Funds2Go.ca",v:["ON"]},
+  {n:"Gentai Capital Corporation",p:"604.638.1580",w:"gentaicapital.com",v:["BC","AB","ON"]},
+  {n:"Gold Capital Corp.",p:"778.386.7264",w:"GoldCapital.ca",v:["BC"]},
+  {n:"IC Funding Financial Corporation",p:"855.673.3528",w:"lcfunding.com",v:["BC","AB","ON"]},
+  {n:"InstaFund Financial Services Ltd.",p:"604.687.2020",w:"instafund.com",v:["BC"]},
+  {n:"JW Capital Inc.",p:"902.456.6525",w:"jwcapital.ca",v:["ATL"]},
+  {n:"Lanyard Financial Corporation",p:"604.658.5388",w:"lanyardgroup.com",v:["BC"]},
+  {n:"Mandate Management Corporation",p:"604.813.7532",w:"mandatemortgage.com",v:["BC"]},
+  {n:"Monfund Financial Inc.",p:"800.966.6680",w:"monfund.com",v:["BC","AB"]},
+  {n:"Morrison Financial Mortgage Corporation",p:"416.391.3535",w:"morrisonfinancial.com",v:["BC","AB","ON"]},
+  {n:"Nexus Investment Corp.",p:"604.664.7075",w:"nexusinvestment.ca",v:["BC"]},
+  {n:"Optimum Mortgage",p:"866.441.3775",w:"optimummortgage.ca",v:["ON"]},
+  {n:"Pioneer West Acceptance Corp.",p:"604.987.1420",w:"pioneerwest.com",v:["BC","AB"]},
+  {n:"Reliable Mortgages Inc.",p:"778.293.1912",w:"reliablemortgages.ca",v:["BC"]},
+  {n:"Rompas Investment Corporation",p:"800.494.0389",w:"rompas.com",v:["BC","AB","ON"]},
+  {n:"Rydan Private Lending",p:"416.453.7826",w:"rydanprivatelending.com",v:["ON"]},
+  {n:"Shinhan Bank Canada",p:"416.260.3620",w:"shinhan.ca",v:["BC","ON"]},
+  {n:"Sun Micro Financial - The Mortgage Centre",p:"905.212.1099",w:"sunmicrofinancial.ca",v:["ON"]},
+  {n:"The Financing Hub",p:"905.507.8383",w:"thefinancinghub.com",v:["BC","AB","SK","MB","ON","QC","ATL"]},
+  {n:"Tri City Group Monthly Income Mortgage Trust",p:"604.569.2015",w:"tricitygroup.ca",v:["BC","AB","ON"]}
+];
+
+// Deduplicate by name (case-insensitive)
+function dedup(arr){
+  var seen={};
+  return arr.filter(function(l){
+    var k=l.n.toLowerCase().trim();
+    if(seen[k])return false;
+    seen[k]=true;return true;
+  });
+}
+R=dedup(R); C=dedup(C);
+R.sort(function(a,b){return a.n.localeCompare(b.n)});
+C.sort(function(a,b){return a.n.localeCompare(b.n)});
+
+var tab='R', provs=[], q='';
+var noteKey='vfcl_member_notes';
+var adminSessionKey='vfcl_admin_unlocked';
+var pendingOpsKey='vfcl_note_pending_ops';
+var pendingLenderOpsKey='vfcl_extra_lender_pending_ops';
+var localThreadKey='vfcl_deal_threads_local';
+var localThreadMsgKey='vfcl_deal_thread_messages_local';
+var investorProfileKey='vfcl_investor_profile';
+var adminToken='';
+var extraLendersKey='vfcl_extra_lenders';
+var extraLenders=(function(){try{return JSON.parse(localStorage.getItem(extraLendersKey)||'[]')||[];}catch(e){return [];}})();
+var remoteExtraLenders=[];
+// Paste your dedicated Apps Script "member notes" Web App URL here.
+var notesURL='https://script.google.com/macros/s/AKfycbwfbhYPRlPJ8RNxc7q6Or8dUyFBPJ8jVWjyYflE_L2sQyXcjER4S1RVVFYDJko6z8EX/exec';
+var memberNotes=(function(){
+  try{return JSON.parse(localStorage.getItem(noteKey)||'{}')||{};}catch(e){return {};}
+})();
+var adminUnlocked=false;
+var pendingOps=(function(){try{return JSON.parse(localStorage.getItem(pendingOpsKey)||'[]')||[];}catch(e){return [];}})();
+var pendingLenderOps=(function(){try{return JSON.parse(localStorage.getItem(pendingLenderOpsKey)||'[]')||[];}catch(e){return [];}})();
+var localThreads=(function(){try{return JSON.parse(localStorage.getItem(localThreadKey)||'[]')||[];}catch(e){return [];}})();
+var localThreadMsgs=(function(){try{return JSON.parse(localStorage.getItem(localThreadMsgKey)||'[]')||[];}catch(e){return [];}})();
+var investorProfile=(function(){try{return JSON.parse(localStorage.getItem(investorProfileKey)||'{}')||{};}catch(e){return {};}})();
+var gateSessionKey='vfcl_gate_session';
+var gateLocalAccountsKey='vfcl_gate_accounts_local';
+var gateHours=8; // keep access for 8 hours before requiring a new login
+var syncIntervalMs=120000; // refresh in background every 2 minutes so expanded notes stay readable longer
+
+// Existing Google Apps Script endpoint used for lead capture
+var scriptURL='https://script.google.com/macros/s/AKfycbwfbhYPRlPJ8RNxc7q6Or8dUyFBPJ8jVWjyYflE_L2sQyXcjER4S1RVVFYDJko6z8EX/exec';
+
+function saveLeadLocal(lead){
+  try{
+    var key='vfcl_leads';
+    var leads=JSON.parse(localStorage.getItem(key)||'[]');
+    leads.push(lead);
+    localStorage.setItem(key,JSON.stringify(leads));
+  }catch(e){}
+}
+
+function saveLeadRemote(lead){
+  if(!scriptURL) return Promise.resolve(false);
+
+  var data=new URLSearchParams({
+    business:'Alternate Lender Directory',
+    name:lead.name||'',
+    phone:lead.phone||'',
+    email:lead.email||'',
+    tier:'LOGIN',
+    score:lead.grantedAt||''
+  });
+
+  return fetch(scriptURL,{
+    method:'POST',
+    mode:'no-cors',
+    keepalive:true,
+    body:data
+  }).then(function(){
+    return true;
+  }).catch(function(){
+    return false;
+  });
+}
+
+function createAccountRemote(account){
+  if(!scriptURL) return Promise.reject(new Error('No signup endpoint configured.'));
+  var data=new URLSearchParams({
+    action:'account_signup',
+    name:account.name||'',
+    phone:account.phone||'',
+    email:account.email||'',
+    password:account.password||'',
+    createdAt:account.createdAt||new Date().toISOString()
+  });
+  return fetch(scriptURL,{
+    method:'POST',
+    mode:'no-cors',
+    keepalive:true,
+    body:data
+  }).then(function(){ return true; });
+}
+
+function parseAccountLoginResponse(res){
+  if(!res || !res.ok || !res.account) throw new Error((res&&res.error)||'Invalid email or password.');
+  return res.account;
+}
+function loginAccountRemote(email,password){
+  if(!notesURL) return Promise.reject(new Error('No login endpoint configured.'));
+  var q=new URLSearchParams({resource:'accounts',action:'login',email:email,password:password,t:Date.now()});
+  return fetch(notesURL+'?'+q.toString(),{method:'GET'})
+    .then(function(resp){
+      if(!resp.ok) throw new Error('Login server returned '+resp.status+'.');
+      return resp.json();
+    })
+    .then(parseAccountLoginResponse)
+    .catch(function(fetchErr){
+      return jsonpFetch({resource:'accounts',action:'login',email:email,password:password})
+        .then(parseAccountLoginResponse)
+        .catch(function(jsonpErr){
+          if(/invalid email or password|account does not exist/i.test((jsonpErr&&jsonpErr.message)||'')) throw jsonpErr;
+          throw fetchErr;
+        });
+    });
+}
+function getLocalGateAccounts(){
+  try{return JSON.parse(localStorage.getItem(gateLocalAccountsKey)||'{}')||{};}catch(e){return {};}
+}
+function saveLocalGateAccounts(accounts){
+  try{localStorage.setItem(gateLocalAccountsKey,JSON.stringify(accounts));}catch(e){}
+}
+
+
+
+function idx(el){ return el.getAttribute('data-tab')||el.getAttribute('data-p'); }
+function jsonpFetch(params){
+  return new Promise(function(resolve,reject){
+    if(!notesURL){reject(new Error('No endpoint'));return;}
+    var cb='vfcl_jsonp_'+Date.now()+'_'+Math.floor(Math.random()*9999);
+    var q=new URLSearchParams(params||{});
+    q.set('callback',cb);
+    q.set('t',Date.now());
+    var s=document.createElement('script');
+    var done=false;
+    window[cb]=function(data){
+      done=true;
+      try{ delete window[cb]; }catch(e){ window[cb]=undefined; }
+      if(s.parentNode) s.parentNode.removeChild(s);
+      resolve(data);
+    };
+    s.onerror=function(){
+      if(done) return;
+      try{ delete window[cb]; }catch(e){ window[cb]=undefined; }
+      reject(new Error('JSONP failed'));
+    };
+    s.src=notesURL+'?'+q.toString();
+    document.body.appendChild(s);
+    setTimeout(function(){ if(!done){ try{ delete window[cb]; }catch(e){ window[cb]=undefined; } reject(new Error('JSONP timeout')); } },12000);
+  });
+}
+function prettyAuthError(err){
+  var msg=(err&&err.message)||'Login failed.';
+  if(/jsonp timeout/i.test(msg)) return 'Login timed out. Please try again in a few seconds.';
+  if(/jsonp failed/i.test(msg)) return 'Could not reach the login server right now. Please try again.';
+  return msg;
+}
+function esc(s){
+  return String(s||'').replace(/[&<>"']/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+function noteId(name,t){return t+'::'+name.toLowerCase().trim();}
+function previewNote(note,maxLen){
+  var s=String(note||'').replace(/\s+/g,' ').trim();
+  if(s.length<=maxLen) return s;
+  return s.slice(0,maxLen).trim()+'…';
+}
+function saveNotes(){try{localStorage.setItem(noteKey,JSON.stringify(memberNotes));}catch(e){}}
+function savePendingOps(){try{localStorage.setItem(pendingOpsKey,JSON.stringify(pendingOps));}catch(e){}}
+function savePendingLenderOps(){try{localStorage.setItem(pendingLenderOpsKey,JSON.stringify(pendingLenderOps));}catch(e){}}
+function saveLocalThreads(){
+  try{localStorage.setItem(localThreadKey,JSON.stringify(localThreads));}catch(e){}
+  try{localStorage.setItem(localThreadMsgKey,JSON.stringify(localThreadMsgs));}catch(e){}
+}
+function saveInvestorProfile(){ try{localStorage.setItem(investorProfileKey,JSON.stringify(investorProfile));}catch(e){} }
+function saveExtraLenders(){ try{localStorage.setItem(extraLendersKey,JSON.stringify(extraLenders));}catch(e){} }
+function normalizeExtraLender(x){
+  return {
+    t:(x.t||x.tab||'R').toUpperCase(),
+    n:(x.n||x.name||'').trim(),
+    p:(x.p||x.phone||'').trim(),
+    w:(x.w||x.website||'').trim(),
+    v:Array.isArray(x.v)?x.v:(String(x.v||x.provinces||'').split(',').map(function(k){return k.trim().toUpperCase();}).filter(Boolean))
+  };
+}
+function mergedExtraLenders(){
+  var all=extraLenders.concat(remoteExtraLenders).map(normalizeExtraLender).filter(function(x){return x.n;});
+  var seen={};
+  return all.filter(function(x){
+    var k=[x.t,x.n.toLowerCase(),x.p.toLowerCase(),x.w.toLowerCase(),x.v.join(',')].join('|');
+    if(seen[k]) return false;
+    seen[k]=1;
+    return true;
+  });
+}
+function mergedData(type){
+  var base=type==='R'?R:C;
+  var add=mergedExtraLenders().filter(function(x){return x.t===type;}).map(function(x){
+    return {n:x.n,p:x.p||'',w:x.w||'',v:x.v||[]};
+  });
+  var all=dedup(base.concat(add));
+  all.sort(function(a,b){return a.n.localeCompare(b.n);});
+  return all;
+}
+function refreshCounts(){
+  document.getElementById('rc').textContent=' '+mergedData('R').length;
+  document.getElementById('cc').textContent=' '+mergedData('C').length;
+}
+refreshCounts();
+function setSyncStatus(msg){
+  var el=document.getElementById('adminSyncStatus');
+  if(el) el.textContent='Sync status: '+msg;
+}
+function verifyNotesEndpoint(){
+  if(!notesURL) return Promise.resolve(false);
+  return jsonpFetch({resource:'member_notes',check:1}).catch(function(){
+    return fetch(notesURL+'?resource=member_notes&check=1&t='+(Date.now()),{method:'GET'})
+      .then(function(r){ if(!r.ok) throw new Error('offline'); return r.json(); });
+  })
+    .then(function(){
+      setSyncStatus('connected');
+      return true;
+    })
+    .catch(function(){
+      setSyncStatus('write-only (endpoint blocks browser checks)');
+      return false;
+    });
+}
+function loadExtraLendersRemote(){
+  if(!notesURL) return Promise.resolve(false);
+  return jsonpFetch({resource:'extra_lenders'}).catch(function(){
+    return fetch(notesURL+'?resource=extra_lenders&t='+(Date.now()),{method:'GET'})
+      .then(function(r){ if(!r.ok) throw new Error('offline'); return r.json(); });
+  }).then(function(data){
+    remoteExtraLenders=((data&&data.lenders)||[]).map(normalizeExtraLender);
+    refreshCounts();
+    draw();
+    return true;
+  }).catch(function(){ return false; });
+}
+function postNoteOp(op){
+  var data=new URLSearchParams({
+    resource:'member_notes',
+    action:op.action||'upsert',
+    tab:op.tab||'R',
+    member:op.member||'',
+    note:op.note||'',
+    updatedAt:op.updatedAt||new Date().toISOString(),
+    adminToken:adminToken
+  });
+  return fetch(notesURL,{
+    method:'POST',
+    mode:'no-cors',
+    keepalive:true,
+    headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},
+    body:data.toString()
+  }).then(function(){
+    setSyncStatus('write sent');
+    return true;
+  });
+}
+function queueNoteOp(action,name,note){
+  pendingOps.push({action:action,tab:tab,member:name,note:note,updatedAt:new Date().toISOString()});
+  savePendingOps();
+}
+function flushPendingOps(){
+  if(!pendingOps.length) return Promise.resolve(true);
+  var ops=pendingOps.slice();
+  return ops.reduce(function(p,op){
+    return p.then(function(){ return postNoteOp(op); });
+  },Promise.resolve()).then(function(){
+    pendingOps=[];
+    savePendingOps();
+    setSyncStatus('connected');
+    return true;
+  }).catch(function(){
+    setSyncStatus('offline (changes queued locally)');
+    return false;
+  });
+}
+function postExtraLenderOp(op){
+  var data=new URLSearchParams({
+    resource:'extra_lenders',
+    action:'create',
+    tab:op.tab||'R',
+    name:op.name||'',
+    phone:op.phone||'',
+    website:op.website||'',
+    provinces:Array.isArray(op.provinces)?op.provinces.join(','):String(op.provinces||''),
+    createdAt:op.createdAt||new Date().toISOString(),
+    adminToken:adminToken
+  });
+  return fetch(notesURL,{
+    method:'POST',
+    mode:'no-cors',
+    keepalive:true,
+    headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},
+    body:data.toString()
+  }).then(function(){
+    return true;
+  });
+}
+function queueExtraLenderOp(lender){
+  pendingLenderOps.push({
+    tab:lender.t||'R',
+    name:lender.n||'',
+    phone:lender.p||'',
+    website:lender.w||'',
+    provinces:Array.isArray(lender.v)?lender.v:[],
+    createdAt:lender.createdAt||new Date().toISOString()
+  });
+  savePendingLenderOps();
+}
+function flushPendingLenderOps(){
+  if(!pendingLenderOps.length) return Promise.resolve(true);
+  var ops=pendingLenderOps.slice();
+  return ops.reduce(function(p,op){
+    return p.then(function(){ return postExtraLenderOp(op); });
+  },Promise.resolve()).then(function(){
+    pendingLenderOps=[];
+    savePendingLenderOps();
+    setSyncStatus('connected');
+    return loadExtraLendersRemote().then(function(){ return true; });
+  }).catch(function(){
+    setSyncStatus('offline (new lenders queued locally)');
+    return false;
+  });
+}
+function loadNotesRemote(){
+  if(!notesURL) return Promise.resolve(false);
+  return jsonpFetch({resource:'member_notes'}).catch(function(){
+    return fetch(notesURL+'?resource=member_notes&t='+(Date.now()),{method:'GET'})
+      .then(function(r){ if(!r.ok) throw new Error('offline'); return r.json(); });
+  })
+    .then(function(data){
+      if(!data) return false;
+      var obj=(Array.isArray(data)?data.reduce(function(acc,row){
+        if(row&&row.key)acc[row.key]=row.note||''; return acc;
+      },{}):data.notes)||data;
+      if(obj&&typeof obj==='object'){
+        memberNotes=obj;
+        saveNotes();
+        draw();
+        setSyncStatus('connected');
+        return true;
+      }
+      return false;
+    }).catch(function(){
+      setSyncStatus('write-only (saved locally, remote read blocked)');
+      return false;
+    });
+}
+function setAuthUI(){
+  var state=document.getElementById('adminAuthState');
+  var canEdit=adminUnlocked;
+  document.getElementById('adminSave').disabled=!canEdit;
+  document.getElementById('adminDelete').disabled=!canEdit;
+  state.textContent=canEdit?'Unlocked: edit enabled.':'Locked (view only).';
+  draw();
+}
+function fmtDate(iso){
+  if(!iso) return '';
+  var d=new Date(iso);
+  if(isNaN(d.getTime())) return iso;
+  return d.toLocaleString();
+}
+function getLatestLead(){
+  try{
+    var leads=JSON.parse(localStorage.getItem('vfcl_leads')||'[]');
+    if(!leads.length) return null;
+    return leads[leads.length-1];
+  }catch(e){return null;}
+}
+
+function getGateSessionLead(){
+  try{
+    var session=JSON.parse(localStorage.getItem(gateSessionKey)||'{}');
+    if(!session || !session.expiresAt) return null;
+    if(new Date(session.expiresAt).getTime()<=Date.now()) return null;
+    return session;
+  }catch(e){return null;}
+}
+
+function prefillThreadContact(){
+  var lead=getGateSessionLead() || getLatestLead();
+  if(!lead) return;
+  var n=document.getElementById('thName');
+  var c=document.getElementById('thContact');
+  if(n && !n.value.trim()) n.value=(lead.name||'').trim();
+  if(c && !c.value.trim()) c.value=(lead.phone||lead.email||'').trim();
+}
+function loadThreads(){
+  var wrap=document.getElementById('threadsList');
+  wrap.innerHTML='Loading threads...';
+  function renderThreads(threads,msgs){
+    var openThreads=threads.filter(function(t){
+      var isOpen=(t.status||'OPEN').toUpperCase()==='OPEN';
+      var hasCore=(t.id||'').trim().length>0;
+      return isOpen&&hasCore;
+    });
+    if(!openThreads.length){wrap.innerHTML='<div class="em-s">No open deals yet.</div>';return;}
+    var msgByThread={};
+    msgs.forEach(function(m){
+      if(!msgByThread[m.threadId]) msgByThread[m.threadId]=[];
+      msgByThread[m.threadId].push(m);
+    });
+    wrap.innerHTML=openThreads.map(function(t){
+      var uniqueMsg={}, rows=(msgByThread[t.id]||[]).filter(function(x){
+        var mk=[x.fromName||'',x.fromContact||'',x.message||''].join('|').toLowerCase();
+        if(uniqueMsg[mk]) return false;
+        uniqueMsg[mk]=true;
+        return true;
+      }).map(function(x){
+        return '<tr><td>'+esc(x.fromName||'Investor')+'</td><td>'+esc(x.fromContact||'')+'</td><td>'+esc(x.message||'')+'</td><td>'+esc(fmtDate(x.createdAt))+'</td></tr>';
+      }).join('');
+      if(!rows) rows='<tr><td colspan="4" class="th-meta">No investor replies yet.</td></tr>';
+      return '<div class="th" data-thread="'+esc(t.id)+'">'+
+        '<div class="th-h"><div><div class="th-title">#'+esc(t.id)+'</div><div class="th-meta">'+esc(t.requester||'')+' · '+esc(t.contact||'')+' · '+esc(fmtDate(t.createdAt))+'</div></div><div class="th-meta">'+esc(t.status||'OPEN')+'</div></div>'+
+        '<div class="th-top">'+
+          '<div class="th-col"><div class="th-k">Property Location</div><div class="th-v">'+esc(t.propertyLocation||'-')+'</div></div>'+
+          '<div class="th-col"><div class="th-k">Requested Amount</div><div class="th-v">'+esc(t.requestedAmount||'-')+'</div></div>'+
+          '<div class="th-col"><div class="th-k">Requested LTV</div><div class="th-v">'+esc(t.requestedLtv||'-')+'</div></div>'+
+          '<button class="th-toggle">Open Thread</button>'+
+        '</div>'+
+        '<div class="th-body">'+
+          (t.requirement?'<div class="th-req">'+esc(t.requirement)+'</div>':'')+
+          '<div class="th-meta" style="margin-top:8px">Conversation (Investor questions + follow-ups)</div>'+
+          '<div class="msg-wrap"><table class="rep-table"><thead><tr><th>Investor</th><th>Contact</th><th>Question / Reply</th><th>Time</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+          '<div class="th-reply">'+
+            '<div class="tm-grid"><input class="tm-input rep-name" placeholder="Investor name" value="'+esc(investorProfile.name||'')+'"><input class="tm-input rep-contact" placeholder="Email or phone" value="'+esc(investorProfile.contact||'')+'"></div>'+
+            '<textarea class="tm-area rep-msg" placeholder="Question / reply for this deal"></textarea>'+
+            '<button class="tm-submit rep-send">Send Reply</button>'+
+          '</div>'+
+        '</div>'+
+      '</div>';
+    }).join('');
+  }
+  return jsonpFetch({resource:'deal_threads'}).catch(function(){
+    return fetch(notesURL+'?resource=deal_threads&t='+(Date.now()),{method:'GET'})
+      .then(function(r){ if(!r.ok) throw new Error('offline'); return r.json(); });
+  })
+    .then(function(data){
+      var remoteThreads=(data&&data.threads)||[];
+      var remoteMsgs=(data&&data.messages)||[];
+      var tSeen={};
+      remoteThreads.forEach(function(t){
+        var k=[t.requester,t.contact,t.propertyLocation,t.requestedAmount,t.requestedLtv,t.requirement].join('|');
+        tSeen[k]=true;
+      });
+      var mSeen={};
+      remoteMsgs.forEach(function(m){
+        var k=[m.threadId,m.fromName,m.fromContact,m.message].join('|');
+        mSeen[k]=true;
+      });
+      localThreads=localThreads.filter(function(t){
+        var k=[t.requester,t.contact,t.propertyLocation,t.requestedAmount,t.requestedLtv,t.requirement].join('|');
+        return !tSeen[k];
+      });
+      localThreadMsgs=localThreadMsgs.filter(function(m){
+        var k=[m.threadId,m.fromName,m.fromContact,m.message].join('|');
+        return !mSeen[k];
+      });
+      saveLocalThreads();
+      var threads=remoteThreads.concat(localThreads);
+      var msgs=remoteMsgs.concat(localThreadMsgs);
+      renderThreads(threads,msgs);
+    })
+    .catch(function(){
+      renderThreads(localThreads,localThreadMsgs);
+    });
+}
+function postThreadCreate(){
+  var lead=getGateSessionLead() || getLatestLead();
+  var name=(document.getElementById('thName').value||'').trim() || (lead&&lead.name)||'';
+  var contact=(document.getElementById('thContact').value||'').trim() || (lead&&(lead.phone||lead.email))||'';
+  var location=(document.getElementById('thLocation').value||'').trim();
+  var amount=(document.getElementById('thAmount').value||'').trim();
+  var ltv=(document.getElementById('thLtv').value||'').trim();
+  var req=document.getElementById('thReq').value.trim();
+  var msg=document.getElementById('thMsg');
+  if(name.length<2||contact.length<3||location.length<2||amount.length<1||ltv.length<1){msg.textContent='Please complete name, contact, property location, requested amount, and requested LTV.';return;}
+  var data=new URLSearchParams({resource:'deal_threads',action:'create',requester:name,contact:contact,propertyLocation:location,requestedAmount:amount,requestedLtv:ltv,requirement:req,createdAt:new Date().toISOString()});
+  fetch(notesURL,{method:'POST',mode:'no-cors',keepalive:true,headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:data.toString()})
+    .then(function(){
+      msg.textContent='Thread submitted online and visible to all.';
+      document.getElementById('thReq').value='';
+      document.getElementById('thLocation').value='';
+      document.getElementById('thAmount').value='';
+      document.getElementById('thLtv').value='';
+      loadThreads();
+    }).catch(function(){msg.textContent='Unable to submit thread online right now. Please try again.';});
+}
+function postThreadReply(threadId,card){
+  var name=(card.querySelector('.rep-name').value||'').trim();
+  var contact=(card.querySelector('.rep-contact').value||'').trim();
+  var text=(card.querySelector('.rep-msg').value||'').trim();
+  if(name.length<2||contact.length<3||text.length<2){
+    alert('Please enter investor name, contact, and reply.');
+    return;
+  }
+  investorProfile={name:name,contact:contact};
+  saveInvestorProfile();
+  localThreadMsgs.push({threadId:threadId,fromName:name,fromContact:contact,message:text,createdAt:new Date().toISOString()});
+  saveLocalThreads();
+  loadThreads();
+  var data=new URLSearchParams({resource:'deal_threads',action:'reply',threadId:threadId,fromName:name,fromContact:contact,message:text,createdAt:new Date().toISOString()});
+  fetch(notesURL,{method:'POST',mode:'no-cors',keepalive:true,headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:data.toString()})
+    .then(function(){ loadThreads(); })
+    .catch(function(){});
+}
+function currentData(){return mergedData(tab);}
+function updateAdminList(){
+  var sel=document.getElementById('adminMember');
+  var data=currentData();
+  sel.innerHTML=data.map(function(m){return '<option value="'+esc(m.n)+'">'+esc(m.n)+'</option>';}).join('');
+  onAdminPick();
+}
+function onAdminPick(){
+  var name=document.getElementById('adminMember').value||'';
+  document.getElementById('adminNote').value=memberNotes[noteId(name,tab)]||'';
+  document.getElementById('adminMsg').textContent='';
+}
+
+function getOpenNoteKeys(){
+  var keys=[];
+  document.querySelectorAll('.cnote details[data-note-key][open]').forEach(function(d){
+    keys.push(d.getAttribute('data-note-key'));
+  });
+  return keys;
+}
+function restoreOpenNoteKeys(keys){
+  var openMap={};
+  (keys||[]).forEach(function(k){openMap[k]=true;});
+  document.querySelectorAll('.cnote details[data-note-key]').forEach(function(d){
+    if(openMap[d.getAttribute('data-note-key')]) d.setAttribute('open','open');
+  });
+}
+
+function draw(){
+  var openNoteKeys=getOpenNoteKeys();
+  var data=currentData();
+  var res=data.filter(function(l){
+    var mq=!q||l.n.toLowerCase().indexOf(q)>-1||l.p.indexOf(q)>-1||l.w.toLowerCase().indexOf(q)>-1;
+    var mp=provs.length===0||provs.every(function(p){return l.v.indexOf(p)>-1});
+    return mq&&mp;
+  });
+
+  document.getElementById('n').textContent=res.length;
+  var el=document.getElementById('list');
+  el.innerHTML='';
+
+  if(!res.length){
+    el.innerHTML='<div class="em"><div class="em-w">No results</div><div class="em-s">Try adjusting filters</div></div>';
+    return;
+  }
+
+  // Group by letter
+  var g={};
+  res.forEach(function(l){
+    var k=l.n[0].toUpperCase();
+    if(!g[k])g[k]=[];
+    g[k].push(l);
+  });
+
+  var PH='<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.41 2 2 0 0 1 3.61 1.21h3a2 2 0 0 1 2 1.72c.1.93.37 1.84.7 2.81a2 2 0 0 1-.45 2.11L8.09 8.91a16 16 0 0 0 6 6l.77-.77a2 2 0 0 1 2.11-.45c.97.33 1.88.6 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
+  var WB='<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>';
+
+  var html='';
+  Object.keys(g).sort().forEach(function(letter){
+    html+='<div class="ag"><div class="ah"><span class="al">'+letter+'</span></div><div class="cl-list">';
+    g[letter].forEach(function(l){
+      var pts=l.v.map(function(p){return'<span class="pt '+p+'">'+p+'</span>';}).join('');
+      var ph=l.p?'<div class="mr">'+PH+'<span class="ph">'+l.p+'</span></div>':'';
+      var wb=l.calc?'<a class="calc-link" href="'+l.w+'"><span>Open Construction Calculator</span><span>OPEN →</span></a>':(l.w?'<div class="mr">'+WB+'<a href="https://'+l.w+'" target="_blank">'+l.w+'</a></div>':'');
+      var noteKeyForLender=noteId(l.n,tab);
+      var note=memberNotes[noteKeyForLender]||'';
+      var notePreview=previewNote(note,140);
+      var noteHtml='';
+      if(note){
+        if(adminUnlocked){
+          noteHtml='<div class="cnote"><strong>Notes:</strong> '+esc(notePreview)+' <details data-note-key="'+esc(noteKeyForLender)+'"><summary>View full details</summary><div class="note-full">'+esc(note)+'</div></details></div>';
+        }else{
+          noteHtml='<div class="cnote locked"><strong>Notes:</strong> '+esc(notePreview)+' <details data-note-key="'+esc(noteKeyForLender)+'"><summary>View full details</summary><div class="note-full">'+esc(note)+'</div></details></div><div class="mini" style="margin-top:4px;color:#64748b">Admin login required to view notes.</div>';
+        }
+      }
+      html+='<div class="c"><div class="ct2"><div class="cn">'+l.n+'</div><div class="pts">'+pts+'</div></div>';
+      if(ph||wb)html+='<div class="cm">'+ph+wb+'</div>';
+      html+=noteHtml;
+      html+='</div>';
+    });
+    html+='</div></div>';
+  });
+  html+='<div class="ft"><div class="ft-name">Vancouver Finance Company Inc. · 2025–2026</div><a href="https://www.vancouverfinancecompany.com" target="_blank">www.vancouverfinancecompany.com</a><a href="mailto:vancouverfinancecompany@gmail.com">vancouverfinancecompany@gmail.com</a></div>';
+  el.innerHTML=html;
+  restoreOpenNoteKeys(openNoteKeys);
+}
+
+// Tab clicks
+document.querySelectorAll('.t-btn').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    document.querySelectorAll('.t-btn').forEach(function(b){b.classList.remove('on')});
+    btn.classList.add('on');
+    tab=btn.getAttribute('data-tab');
+    document.getElementById('q').value='';
+    q='';
+    if(document.getElementById('adminModal').classList.contains('show')) updateAdminList();
+    draw();
+  });
+});
+
+// Province clicks
+document.querySelectorAll('.p-btn').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    var p=btn.getAttribute('data-p');
+    var i=provs.indexOf(p);
+    if(i>-1){provs.splice(i,1);btn.classList.remove('on');}
+    else{provs.push(p);btn.classList.add('on');}
+    draw();
+  });
+});
+
+// Search
+document.getElementById('q').addEventListener('input',function(e){
+  q=e.target.value.toLowerCase();
+  draw();
+});
+
+// Clear
+document.getElementById('clr').addEventListener('click',function(){
+  provs=[];
+  document.querySelectorAll('.p-btn').forEach(function(b){b.classList.remove('on')});
+  document.getElementById('q').value='';
+  q='';
+  draw();
+});
+
+document.getElementById('adminOpen').addEventListener('click',function(){
+  updateAdminList();
+  setAuthUI();
+  document.getElementById('adminModal').classList.add('show');
+});
+document.getElementById('adminClose').addEventListener('click',function(){
+  document.getElementById('adminModal').classList.remove('show');
+});
+document.getElementById('threadOpen').addEventListener('click',function(){
+  document.getElementById('threadModal').classList.add('show');
+  prefillThreadContact();
+  loadThreads();
+});
+document.getElementById('threadClose').addEventListener('click',function(){
+  document.getElementById('threadModal').classList.remove('show');
+});
+document.getElementById('thCreate').addEventListener('click',postThreadCreate);
+document.getElementById('threadsList').addEventListener('click',function(e){
+  if(e.target.classList.contains('th-toggle')){
+    var box=e.target.closest('.th');
+    if(!box) return;
+    box.classList.toggle('open');
+    e.target.textContent=box.classList.contains('open')?'Hide Thread':'Open Thread';
+    return;
+  }
+  if(!e.target.classList.contains('rep-send')) return;
+  var card=e.target.closest('.th');
+  if(!card) return;
+  postThreadReply(card.getAttribute('data-thread'),card);
+});
+document.getElementById('adminMember').addEventListener('change',onAdminPick);
+async function adminSha256_(value) {
+  var bytes=new TextEncoder().encode(value);
+  var digest=await crypto.subtle.digest('SHA-256',bytes);
+  return Array.from(new Uint8Array(digest)).map(function(x){return x.toString(16).padStart(2,'0');}).join('');
+}
+document.getElementById('adminUnlock').addEventListener('click',async function(){
+  var entered=document.getElementById('adminPassword').value||'';
+  var btn=document.getElementById('adminUnlock');
+  btn.disabled=true;
+  try {
+    if(!window.crypto || !crypto.subtle) throw new Error('Secure HTTPS connection required');
+    var challenge=await jsonpFetch({resource:'admin_auth',action:'challenge'});
+    if(!challenge.ok) throw new Error(challenge.error||'Authentication unavailable');
+    var proof=await adminSha256_(entered+':'+challenge.nonce);
+    var result=await jsonpFetch({resource:'admin_auth',action:'login',nonce:challenge.nonce,proof:proof});
+    if(!result.ok || !result.token) throw new Error(result.error||'Incorrect password');
+    adminToken=result.token;
+    adminUnlocked=true;
+    document.getElementById('adminPassword').value='';
+    setAuthUI();
+    document.getElementById('adminMsg').textContent='Admin access granted.';
+  }catch(err){
+    adminToken='';
+    adminUnlocked=false;
+    setAuthUI();
+    document.getElementById('adminMsg').textContent=err.message||'Unable to unlock admin.';
+  }finally{btn.disabled=false;}
+});
+document.getElementById('adminSave').addEventListener('click',function(){
+  if(!adminUnlocked){document.getElementById('adminMsg').textContent='Password required to edit notes.';return;}
+  var name=document.getElementById('adminMember').value||'';
+  if(!name)return;
+  var note=document.getElementById('adminNote').value.trim();
+  memberNotes[noteId(name,tab)]=note;
+  saveNotes();
+  queueNoteOp('upsert',name,note);
+  flushPendingOps();
+  loadNotesRemote();
+  document.getElementById('adminMsg').textContent='Note saved for '+name+'.';
+  draw();
+});
+document.getElementById('adminDelete').addEventListener('click',function(){
+  if(!adminUnlocked){document.getElementById('adminMsg').textContent='Password required to edit notes.';return;}
+  var name=document.getElementById('adminMember').value||'';
+  if(!name)return;
+  delete memberNotes[noteId(name,tab)];
+  saveNotes();
+  queueNoteOp('delete',name,'');
+  flushPendingOps();
+  loadNotesRemote();
+  document.getElementById('adminNote').value='';
+  document.getElementById('adminMsg').textContent='Note deleted for '+name+'.';
+  draw();
+});
+document.getElementById('addLenderBtn').addEventListener('click',function(){
+  if(!adminUnlocked){document.getElementById('adminMsg').textContent='Password required to add lender.';return;}
+  var t=(document.getElementById('newLenderTab').value||'R').trim();
+  var n=(document.getElementById('newLenderName').value||'').trim();
+  var p=(document.getElementById('newLenderPhone').value||'').trim();
+  var w=(document.getElementById('newLenderWeb').value||'').trim();
+  var prov=(document.getElementById('newLenderProv').value||'').split(',').map(function(x){return x.trim().toUpperCase();}).filter(Boolean);
+  if(n.length<2 || !prov.length){document.getElementById('adminMsg').textContent='Please add lender name and at least one province.';return;}
+  extraLenders.push({t:t,n:n,p:p,w:w,v:prov,createdAt:new Date().toISOString()});
+  saveExtraLenders();
+  queueExtraLenderOp({t:t,n:n,p:p,w:w,v:prov,createdAt:new Date().toISOString()});
+  flushPendingLenderOps();
+  refreshCounts();
+  draw();
+  if(document.getElementById('adminModal').classList.contains('show')) updateAdminList();
+  document.getElementById('newLenderName').value='';
+  document.getElementById('newLenderPhone').value='';
+  document.getElementById('newLenderWeb').value='';
+  document.getElementById('newLenderProv').value='';
+  document.getElementById('adminMsg').textContent='New lender added.';
+});
+
+function showGate(){
+  document.getElementById('gate').classList.remove('hide');
+}
+
+function unlockList(){
+  document.getElementById('gate').classList.add('hide');
+  draw();
+}
+
+function hasActiveGateSession(){
+  try{
+    var session=JSON.parse(localStorage.getItem(gateSessionKey)||'{}');
+    if(!session || !session.expiresAt) return false;
+    return new Date(session.expiresAt).getTime()>Date.now();
+  }catch(e){return false;}
+}
+
+function persistGateSession(lead){
+  var expiresAt=new Date(Date.now()+gateHours*60*60*1000).toISOString();
+  try{
+    localStorage.setItem(gateSessionKey,JSON.stringify({
+      name:lead.name||'',
+      email:lead.email||'',
+      phone:lead.phone||'',
+      grantedAt:lead.grantedAt||new Date().toISOString(),
+      expiresAt:expiresAt
+    }));
+  }catch(e){}
+}
+
+(function initGate(){
+  var gateMode='login';
+  function setGateMode(mode){
+    gateMode=mode==='login'?'login':'signup';
+    var submit=document.getElementById('gateSubmit');
+    var toggle=document.getElementById('gateModeToggle');
+    var nameWrap=document.getElementById('gNameWrap');
+    var nameInput=document.getElementById('gName');
+    var phoneWrap=document.getElementById('gPhone').parentElement;
+    var phoneInput=document.getElementById('gPhone');
+    if(gateMode==='login'){
+      submit.textContent='Login';
+      toggle.textContent='Need an account? Create one';
+      nameWrap.style.display='none';
+      nameInput.required=false;
+      phoneWrap.style.display='none';
+      phoneInput.required=false;
+    }else{
+      submit.textContent='Create Account';
+      toggle.textContent='Already have an account? Login';
+      nameWrap.style.display='';
+      nameInput.required=true;
+      phoneWrap.style.display='';
+      phoneInput.required=true;
+    }
+    document.getElementById('gErr').textContent='';
+  }
+  function syncAll(){
+    verifyNotesEndpoint().then(function(){
+      flushPendingOps();
+      flushPendingLenderOps();
+      loadNotesRemote();
+      loadExtraLendersRemote();
+    });
+  }
+  function startSyncLoop(){
+    setSyncStatus('checking…');
+    syncAll();
+    window.setInterval(syncAll,syncIntervalMs);
+  }
+  if(hasActiveGateSession()){
+    unlockList();
+    startSyncLoop();
+    return;
+  }
+  showGate();
+  setGateMode('login');
+  startSyncLoop();
+  document.getElementById('gateModeToggle').addEventListener('click',function(){
+    setGateMode(gateMode==='signup'?'login':'signup');
+  });
+  document.getElementById('gateForm').addEventListener('submit',function(e){
+    e.preventDefault();
+    var name=document.getElementById('gName').value.trim();
+    var email=document.getElementById('gEmail').value.trim();
+    var phone=document.getElementById('gPhone').value.trim();
+    var password=document.getElementById('gPassword').value;
+    var digits=phone.replace(/\D/g,'');
+    var err='';
+
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) err='Please enter a valid email address.';
+    else if(password.length<6) err='Password must be at least 6 characters.';
+    else if(gateMode==='signup' && name.length<2) err='Please enter your full name.';
+    else if(gateMode==='signup' && digits.length<10) err='Please enter a valid phone number.';
+
+    document.getElementById('gErr').textContent=err;
+    if(err) return;
+    var lead={name:name,email:email,phone:phone,grantedAt:new Date().toISOString(),source:'alternate-lender-list'};
+    if(gateMode==='signup'){
+      createAccountRemote({name:name,email:email,phone:phone,password:password,createdAt:new Date().toISOString()})
+        .then(function(){
+          saveLeadLocal(lead);
+          saveLeadRemote(lead);
+          persistGateSession(lead);
+          unlockList();
+        })
+        .catch(function(){
+          var accounts=getLocalGateAccounts();
+          var k=email.toLowerCase();
+          if(accounts[k]){
+            document.getElementById('gErr').textContent='Account already exists. Please login.';
+            return;
+          }
+          accounts[k]={name:name,email:email,phone:phone,password:password,createdAt:new Date().toISOString()};
+          saveLocalGateAccounts(accounts);
+          saveLeadLocal(lead);
+          persistGateSession(lead);
+          document.getElementById('gErr').textContent='Apps Script unavailable. Account saved locally on this device.';
+          unlockList();
+        });
+	    }else{
+	      loginAccountRemote(email,password)
+        .then(function(account){
+          lead.name=(account.name||name);
+          lead.email=(account.email||email);
+          lead.phone=(account.phone||'');
+          persistGateSession(lead);
+          unlockList();
+        })
+	        .catch(function(err){
+	          var errMsg=prettyAuthError(err);
+	          if(/account does not exist/i.test(errMsg)){
+	            setGateMode('signup');
+	            document.getElementById('gName').focus();
+	            document.getElementById('gErr').textContent='No account found for this email. Please create an account first.';
+	            return;
+	          }
+	          var accounts=getLocalGateAccounts();
+	          var acct=accounts[email.toLowerCase()];
+          if(acct && acct.password===password){
+            lead.name=(acct.name||name);
+            lead.email=(acct.email||email);
+            lead.phone=(acct.phone||'');
+            persistGateSession(lead);
+            document.getElementById('gErr').textContent='Logged in using local account (Apps Script unavailable).';
+            unlockList();
+            return;
+          }
+	          document.getElementById('gErr').textContent=errMsg;
+	        });
+	    }
+  });
+})();
+</script>
+</body>
+</html>
