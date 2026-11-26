@@ -62,6 +62,11 @@ function doGet(e) {
   var p = (e && e.parameter) || {};
   try {
     var resource = String(p.resource || '');
+    if (resource === 'health') {
+      var ss = getSpreadsheet_();
+      var accounts = ss.getSheetByName(ACCOUNT_SHEET);
+      return jsonWithCallback_({ok:true,version:'2026-11-26.2',spreadsheetConnected:true,accountsReady:!!accounts},p);
+    }
     if (resource === 'admin_auth') return adminAuthGet_(p);
     if (resource === 'deal_threads') {
       var ts = getSheetBySchema_(THREAD_SHEET, THREAD_HEADERS);
@@ -193,6 +198,12 @@ function handleAccountPost_(p) {
 }
 
 function handleAccountSignup_(p) {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try { return handleAccountSignupLocked_(p); } finally { lock.releaseLock(); }
+}
+
+function handleAccountSignupLocked_(p) {
   var email = String(p.email || '').trim().toLowerCase();
   var name = String(p.name || '').trim();
   var phone = String(p.phone || '').trim();
@@ -207,6 +218,7 @@ function handleAccountSignup_(p) {
     }
   }
   as.appendRow([email, name, phone, hashPassword_(password, email), '0', '', now, now]);
+  SpreadsheetApp.flush();
   return json_({ ok: true, action: 'signup', email: email });
 }
 
@@ -326,9 +338,10 @@ function getSheetBySchema_(name, headers) {
 }
 
 function getSpreadsheet_() {
+  var configuredId = SPREADSHEET_ID || PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');
+  if (configuredId) return SpreadsheetApp.openById(configuredId);
   var active = SpreadsheetApp.getActiveSpreadsheet();
   if (active) return active;
-  if (SPREADSHEET_ID) return SpreadsheetApp.openById(SPREADSHEET_ID);
   throw new Error('No active spreadsheet. Set SPREADSHEET_ID in apps_script_member_notes.gs.');
 }
 
@@ -383,9 +396,19 @@ function jsonWithCallback_(obj, params) {
  * in the SAME spreadsheet.
  */
 function setupAllSheets_() {
+  var ss = getSpreadsheet_();
+  PropertiesService.getScriptProperties().setProperty('SPREADSHEET_ID', ss.getId());
   getSheetBySchema_(SHEET_NAME, HEADERS);
   getSheetBySchema_(THREAD_SHEET, THREAD_HEADERS);
   getSheetBySchema_(THREAD_MSG_SHEET, THREAD_MSG_HEADERS);
   getSheetBySchema_(EXTRA_LENDER_SHEET, EXTRA_LENDER_HEADERS);
   getSheetBySchema_(ACCOUNT_SHEET, ACCOUNT_HEADERS);
+}
+
+// Run once from the existing bound Apps Script editor before redeploying.
+function configureExistingSpreadsheet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  if (!ss) throw new Error('Open this script from the existing spreadsheet, or set SPREADSHEET_ID explicitly.');
+  PropertiesService.getScriptProperties().setProperty('SPREADSHEET_ID', ss.getId());
+  Logger.log('Spreadsheet connection configured. Accounts tab present: ' + !!ss.getSheetByName(ACCOUNT_SHEET));
 }
