@@ -1,0 +1,1 @@
+window.VFCDemo={key:'vfc-demo-crm-v1',read(){try{return JSON.parse(localStorage.getItem(this.key))||[]}catch(e){return[]}},write(r){localStorage.setItem(this.key,JSON.stringify(r))}};
