@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin CRM | Vancouver Finance Company Inc.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Cormorant+Garamond:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="portal.css">
+<style>
+.business-kv{align-items:center}.business-inline{display:flex;align-items:center;gap:7px;min-width:0}.business-inline input{min-width:0;flex:1;height:31px;padding:6px 9px;border:1px solid #ded4c8;border-radius:7px;background:#fcfaf7;font:inherit;color:var(--ink);outline:none;transition:border-color .18s ease,box-shadow .18s ease}.business-inline input::placeholder{color:#aaa198}.business-inline input:focus{border-color:rgba(198,150,78,.72);box-shadow:0 0 0 3px rgba(198,150,78,.08);background:#fff}.business-inline .quick{padding:7px 10px;flex:0 0 auto}.business-save-msg{display:block;margin-top:4px;font-size:9px;color:#786f65}.business-save-msg.success{color:#2f855a}.business-save-msg.error{color:#a13f33}@media(max-width:760px){.business-inline{align-items:stretch}.business-inline input{height:34px}}
+.client-response{border:1px solid rgba(198,150,78,.32);background:#fbf7f0;border-radius:10px;padding:16px}.client-response strong{display:block;font-size:11px;letter-spacing:.09em;text-transform:uppercase;margin-bottom:6px}.client-response p{margin:4px 0;color:#786f65;font-size:12px;line-height:1.6}.client-response.has-response{background:#edf6f0;border-color:rgba(47,133,90,.25)}.admin-conversation{display:grid;gap:8px}.admin-chat-row{max-width:86%;padding:10px 12px;border-radius:10px;background:#17130f;color:#fff;font-size:11px;line-height:1.55}.admin-chat-row.client{margin-left:auto}.admin-chat-row small{display:block;margin-bottom:4px;opacity:.62;font-size:7px;letter-spacing:.1em;text-transform:uppercase}.admin-chat-empty{color:#786f65;font-size:11px;line-height:1.55}.conversation-compose{margin-top:14px;padding-top:14px;border-top:1px solid #eee}.conversation-compose label{display:block;margin-bottom:6px;font-size:8px;font-weight:600;letter-spacing:.105em;text-transform:uppercase;color:#786f65}.conversation-compose textarea{width:100%;min-height:92px;resize:vertical;border:1px solid #ded4c8;border-radius:9px;background:#fcfaf7;padding:10px 11px;font:inherit;font-size:11px;line-height:1.5;color:var(--ink);outline:none;transition:border-color .18s ease,box-shadow .18s ease}.conversation-compose textarea:focus{border-color:rgba(198,150,78,.72);box-shadow:0 0 0 3px rgba(198,150,78,.08);background:#fff}.conversation-compose-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:9px}.conversation-compose-actions .notice{margin:0;flex:1;min-width:180px}@media(max-width:760px){.conversation-compose-actions{align-items:stretch;flex-direction:column}.conversation-compose-actions .btn{width:100%}}
+.audit-card{padding:0!important;overflow:hidden}.audit-toggle-row{width:100%;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:17px 18px;background:transparent;border:0;color:var(--ink);text-align:left;cursor:pointer}.audit-toggle-row:hover{background:#fcfaf7}.audit-toggle-title{display:flex;align-items:center;gap:12px;min-width:0}.audit-toggle-title h3{margin:2px 0 0;font-size:22px}.audit-toggle-meta{display:flex;align-items:center;gap:10px;flex:0 0 auto}.audit-chevron{font-size:16px;line-height:1;color:var(--muted);transition:transform .18s ease}.audit-card.open .audit-chevron{transform:rotate(180deg)}.audit-body{padding:0 18px 18px;border-top:1px solid #eee}.audit-body.hidden{display:none}.audit-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-top:14px}.audit-controls select{border:1px solid #d9cdbf;border-radius:999px;padding:8px 11px;background:#fcf9f4;font-size:9px;text-transform:uppercase;letter-spacing:.07em}.audit-trail{position:relative;margin-top:14px;max-height:430px;overflow:auto;padding-right:4px}.audit-empty{padding:18px 0;color:#786f65;font-size:11px}.audit-event{display:grid;grid-template-columns:16px minmax(0,1fr);gap:11px;padding:0 0 17px;position:relative}.audit-event:not(:last-child)::after{content:'';position:absolute;left:7px;top:16px;bottom:0;width:1px;background:#e7ded4}.audit-dot{width:9px;height:9px;border-radius:50%;background:#c6964e;margin-top:4px;z-index:1;box-shadow:0 0 0 3px #fff}.audit-event.client .audit-dot{background:#406b8a}.audit-event.admin .audit-dot{background:#17130f}.audit-event.agent .audit-dot{background:#2f855a}.audit-event.system .audit-dot{background:#8b8176}.audit-line{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}.audit-summary{font-size:11px;font-weight:600;line-height:1.45}.audit-time{font-size:9px;color:#8a8177;white-space:nowrap}.audit-meta{margin-top:4px;font-size:10px;color:#786f65;line-height:1.5}.audit-actor{display:inline-block;margin-top:6px;padding:4px 7px;border-radius:999px;background:#f2eee8;font-size:7px;text-transform:uppercase;letter-spacing:.08em;color:#786f65}@media(max-width:760px){.audit-line{display:block}.audit-time{display:block;margin-top:3px}.audit-controls{align-items:stretch}.audit-controls select,.audit-controls button{flex:1}}
+.client-update-card .section-title{margin-bottom:8px}.client-update-card .form-grid{gap:9px 10px}.client-update-card .field{margin-top:8px}.client-update-card .field label{font-size:8px;letter-spacing:.105em;margin-bottom:5px}.client-update-card .field input,.client-update-card .field select,.client-update-card .field textarea{font-size:11px;padding:9px 10px;border-radius:8px}.client-update-card .field textarea{line-height:1.45}.docs-toggle-row{display:flex;align-items:center;justify-content:space-between;gap:18px;border:1px solid #e1d8ce;background:#fcfaf7;border-radius:10px;padding:11px 12px}.docs-toggle-row .subtle{margin-top:3px;font-size:9px;line-height:1.45}.switch-control{position:relative;display:inline-flex!important;align-items:center;flex:0 0 auto;margin:0!important}.switch-control input{position:absolute;opacity:0;pointer-events:none}.switch-track{width:42px;height:23px;border-radius:999px;background:#d8d1c8;position:relative;transition:.2s ease;box-shadow:inset 0 0 0 1px rgba(23,19,15,.08)}.switch-track::after{content:'';position:absolute;width:17px;height:17px;left:3px;top:3px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.18);transition:.2s ease}.switch-control input:checked+.switch-track{background:#406b8a}.switch-control input:checked+.switch-track::after{transform:translateX(19px)}.switch-control input:focus-visible+.switch-track{box-shadow:0 0 0 3px rgba(64,107,138,.16)}
+.client-update-card .drawer-buttons{
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:8px!important;
+}
+.client-update-card .drawer-buttons .btn{
+  width:100%;
+  min-width:0;
+  margin:0;
+  padding:11px 8px;
+  white-space:normal;
+  line-height:1.25;
+}
+</style>
+</head>
+<body>
+<header class="tfc-top">
+  <div class="tfc-brand">Vancouver Finance Company Inc. · Admin</div>
+  <nav class="tfc-nav">
+    <span>DEMO · SAMPLE DATA ONLY</span>
+    <button id="websiteLink">Website</button>
+    <button class="hidden" id="logoutBtn">Log Out</button>
+  </nav>
+</header>
+
+<section id="login" class="login-card card hidden">
+  <div class="eyebrow" style="text-align:center">Secure Operations</div>
+  <h1>Admin Login</h1>
+  <p>Manage applications, client messages, approvals and documents.</p>
+  <div class="field"><label>Email Address</label><input id="adminEmail" type="email" autocomplete="username"></div>
+  <div class="field"><label>Password</label><input id="adminPassword" type="password" autocomplete="current-password"></div>
+  <button class="btn" id="adminLogin" style="width:100%;margin-top:20px">Log In</button>
+  <div id="loginMsg" class="notice"></div>
+</section>
+
+<main id="admin" class="shell">
+  <section class="hero-row">
+    <div><div class="eyebrow">Operations Dashboard</div><h1>Application CRM</h1><p>One source of truth for client stages, messages and financing decisions.</p></div>
+    <div class="hero-actions"><div class="sync" id="lastSync">Not refreshed yet</div><button class="btn secondary" id="refresh">Refresh Applications</button></div>
+  </section>
+
+  <section class="metrics">
+    <article class="metric card"><span>All Applications</span><strong id="mAll">0</strong></article>
+    <article class="metric card"><span>Action Required</span><strong id="mAction">0</strong></article>
+    <article class="metric card"><span>Ready for Review</span><strong id="mReady">0</strong></article>
+    <article class="metric card"><span>Under Review</span><strong id="mReview">0</strong></article>
+    <article class="metric card"><span>Decisions</span><strong id="mDecision">0</strong></article>
+  </section>
+
+  <section class="workspace card">
+    <div class="toolbar">
+      <input id="search" placeholder="Search client, email, business or application ID">
+      <select id="filter">
+        <option value="">All statuses</option>
+        <option>Account Created</option><option>Statements Required</option><option>Ready for Review</option>
+        <option>Under Review</option><option>Additional Documents Required</option><option>Conditional Approval</option>
+        <option>Approved</option><option>Funded</option><option>Declined</option>
+      </select>
+      <select id="intake"><option value="">All intake</option><option>Broker</option><option>Direct</option></select><button class="btn secondary" id="clearFilters">Clear Filters</button>
+    </div>
+    <div class="tablewrap">
+      <table><thead><tr><th>Application</th><th>Client</th><th>Business</th><th>Intake / Broker</th><th>Status</th><th>Statements</th><th>Advisor</th><th>Updated</th><th></th></tr></thead><tbody id="rows"></tbody></table>
+      <div id="empty" class="empty hidden">No applications match the filters.</div>
+    </div>
+  </section>
+</main>
+
+<div class="backdrop" id="backdrop"></div>
+<aside class="drawer" id="drawer">
+  <header class="drawer-head"><div><div class="eyebrow">Application File</div><h2 id="dTitle">Application</h2></div><button class="close" id="close">×</button></header>
+  <div class="drawer-body">
+    <section class="summary-grid">
+      <article class="summary-card card"><small>Status</small><strong id="summaryStatus">—</strong></article>
+      <article class="summary-card card"><small>Statements</small><strong id="summaryStatements">0 / 6</strong></article>
+      <article class="summary-card card"><small>Advisor</small><strong id="summaryAdvisor">Unassigned</strong></article>
+    </section>
+
+    <section class="card audit-card" id="auditCard">
+      <button class="audit-toggle-row" id="auditToggle" type="button" aria-expanded="false">
+        <div class="audit-toggle-title">
+          <div><div class="eyebrow">Permanent History</div><h3>Application Activity</h3></div>
+        </div>
+        <div class="audit-toggle-meta">
+          <span class="subtle" id="auditCount">0 events</span>
+          <span class="audit-chevron">⌄</span>
+        </div>
+      </button>
+      <div class="audit-body hidden" id="auditBody">
+        <div class="audit-controls">
+          <select id="auditFilter" aria-label="Filter application activity">
+            <option value="all">All Activity</option>
+            <option value="admin">Admin</option>
+            <option value="client">Client</option>
+            <option value="agent">Agent</option>
+            <option value="documents">Documents</option>
+            <option value="status">Status</option>
+            <option value="financing">Financing</option>
+            <option value="notifications">Notifications</option>
+            <option value="system">System</option>
+          </select>
+          <button class="quick" id="auditRefresh">Refresh Activity</button>
+        </div>
+        <div class="audit-trail" id="auditTrail"><div class="audit-empty">Open a client file to load its activity.</div></div>
+      </div>
+    </section>
+
+    <section class="section card">
+      <div class="section-title"><h3>Client & Application</h3><button class="quick" id="copyId">Copy ID</button></div>
+      <div id="details"></div>
+    </section>
+
+    <section class="section card">
+      <div class="section-title"><h3>Advisor & Client Conversation</h3></div>
+      <div class="admin-conversation" id="adminConversation"><div class="admin-chat-empty">No conversation yet.</div></div>
+      <div class="conversation-compose">
+        <label for="messageBody">Message to Client</label>
+        <textarea id="messageBody" rows="4" placeholder="Write a message to the client..."></textarea>
+        <div class="conversation-compose-actions">
+          <button class="btn gold" id="saveNotify" type="button">Send Message to Client</button>
+          <div id="messageSendMsg" class="notice"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section card">
+      <div class="section-title"><h3>Client Response</h3></div>
+      <div class="client-response" id="clientResponse"><strong>Awaiting Response</strong><p>When the client chooses Proceed or Request More Information, the response will appear here.</p></div>
+    </section>
+
+    <section class="section card client-update-card">
+      <div class="section-title"><h3>Client Update</h3></div>
+      <div class="form-grid">
+        <div class="field"><label>Status</label><select id="status"><option>Account Created</option><option>Statements Required</option><option>Ready for Review</option><option>Under Review</option><option>Additional Documents Required</option><option>Conditional Approval</option><option>Approved</option><option>Funded</option><option>Declined</option></select></div>
+        <div class="field"><label>Assigned Advisor</label><input id="advisor"></div>
+        <div class="field"><label>Approved Amount</label><input id="approvedAmount" type="number" min="0"></div>
+        <div class="field"><label>Product / Terms</label><input id="quote" placeholder="Financing Available"></div>
+        <div class="field"><label>Term</label><input id="term" placeholder="e.g. 12 months"></div>
+        <div class="field"><label>Payment Frequency</label><input id="paymentFrequency" placeholder="e.g. Weekly"></div>
+        <div class="field"><label>Payment Amount</label><input id="paymentAmount" type="number" min="0" step="0.01"></div>
+        <div class="field"><label>Number of Payments</label><input id="numberPayments" type="number" min="0"></div>
+        <div class="field"><label>Total Repayment</label><input id="totalRepayment" type="number" min="0" step="0.01"></div>
+        <div class="field full">
+          <div class="docs-toggle-row">
+            <div>
+              <label style="margin:0">Additional Document Upload</label>
+              <div class="subtle">Turn on when the client should see the additional-document upload section.</div>
+            </div>
+            <label class="switch-control" aria-label="Show additional document upload in client portal">
+              <input id="additionalDocsEnabled" type="checkbox">
+              <span class="switch-track"></span>
+            </label>
+          </div>
+        </div>
+        <div class="field full"><label>Additional Documents Requested</label><textarea id="documentsRequested" rows="3" placeholder="Example: Driver’s licence for each signer, void cheque, latest financial statements"></textarea></div>
+        <div class="field full"><label>Internal / Advisor Notes</label><textarea id="notes" rows="5"></textarea></div>
+      </div>
+      <div class="drawer-buttons">
+        <button class="btn gold" id="save" type="button">Save Client Update</button>
+        <button class="btn secondary" id="saveEmailUpdate" type="button">Save & Send Email Update</button>
+        <button class="btn secondary" id="drive" type="button">Open Drive Folder</button>
+      </div>
+      <div id="saveMsg" class="notice client-update-save-msg"></div>
+    </section>
+
+    <section class="section card"><div class="section-title"><h3>Uploaded Documents</h3><span class="subtle" id="documentCount">0 files</span></div><ul id="documents" class="list"></ul></section>
+  </div>
+</aside>
+<div class="toast" id="toast"></div>
+
+
+
+
+<script src="demo.js"></script></body>
+</html>
