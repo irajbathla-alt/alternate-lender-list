@@ -680,20 +680,11 @@ function saveLeadRemote(lead){
 
 function createAccountRemote(account){
   if(!scriptURL) return Promise.reject(new Error('No signup endpoint configured.'));
-  var data=new URLSearchParams({
-    action:'account_signup',
-    name:account.name||'',
-    phone:account.phone||'',
-    email:account.email||'',
-    password:account.password||'',
-    createdAt:account.createdAt||new Date().toISOString()
+  var data=new URLSearchParams({action:'account_signup',name:account.name||'',phone:account.phone||'',email:account.email||'',password:account.password||'',createdAt:account.createdAt||new Date().toISOString()});
+  return fetch(scriptURL,{method:'POST',mode:'no-cors',keepalive:true,body:data}).then(function(){
+    function verify(attempt){return loginAccountRemote(account.email,account.password).catch(function(err){if(attempt>=3||/invalid email or password/i.test(err.message||''))throw err;return new Promise(function(resolve){setTimeout(resolve,1200*attempt);}).then(function(){return verify(attempt+1);});});}
+    return verify(1);
   });
-  return fetch(scriptURL,{
-    method:'POST',
-    mode:'no-cors',
-    keepalive:true,
-    body:data
-  }).then(function(){ return true; });
 }
 
 function parseAccountLoginResponse(res){
@@ -710,6 +701,7 @@ function loginAccountRemote(email,password){
     })
     .then(parseAccountLoginResponse)
     .catch(function(fetchErr){
+      if(/invalid email or password|account does not exist/i.test(fetchErr.message||'')) throw fetchErr;
       return jsonpFetch({resource:'accounts',action:'login',email:email,password:password})
         .then(parseAccountLoginResponse)
         .catch(function(jsonpErr){
@@ -1452,19 +1444,8 @@ function persistGateSession(lead){
           persistGateSession(lead);
           unlockList();
         })
-        .catch(function(){
-          var accounts=getLocalGateAccounts();
-          var k=email.toLowerCase();
-          if(accounts[k]){
-            document.getElementById('gErr').textContent='Account already exists. Please login.';
-            return;
-          }
-          accounts[k]={name:name,email:email,phone:phone,password:password,createdAt:new Date().toISOString()};
-          saveLocalGateAccounts(accounts);
-          saveLeadLocal(lead);
-          persistGateSession(lead);
-          document.getElementById('gErr').textContent='Apps Script unavailable. Account saved locally on this device.';
-          unlockList();
+        .catch(function(err){
+          document.getElementById('gErr').textContent='Account could not be verified. '+prettyAuthError(err)+' Please try logging in again or contact support.';
         });
 	    }else{
 	      loginAccountRemote(email,password)
@@ -1483,17 +1464,6 @@ function persistGateSession(lead){
 	            document.getElementById('gErr').textContent='No account found for this email. Please create an account first.';
 	            return;
 	          }
-	          var accounts=getLocalGateAccounts();
-	          var acct=accounts[email.toLowerCase()];
-          if(acct && acct.password===password){
-            lead.name=(acct.name||name);
-            lead.email=(acct.email||email);
-            lead.phone=(acct.phone||'');
-            persistGateSession(lead);
-            document.getElementById('gErr').textContent='Logged in using local account (Apps Script unavailable).';
-            unlockList();
-            return;
-          }
 	          document.getElementById('gErr').textContent=errMsg;
 	        });
 	    }
