@@ -3,7 +3,7 @@ import Link from 'next/link'
 import {supabase} from '../../../../lib/server'
 import {redirect,notFound} from 'next/navigation'
 import {Shell,Alert,StateTag} from '../../../../components/shell'
-import {createInvitation,requestTask,postMessage,submitToAdmin} from '../../../actions'
+import {createInvitation,requestTask,postMessage,submitToAdmin,submitTestToAdmin} from '../../../actions'
 export default async function Deal({params,searchParams}:{params:Promise<{id:string}>,searchParams:Promise<{error?:string,success?:string,invite?:string}>}){
  const {id}=await params,s=await supabase(),{data:{user}}=await s.auth.getUser();if(!user)redirect('/login');
  const {data:p}=await s.from('profiles').select('role,active').eq('id',user.id).single();if(!p?.active||p.role!=='broker')redirect('/');
@@ -14,7 +14,13 @@ export default async function Deal({params,searchParams}:{params:Promise<{id:str
  <Alert error={q.error} success={q.success}/>
  <section className="card"><div className="detail-header"><div><div className="eyebrow">APPLICATION WORKFLOW</div><StateTag status={a.status}/></div>
  <div className="buttonrow"><button className="btn secondary small" disabled title="Secure electronic signing is being developed">Send E-Sign · Soon</button><a className="btn secondary small" href="#document-vault">Docs Upload</a><form action={submitToAdmin}><input type="hidden" name="application" value={id}/><button className="btn small" title="Submission requires verified signature and accepted checklist">Submit to Admin</button></form></div></div>
- <p className="muted small">Submit to Admin is protected: it will reject unsigned applications or outstanding required tasks.</p></section>
+ <p className="muted small">Submit to Admin is protected: it will reject unsigned applications or outstanding required tasks.</p>
+ {a.business_name.startsWith('TEST - ')&&client.email.toLowerCase().endsWith('@example.invalid')&&
+ <div className="callout" style={{marginTop:12}}>
+ <b>Test Application Only</b>
+ <p className="small">Send a fictional application to your Admin queue to check the broker-to-Admin workflow. This bypasses e-signatures <strong>only</strong> for fake TEST records with example.invalid email addresses and no documents. Not available for real clients.</p>
+ <form action={submitTestToAdmin}><input type="hidden" name="application" value={id}/><button className="btn secondary small" disabled={Boolean(a.submitted_at)}>Submit TEST Application to Admin</button></form>
+ </div>}</section>
  <div className="split" style={{marginTop:16}}><div className="stack"><section className="card"><h2>Client Information</h2>
  <div className="item"><span>Client</span><b>{client.full_name}</b></div><div className="item"><span>Email</span><b>{client.email}</b></div><div className="item"><span>Financing</span><b>{a.financing_product}</b></div><div className="item"><span>Requested</span><b>CAD ${Number(a.requested_amount).toLocaleString()}</b></div>
  <hr className="line"/><h3>Client Portal Invitation</h3><p className="muted small">Your client must have an active, verified client account to accept an invitation. The invitation matches the client's email address.</p>
