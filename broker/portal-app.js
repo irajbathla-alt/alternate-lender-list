@@ -44,7 +44,7 @@ async function busyRun(button,func){
 }
 let fileRequest=0,activeFileTab='information',workspaceView='dashboard';
 const sectionNames={information:'Client & Business',documents:'Documents',signing:'Application & Signing',activity:'Messages & Activity'};
-function showWorkspace(view,scroll=true){workspaceView=view;['dashboard','deals','new','file'].forEach(name=>{const el=$('view-'+name);if(el)el.hidden=name!==view;});document.querySelectorAll('[data-workspace]').forEach(b=>{const active=b.dataset.workspace===(view==='file'?'deals':view);if(active)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});if(scroll)window.scrollTo({top:0,behavior:'instant'});}
+function showWorkspace(view,scroll=true){workspaceView=view;['dashboard','deals','new','file'].forEach(name=>{const el=$('view-'+name);if(el)el.hidden=name!==view;});document.querySelectorAll('[data-workspace]').forEach(b=>{const active=b.dataset.workspace===(view==='file'?'deals':view);if(active)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});if(scroll)window.scrollTo({top:0,behavior:'auto'});}
 function navigateWorkspace(view){if(working)return;if(isEditingInfo()){notice('Save or cancel your changes before leaving the file.',true);return;}selected=null;fileRequest++;$('detail').innerHTML='';showWorkspace(view);notice('');}
 function isEditingInfo(){return $('editClientForm')?.classList.contains('is-editing')===true;}
 function selectFileTab(name){if(!sectionNames[name])return false;if(name!=='information'&&isEditingInfo()){notice('Save or cancel your changes before switching sections.',true);return false;}activeFileTab=name;document.querySelectorAll('#openedFile [data-file-tab]').forEach(b=>{if(b.dataset.fileTab===name)b.setAttribute('aria-current','true');else b.removeAttribute('aria-current');});document.querySelectorAll('#openedFile [data-file-panel]').forEach(p=>p.hidden=p.dataset.filePanel!==name);$('fileSectionTitle').textContent=sectionNames[name];const menu=$('fileMenu');if(menu)menu.open=false;return true;}
@@ -160,9 +160,11 @@ async function openFile(id,scroll=true){
 }
 $('loginForm').onsubmit=async e=>{e.preventDefault();const button=e.submitter;await busyRun(button,async()=>{const {email,password}=Object.fromEntries(new FormData(e.currentTarget));const {error}=await db.auth.signInWithPassword({email:String(email).trim(),password:String(password)});if(error)throw error;notice('',false,true);await loadIdentity()})};
 $('resetPassword').onclick=e=>busyRun(e.currentTarget,async()=>{const email=$('loginEmail').value.trim();if(!email)throw Error('Enter your account email first.');const {error}=await db.auth.resetPasswordForEmail(email,{redirectTo:location.origin+'/broker/'});if(error)throw error;notice('If the email belongs to an account, password reset instructions have been sent.',false,true)});
-$('logout').onclick=e=>busyRun(e.currentTarget,async()=>{const {error}=await db.auth.signOut();if(error)throw error;user=null;profile=null;selected=null;fileRequest++;apps=[];$('detail').innerHTML='';showWorkspace('dashboard',false);gate();notice('You have signed out.',false,true)});
+$('logout').onclick=e=>busyRun(e.currentTarget,async()=>{if(isEditingInfo()&&!confirm('Discard unsaved changes and log out?'))return;const {error}=await db.auth.signOut();if(error)throw error;user=null;profile=null;selected=null;fileRequest++;apps=[];$('detail').innerHTML='';showWorkspace('dashboard',false);gate();notice('You have signed out.',false,true)});
 $('new').onclick=()=>navigateWorkspace('new');
 $('dashboardDeals').onclick=()=>navigateWorkspace('deals');
+$('newDealFromList').onclick=()=>navigateWorkspace('new');
+const topHeader=document.querySelector('header.tfc-top');const fitRail=()=>{if(topHeader)$('appView').style.setProperty('--broker-header-height',Math.ceil(topHeader.getBoundingClientRect().height)+'px');};fitRail();if(window.ResizeObserver&&topHeader)new ResizeObserver(fitRail).observe(topHeader);else window.addEventListener('resize',fitRail);
 $('cancelNew').onclick=()=>navigateWorkspace('deals');
 $('railLogout').onclick=()=>$('logout').click();
 document.querySelectorAll('[data-workspace]').forEach(b=>b.onclick=()=>navigateWorkspace(b.dataset.workspace));
@@ -174,7 +176,7 @@ $('productFilter').onchange=e=>{productFilter=e.target.value;render()};
 $('sortFilter').onchange=e=>{listSort=e.target.value;render()};
 $('clearFilters').onclick=()=>{$('search').value='';$('statusFilter').value='all';$('productFilter').value='all';$('sortFilter').value='newest';statusFilter='all';productFilter='all';listSort='newest';render()};
 $('refreshList').onclick=e=>{if(isEditingInfo()){notice('Save or cancel your changes before refreshing.',true);return;}return busyRun(e.currentTarget,async()=>{await refresh();notice('Application list updated.')});};
-$('cards').onclick=e=>{const b=e.target.closest('[data-id]');if(b&&isEditingInfo()){notice('Save or cancel your changes before opening another file.',true);return;}if(b&&!working)openFile(b.dataset.id).catch(err=>notice(errText(err),true))};
+$('cards').onclick=e=>{const b=e.target.closest('[data-id]');if(b&&isEditingInfo()){notice('Save or cancel your changes before opening another file.',true);return;}if(b&&!working)busyRun(b,async()=>{try{await openFile(b.dataset.id)}catch(err){selected=null;fileRequest++;$('detail').innerHTML='';showWorkspace('deals',false);throw err;}})};
 $('application').onsubmit=e=>{e.preventDefault();const form=e.currentTarget;busyRun(e.submitter,async()=>{const f=new FormData(form);if(!f.get('email'))throw Error('Client email is required for secure intake.');const payload=Object.fromEntries(f.entries());payload.amount=payload.requestedAmount;delete payload.requestedAmount;const {data,error}=await db.rpc('broker_create_full_application',{p_payload:payload});if(error)throw error;notice('Application saved securely to your broker account.');form.reset();await refresh();await openFile(data)})};
 (async()=>{try{await loadIdentity();}catch(e){gate();notice('Unable to connect: '+errText(e),true,true)}})();
 })();
