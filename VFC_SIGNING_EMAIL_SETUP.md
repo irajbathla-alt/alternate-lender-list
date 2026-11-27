@@ -8,17 +8,18 @@
 - **Supabase Edge Function `vfc-sign`:** securely validates signing links, signs PDF on server, records signature, prepares Apps Script emails and allows authenticated Admin lender sending.
 - **Google Apps Script:** sends emails/attachments after deployment and secret setup. Email delivery is **NOT configured just by checking this code into GitHub**.
 
-## Configure Google Apps Script sender (one-time setup)
-1. Create a **new standalone** Google Apps Script project under the Google account that should send VFC mail. Do NOT replace the unrelated lender-directory Apps Script project.
-2. Paste the contents of `apps_script_vfc_mail_gateway.gs` into a `Code.gs` script file.
-3. In Project Settings → Script Properties, add `VFC_MAIL_SHARED_SECRET` with a newly generated, strong secret (at least 32 random characters). Do not store or share it in GitHub.
-4. Deploy → New deployment → Web app. Execute as **Me**, access **Anyone**. The handler requires the shared secret for every send, but the web app URL should still be treated as sensitive configuration.
-5. In the Supabase project → **Edge Functions → Secrets**, add:
-   - `VFC_APPS_SCRIPT_URL`: the deployed Apps Script `/exec` URL
-   - `VFC_APPS_SCRIPT_SECRET`: exactly the same secret as the Apps Script property
-6. Test only with a fictional application and approved test email addresses. The Apps Script sender email is the Google account running the web app. If using a business alias, configure that sender separately.
+## Extend the existing Alternate Lender Apps Script (one-time setup)
+1. Open the **existing** Google Apps Script project that powers the Alternate Lender List. Do not create a new project, spreadsheet, or deployment.
+2. Back up its current source. Update its existing main script with `apps_script_member_notes.gs` (version `2026-11-26.3`). It retains the existing lender directory, account, admin authentication, member notes and deal thread handlers and adds the isolated `send_vfc_mail` route. Do not paste the obsolete standalone gateway or create a second `doPost`.
+3. Preserve the current spreadsheet ID, Script Properties (including ADMIN_PASSWORD and the existing spreadsheet connection), and existing deployment settings. If your live script has additional custom changes, merge only the new route and `handleVfcMail_` helper into that source.
+4. Add one new Script Property: `VFC_MAIL_SHARED_SECRET` (a strong, random value of at least 32 characters). Keep all previous properties.
+5. Deploy → Manage deployments → Edit the **existing** web app deployment → New version → Deploy. Retain the existing `/exec` URL and access settings. Approve the added MailApp permission if prompted. The executing account must be authorized to send VFC mail.
+6. In Supabase → Edge Functions → Secrets, set:
+   - `VFC_APPS_SCRIPT_URL`: the same existing Apps Script `/exec` URL
+   - `VFC_APPS_SCRIPT_SECRET`: the matching new shared secret
+7. Verify the existing lender portal login, notes, deal threads, lender data and calculators, then test signing and PDF email using a fictional application and approved test inboxes.
 
-Do not put `VFC_APPS_SCRIPT_SECRET` into public website JavaScript. Clients signing from email **do not need accounts**.
+Never place the shared secret in GitHub or browser JavaScript. The existing script's executing account sends the email; the VFC reply-to is `vancouverfinancecompany@gmail.com`. Email is not configured merely by committing source code.
 
 ## Signing process
 1. Broker opens a **draft** application and uses **Edit Client Information** until all information is accurate.
