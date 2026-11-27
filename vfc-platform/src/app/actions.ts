@@ -9,16 +9,15 @@ async function role(required:'broker'|'client'|'admin'){
  return s;
 }
 export async function createApplication(f:FormData){
- const s=await role('broker');
- const amount=Number(f.get('amount'));
- const {data,error}=await s.rpc('broker_create_application',{
- p_name:String(f.get('name')||''),p_email:String(f.get('email')||''),
- p_business:String(f.get('business')||''),p_product:String(f.get('product')||''),
- p_amount:amount,p_phone:String(f.get('phone')||'')
- });
- if(error||!data)redirect('/broker?error=application');
- redirect('/broker/applications/'+data);
+ const s=await role('broker')
+ const keys=['name','email','phone','business','product','amount','nature','employees','revenue','businessAddress','registrationYear','bank','dob','ownerAddress','summary']
+ const payload:Record<string,string>={}
+ for(const key of keys)payload[key]=String(f.get(key)||'').trim()
+ const {data,error}=await s.rpc('broker_create_full_application',{p_payload:payload})
+ if(error||!data)redirect('/broker?error=application')
+ redirect('/broker/applications/'+data)
 }
+
 export async function requestTask(f:FormData){
  const s=await role('broker'),id=String(f.get('application')||'');
  const {error}=await s.rpc('broker_request_task',{
@@ -122,4 +121,44 @@ export async function submitTestToAdmin(f:FormData){
  const s=await role('broker'),id=String(f.get('application')||'');
  const {error}=await s.rpc('broker_submit_test_application',{p_application:id});
  redirect('/broker/applications/'+id+(error?'?error=testsubmission':'?success=testsubmitted'));
+}
+
+
+export async function sendBrokerEmail(f:FormData){
+ const s=await role('broker')
+ const id=String(f.get('application')||'')
+ const audience=String(f.get('audience')||'')
+ const subject=String(f.get('subject')||'').trim()
+ const body=String(f.get('body')||'').trim()
+ if(!/^[0-9a-f-]{36}$/i.test(id)||!['client','admin'].includes(audience)||subject.length<4||subject.length>180||body.length<10||body.length>5000)
+ redirect('/broker?error=email-invalid')
+ const destination='/broker/applications/'+id
+ const key=process.env.RESEND_API_KEY
+ const from=process.env.VFC_EMAIL_FROM
+ if(!key||!from||!/^.+<[^<>@\s]+@[^<>@\s]+>$/.test(from))redirect(destination+'?error=email-not-configured')
+ const {data:record,error:prepareError}=await s.rpc('broker_prepare_email',{
+ p_application:id,p_audience:audience,p_subject:subject,p_body:body
+ })
+ const queued=Array.isArray(record)?record[0]:null
+ if(prepareError||!queued?.email_id||!queued?.recipient_email)redirect(destination+'?error=email-permission')
+ let providerId:string|null=null,errorMessage:string|null=null
+ try{
+  const email=String(queued.recipient_email)
+  const allowed=process.env.VFC_EMAIL_TEST_RECIPIENT
+  if(process.env.VFC_EMAIL_LIVE_ENABLED!=='true'&&(!allowed||email.toLowerCase()!==allowed.toLowerCase())){
+   errorMessage='Staging recipient is not allowlisted'
+  }else{
+   const response=await fetch('https://api.resend.com/emails',{
+    method:'POST',
+    headers:{'Authorization':'Bearer '+key,'Content-Type':'application/json','Idempotency-Key':queued.email_id},
+    body:JSON.stringify({from,to:[email],subject,text:body}),
+    signal:AbortSignal.timeout(12000)
+   })
+   const result=await response.json() as {id?:string,message?:string,name?:string}
+   if(response.ok&&result.id)providerId=result.id
+   else errorMessage='Email service rejected the message ('+response.status+')'
+  }
+ }catch{errorMessage='Email service did not respond'}
+ await s.rpc('broker_finish_email',{p_email:queued.email_id,p_provider_id:providerId,p_error:errorMessage})
+ redirect(destination+(providerId?'?success=email-sent':'?error=email-send-failed'))
 }
