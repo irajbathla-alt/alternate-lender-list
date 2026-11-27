@@ -57,7 +57,8 @@ function editableInfoRow(k,name,value,options={}){
  if(options.choices){const choices=[...new Set([...options.choices,...(value?[String(value)]:[])])];control='<select'+attrs+'>'+choices.map(p=>'<option value="'+esc(p)+'"'+(String(value)===p?' selected':'')+'>'+esc(p)+'</option>').join('')+'</select>';}
  else if(options.type==='textarea'){control='<textarea'+attrs+' rows="3">'+raw+'</textarea>';}
  else{control='<input'+attrs+' type="'+(options.type||'text')+'" value="'+raw+'"'+(options.min!=null?' min="'+options.min+'"':'')+(options.max!=null?' max="'+options.max+'"':'')+(options.step?' step="'+options.step+'"':'')+'>';}
- return '<div class="broker-kv inline-info-row"><label for="'+id+'">'+esc(k)+'</label><b class="inline-read">'+esc(shown==null||shown===''?'—':shown)+'</b><div class="inline-field" hidden>'+control+'</div></div>';
+ const display=esc(shown==null||shown===''?'—':shown);
+ return '<div class="broker-kv inline-info-row'+(options.type==='textarea'?' inline-summary-row':'')+'"><label for="'+id+'" title="'+esc(k)+'">'+esc(k)+'</label><b class="inline-read" title="'+display+'" tabindex="0">'+display+'</b><div class="inline-field" hidden>'+control+'</div></div>';
 }
 async function openFile(id,scroll=true){
  if(!authorized()||!apps.some(a=>a.id===id))return;if(selected!==id)activeFileTab='information';selected=id;const request=++fileRequest;const a=apps.find(x=>x.id===id);
