@@ -3,7 +3,7 @@ import {uploadDocument} from '../app/actions'
 export async function DocumentVault({applicationId,role}:{applicationId:string,role:'broker'|'client'|'admin'}){
  const s=await supabase();const {data:docs}=await s.from('documents').select('id,original_filename,category,scan_status,storage_path,created_at,uploaded_by').eq('application_id',applicationId).order('created_at',{ascending:false});
  const links=await Promise.all((docs||[]).map(async d=>{const {data}=await s.storage.from('application-documents').createSignedUrl(d.storage_path,60);return {...d,url:data?.signedUrl||null}}));
- return <section className="card"><h2>Secure Document Vault</h2><p className="muted small">Only PDFs, JPG and PNG (20 MB maximum). New uploads are private and pending security review before they can be shared with other users.</p>
+ return <section className="card" id="document-vault"><h2>Secure Document Vault</h2><p className="muted small">Only PDFs, JPG and PNG (20 MB maximum). New uploads are private and pending security review before they can be shared with other users.</p>
  <form action={uploadDocument}><input type="hidden" name="application" value={applicationId}/><div className="field"><label>Document Category</label><select name="category">
  {['bank_statements','identification','financial_statements','business_registration','tax_documents','property_documents','application','proposal','other'].map(c=><option key={c} value={c}>{c.replaceAll('_',' ')}</option>)}
  </select></div>
