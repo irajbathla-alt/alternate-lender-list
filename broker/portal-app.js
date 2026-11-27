@@ -18,11 +18,11 @@ async function loadIdentity(){
  if(user&&!authorized())notice('Your Supabase account is not an active Broker account. Please contact VFC Admin.',true,true);
  if(authorized()){ $('welcome').textContent='Welcome, '+(profile.full_name||user.email?.split('@')[0]||'Broker')+'.'; $('accountEmail').textContent=user.email||''; await refresh(); }
 }
-async function refresh(){
+async function refresh(scroll=true){
  if(!authorized())return;
  const r=await db.from('applications').select('id,application_number,business_name,financing_product,requested_amount,status,submitted_at,created_at,deal_summary,clients(id,full_name,email,phone)').eq('broker_id',user.id).order('created_at',{ascending:false}).limit(250);
  if(r.error)throw r.error;apps=r.data||[];render();
- if(selected){const exists=apps.find(a=>a.id===selected);if(exists)await openFile(selected);else{$('detail').innerHTML='';selected=null;}}
+ if(selected){const exists=apps.find(a=>a.id===selected);if(exists)await openFile(selected,scroll);else{$('detail').innerHTML='';selected=null;}}
 }
 function signingStatus(x){if(!x)return 'Not sent';if(x.status==='signed')return 'Signed';if(x.status==='pending'&&new Date(x.expires_at).getTime()<Date.now())return 'Link expired';if(x.status==='pending')return 'Awaiting signature';return label(x.status);}
 function signingRows(rows){return rows.map(x=>'<div class="broker-mini broker-sign-row"><span><b>'+esc(signingStatus(x))+'</b><small>Created: '+new Date(x.created_at).toLocaleString('en-CA')+(x.signed_at?' · Signed: '+new Date(x.signed_at).toLocaleString('en-CA'):'')+(x.status==='signed'&&x.email_status?' · PDF email: '+esc(label(x.email_status)):'')+'</small></span>'+(x.status==='signed'?'<button type="button" class="btn secondary signed-copy" data-id="'+esc(x.id)+'">Download Signed PDF</button>':'')+'</div>').join('')||'<p class="subtle">No signing requests created.</p>';}
@@ -43,8 +43,18 @@ async function busyRun(button,func){
  try{await func();}catch(e){notice(errText(e),true);}finally{working=false;if(button){button.disabled=false;button.textContent=button.dataset.pending==='true'?'Reissue Signing Link':text;}}
 }
 let fileRequest=0,activeFileTab='information';
-function selectFileTab(name){activeFileTab=name;document.querySelectorAll('#openedFile [data-file-tab]').forEach(b=>{const active=b.dataset.fileTab===name;b.setAttribute('aria-selected',String(active));b.tabIndex=active?0:-1;});document.querySelectorAll('#openedFile [data-file-panel]').forEach(p=>p.hidden=p.dataset.filePanel!==name);}
+function isEditingInfo(){return $('editClientForm')?.classList.contains('is-editing')===true;}
+function selectFileTab(name){if(name!=='information'&&isEditingInfo()){notice('Save or cancel your changes before switching tabs.',true);return false;}activeFileTab=name;document.querySelectorAll('#openedFile [data-file-tab]').forEach(b=>{const active=b.dataset.fileTab===name;b.setAttribute('aria-selected',String(active));b.tabIndex=active?0:-1;});document.querySelectorAll('#openedFile [data-file-panel]').forEach(p=>p.hidden=p.dataset.filePanel!==name);return true;}
 function infoRow(k,v){return '<div class="broker-kv"><span>'+esc(k)+'</span><b>'+esc(v==null||v===''?'—':v)+'</b></div>';}
+function editableInfoRow(k,name,value,options={}){
+ const shown=options.display??value,raw=esc(value??''),id='inline-'+name;
+ const attrs=' id="'+id+'" name="'+name+'" disabled'+(options.required?' required':'');
+ let control;
+ if(options.choices){const choices=[...new Set([...options.choices,...(value?[String(value)]:[])])];control='<select'+attrs+'>'+choices.map(p=>'<option value="'+esc(p)+'"'+(String(value)===p?' selected':'')+'>'+esc(p)+'</option>').join('')+'</select>';}
+ else if(options.type==='textarea'){control='<textarea'+attrs+' rows="3">'+raw+'</textarea>';}
+ else{control='<input'+attrs+' type="'+(options.type||'text')+'" value="'+raw+'"'+(options.min!=null?' min="'+options.min+'"':'')+(options.max!=null?' max="'+options.max+'"':'')+(options.step?' step="'+options.step+'"':'')+'>';}
+ return '<div class="broker-kv inline-info-row"><label for="'+id+'">'+esc(k)+'</label><b class="inline-read">'+esc(shown==null||shown===''?'—':shown)+'</b><div class="inline-field" hidden>'+control+'</div></div>';
+}
 async function openFile(id,scroll=true){
  if(!authorized()||!apps.some(a=>a.id===id))return;if(selected!==id)activeFileTab='information';selected=id;const request=++fileRequest;const a=apps.find(x=>x.id===id);
  const [details,tasks,msg,docs,activity,signing]=await Promise.all([
@@ -65,7 +75,7 @@ async function openFile(id,scroll=true){
  const panel=(key)=>'<div role="tabpanel" id="file-panel-'+key+'" aria-labelledby="file-tab-'+key+'" data-file-panel="'+key+'" hidden>';
  $('detail').innerHTML='<section class="card broker-form" id="openedFile"><div class="broker-detail-top"><div><div class="eyebrow">VFC-'+String(a.application_number).padStart(4,'0')+'</div><h2>'+esc(a.business_name)+'</h2><p><b>'+esc(label(a.status))+'</b> · '+fmt(a.requested_amount)+' · '+esc(a.financing_product)+'</p></div><button type="button" class="btn secondary" id="closeFile">Close</button></div>'+
  '<nav class="file-tabs" role="tablist" aria-label="Client file sections">'+tab('information','Client &amp; Business')+tab('documents','Documents',detailData.docs.length+(signed?1:0))+tab('signing','Application &amp; Signing')+tab('activity','Messages &amp; Activity')+'</nav>'+
- panel('information')+'<div class="file-info-toolbar"><span class="sign-state '+(signed?'is-signed':pending?'is-pending':'')+'">'+esc(signingStatus(signed||pending||detailData.signing[0]))+'</span>'+(canEdit?'<button type="button" class="btn secondary" id="editClientInfo">Edit Information</button>':'')+'</div><div id="editClientPanel" hidden></div><div class="file-info-grid"><section class="file-section"><h3>Business Information</h3>'+infoRow('Legal Business Name',a.business_name)+infoRow('Nature of Business',d.nature_of_business)+infoRow('Annual Revenue',d.annual_revenue==null?null:fmt(d.annual_revenue))+infoRow('Employees',d.employee_count)+infoRow('Business Address',d.business_address)+infoRow('Registration Year',d.registration_year)+infoRow('Business Bank',d.business_bank)+'</section><section class="file-section"><h3>Client Information</h3>'+infoRow('Full Name',a.clients?.full_name)+infoRow('Email Address',a.clients?.email)+infoRow('Phone Number',a.clients?.phone)+infoRow('Date of Birth',d.owner_date_of_birth)+infoRow('Residential Address',d.owner_address)+'</section></div><section class="file-section file-financing"><h3>Financing Information</h3>'+infoRow('Product',a.financing_product)+infoRow('Requested Amount',fmt(a.requested_amount))+(a.deal_summary?'<p class="file-summary-text">'+esc(a.deal_summary)+'</p>':'')+'</section></div>'+
+ panel('information')+'<form id="editClientForm" class="file-inline-form"><div class="file-info-toolbar"><span class="sign-state '+(signed?'is-signed':pending?'is-pending':'')+'">'+esc(signingStatus(signed||pending||detailData.signing[0]))+'</span>'+(canEdit?'<div class="inline-edit-actions"><button type="button" class="btn secondary" id="editClientInfo">Edit Information</button><button type="button" class="btn secondary" id="cancelClientEdit" hidden>Cancel</button><button type="submit" class="btn" id="saveClientEdit" hidden>Save Changes</button></div>':'')+'</div><div class="file-info-grid"><section class="file-section"><h3>Business Information</h3>'+editableInfoRow('Legal Business Name','business',a.business_name,{required:true})+editableInfoRow('Nature of Business','nature',d.nature_of_business)+editableInfoRow('Annual Revenue','revenue',d.annual_revenue,{type:'number',min:0,step:'.01',display:d.annual_revenue==null?null:fmt(d.annual_revenue)})+editableInfoRow('Employees','employees',d.employee_count,{type:'number',min:0,step:'1'})+editableInfoRow('Business Address','businessAddress',d.business_address)+editableInfoRow('Registration Year','registrationYear',d.registration_year,{type:'number',min:1800,max:2030,step:'1'})+editableInfoRow('Business Bank','bank',d.business_bank)+'</section><section class="file-section"><h3>Client Information</h3>'+editableInfoRow('Full Name','name',a.clients?.full_name,{required:true})+editableInfoRow('Email Address','email',a.clients?.email,{type:'email',required:true})+editableInfoRow('Phone Number','phone',a.clients?.phone,{type:'tel'})+editableInfoRow('Date of Birth','dob',d.owner_date_of_birth,{type:'date'})+editableInfoRow('Residential Address','ownerAddress',d.owner_address)+'</section></div><section class="file-section file-financing"><h3>Financing Information</h3>'+editableInfoRow('Product','product',a.financing_product,{choices:['Term Loan','Business LOC','Flex Funds','Mortgage Financing']})+editableInfoRow('Requested Amount','amount',a.requested_amount,{type:'number',min:1,step:'.01',required:true,display:fmt(a.requested_amount)})+editableInfoRow('Deal Summary','summary',a.deal_summary,{type:'textarea'})+'</section><p class="inline-edit-hint subtle" hidden>Changes are saved securely to this application.</p></form></div>'+
  panel('documents')+
  '<section class="file-section"><div class="file-section-heading"><h3>Uploaded Documents</h3><span class="file-count">'+(detailData.docs.length+(signed?1:0))+'</span></div>'+(signed?'<div class="broker-signed-document"><b>Signed Application.pdf</b><small>Electronically signed · '+fmtDate(signed.signed_at)+'</small><button type="button" class="btn secondary signed-copy" data-id="'+esc(signed.id)+'">Download Signed PDF</button></div>':'')+'<div id="docList">'+(detailData.docs.map(d=>'<div class="file-document-row"><span class="file-type-icon" aria-hidden="true">'+esc((d.original_filename.split('.').pop()||'FILE').toUpperCase().slice(0,5))+'</span><div class="file-document-name"><b>'+esc(d.original_filename)+'</b><small>'+esc(label(d.category))+' · '+esc(label(d.scan_status))+'</small></div><button type="button" class="btn secondary small doc-download" data-path="'+esc(d.storage_path)+'">Download</button></div>').join('')||(signed?'':'<p class="file-empty">No documents uploaded yet.</p>'))+'</div><details class="file-disclosure" id="uploadDisclosure"><summary>Upload Document</summary><p class="subtle">PDF, JPG or PNG · up to 20 MB. Files are private.</p><form id="uploadForm"><label>Category<select name="category">'+['bank_statements','identification','financial_statements','business_registration','tax_documents','property_documents','application','other'].map(s=>'<option value="'+s+'">'+esc(s.replace(/_/g,' '))+'</option>').join('')+'</select></label><label>Private Document<input name="file" type="file" accept=".pdf,.jpg,.jpeg,.png" required></label><button class="btn" type="submit">Upload Securely</button></form></details></section>'+
 
@@ -81,39 +91,28 @@ async function openFile(id,scroll=true){
  panel('activity')+
  '<section class="file-section"><h3>Admin Messages</h3><div class="broker-chat-list">'+(detailData.messages.filter(m=>m.channel==='broker_admin').map(m=>'<div class="broker-chat"><b>'+esc(m.sender_id===user.id?'Broker':'VFC Admin')+'</b><p>'+esc(m.body)+'</p><small>'+fmtDate(m.created_at)+'</small></div>').join('')||'<p class="subtle">No Admin messages yet.</p>')+'</div>'+(a.submitted_at?'<form id="messageForm"><input type="hidden" name="channel" value="broker_admin"><label>Message to VFC Admin<textarea name="body" required maxlength="10000"></textarea></label><button class="btn" type="submit">Send to Admin</button></form>':'<p class="subtle">Admin messaging becomes available after submitting the application.</p>')+'<p class="subtle">Messages are stored in Supabase. Email delivery is not enabled.</p></section><section class="file-section"><div class="file-section-heading"><h3>Document Activity</h3></div><button type="button" class="btn secondary" id="refreshActivity">Refresh Activity</button><p class="subtle">Supabase records the upload, broker identity, filename, category and time for each document.</p><div class="broker-activity">'+(detailData.activity.map(ev=>'<div class="broker-mini"><b>'+esc(label(ev.action))+'</b><small>'+new Date(ev.created_at).toLocaleString('en-CA')+' · '+esc(ev.actor_role)+(ev.filename?' · '+esc(ev.filename):'')+'</small></div>').join('')||'<p class="subtle">No activity recorded.</p>')+'</div></section></div></section>';
  selectFileTab(activeFileTab);
- document.querySelectorAll('#openedFile [data-file-tab]').forEach((b,i,all)=>{b.onclick=()=>selectFileTab(b.dataset.fileTab);b.onkeydown=e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();const n=e.key==='Home'?0:e.key==='End'?all.length-1:(i+(e.key==='ArrowRight'?1:-1)+all.length)%all.length;all[n].focus();selectFileTab(all[n].dataset.fileTab);};});
- $('closeFile').onclick=()=>{selected=null;fileRequest++;$('detail').innerHTML='';$('cards').scrollIntoView({behavior:'smooth',block:'nearest'})};
+ document.querySelectorAll('#openedFile [data-file-tab]').forEach((b,i,all)=>{b.onclick=()=>selectFileTab(b.dataset.fileTab);b.onkeydown=e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();const n=e.key==='Home'?0:e.key==='End'?all.length-1:(i+(e.key==='ArrowRight'?1:-1)+all.length)%all.length;if(selectFileTab(all[n].dataset.fileTab))all[n].focus();};});
+ $('closeFile').onclick=()=>{if(working)return;if(isEditingInfo()){notice('Save or cancel your changes before closing the file.',true);return;}selected=null;fileRequest++;$('detail').innerHTML='';$('cards').scrollIntoView({behavior:'smooth',block:'nearest'})};
  $('refreshSignature').onclick=e=>busyRun(e.currentTarget,async()=>{await openFile(id,false);notice('Signing status refreshed.')});
- if($('editClientInfo'))$('editClientInfo').onclick=()=>{
- const container=$('editClientPanel');container.hidden=!container.hidden;if(container.hidden)return;
- const d=details.data||{};const value=(x)=>esc(x??'');
- container.innerHTML='<form id="editClientForm" class="broker-edit-form"><h3>Business Information</h3><div class="form-grid">'+
- '<div class="field"><label>Legal Business Name<input name="business" required value="'+value(a.business_name)+'"></label></div>'+
- '<div class="field"><label>Nature of Business<input name="nature" value="'+value(d.nature_of_business)+'"></label></div>'+
- '<div class="field"><label>Employees<input type="number" name="employees" min="0" value="'+value(d.employee_count)+'"></label></div>'+
- '<div class="field"><label>Annual Revenue<input name="revenue" type="number" min="0" step=".01" value="'+value(d.annual_revenue)+'"></label></div>'+
- '<div class="field"><label>Business Address<input name="businessAddress" value="'+value(d.business_address)+'"></label></div>'+
- '<div class="field"><label>Registration Year<input name="registrationYear" type="number" min="1800" max="2030" value="'+value(d.registration_year)+'"></label></div>'+
- '<div class="field"><label>Business Bank<input name="bank" value="'+value(d.business_bank)+'"></label></div>'+
- '</div><h3>Client Information</h3><div class="form-grid">'+
- '<div class="field"><label>Owner Full Name<input name="name" required value="'+value(a.clients?.full_name)+'"></label></div>'+
- '<div class="field"><label>Client Email<input name="email" type="email" required value="'+value(a.clients?.email)+'"></label></div>'+
- '<div class="field"><label>Phone<input name="phone" type="tel" value="'+value(a.clients?.phone)+'"></label></div>'+
- '<div class="field"><label>Date of Birth<input name="dob" type="date" value="'+value(d.owner_date_of_birth)+'"></label></div>'+
- '<div class="field"><label>Residential Address<input name="ownerAddress" value="'+value(d.owner_address)+'"></label></div>'+
- '</div><h3>Financing Information</h3><div class="form-grid">'+
- '<div class="field"><label>Requested Amount<input name="amount" type="number" min="1" step=".01" required value="'+value(a.requested_amount)+'"></label></div>'+
- '<div class="field"><label>Financing Product<select name="product">'+['Term Loan','Business LOC','Flex Funds','Mortgage Financing'].map(p=>'<option value="'+esc(p)+'" '+(p===a.financing_product?'selected':'')+'>'+esc(p)+'</option>').join('')+'</select></label></div>'+
- '<div class="field full"><label>Deal Summary<textarea name="summary" rows="3">'+esc(a.deal_summary||'')+'</textarea></label></div></div><div class="broker-actions"><button class="btn" type="submit">Save Changes</button><button class="btn secondary" type="button" id="cancelClientEdit">Cancel</button></div></form>';
- $('cancelClientEdit').onclick=()=>{container.hidden=true;container.innerHTML='';};
- $('editClientForm').onsubmit=e=>{e.preventDefault();const form=e.currentTarget;busyRun(e.submitter,async()=>{
+ if($('editClientInfo')){
+ const form=$('editClientForm');
+ const setEditing=(enabled)=>{
+ form.classList.toggle('is-editing',enabled);
+ form.querySelectorAll('.inline-read').forEach(el=>el.hidden=enabled);
+ form.querySelectorAll('.inline-field').forEach(el=>{el.hidden=!enabled;el.querySelector('input,select,textarea').disabled=!enabled;});
+ form.querySelector('.inline-edit-hint').hidden=!enabled;
+ $('editClientInfo').hidden=enabled;$('cancelClientEdit').hidden=!enabled;$('saveClientEdit').hidden=!enabled;
+ };
+ $('editClientInfo').onclick=()=>{setEditing(true);form.querySelector('input:not(:disabled)')?.focus({preventScroll:true});};
+ $('cancelClientEdit').onclick=()=>{if(working)return;form.reset();setEditing(false);$('editClientInfo').focus({preventScroll:true});notice('');};
+ form.onsubmit=e=>{e.preventDefault();if(!isEditingInfo())return;busyRun(e.submitter||$('saveClientEdit'),async()=>{
  const p=Object.fromEntries(new FormData(form).entries());
  const {error}=await db.rpc('vfc_broker_edit_application',{p_application:id,p_payload:p});
- if(error)throw error;notice('Client information saved with an audit entry.');await refresh();
+ if(error)throw error;
+ setEditing(false);notice('Information saved with an audit entry.');await refresh(false);
  })};
- container.scrollIntoView({behavior:'smooth',block:'nearest'});
- };
- if($('sendForSignature'))$('sendForSignature').onclick=e=>{if(!$('editClientPanel').hidden){notice('Save or cancel your changes before sending the application.',true);return;}if((pending||e.currentTarget.dataset.pending==='true')&&!confirm('Create a replacement signing link? The earlier link will no longer work.'))return;return busyRun(e.currentTarget,async()=>{
+ }
+ if($('sendForSignature'))$('sendForSignature').onclick=e=>{if(isEditingInfo()){notice('Save or cancel your changes before sending the application.',true);return;}if((pending||e.currentTarget.dataset.pending==='true')&&!confirm('Create a replacement signing link? The earlier link will no longer work.'))return;return busyRun(e.currentTarget,async()=>{
  const {data:token,error}=await db.rpc('vfc_broker_create_signing_link',{p_application:id});
  if(error||!token)throw error||Error('Unable to create signing request.');
  const link=location.origin+'/sign/?token='+token;
@@ -165,8 +164,8 @@ $('statusFilter').onchange=e=>{statusFilter=e.target.value;render()};
 $('productFilter').onchange=e=>{productFilter=e.target.value;render()};
 $('sortFilter').onchange=e=>{listSort=e.target.value;render()};
 $('clearFilters').onclick=()=>{$('search').value='';$('statusFilter').value='all';$('productFilter').value='all';$('sortFilter').value='newest';statusFilter='all';productFilter='all';listSort='newest';render()};
-$('refreshList').onclick=e=>busyRun(e.currentTarget,async()=>{await refresh();notice('Application list updated.')});
-$('cards').onclick=e=>{const b=e.target.closest('[data-id]');if(b&&!working)openFile(b.dataset.id).catch(err=>notice(errText(err),true))};
+$('refreshList').onclick=e=>{if(isEditingInfo()){notice('Save or cancel your changes before refreshing.',true);return;}return busyRun(e.currentTarget,async()=>{await refresh();notice('Application list updated.')});};
+$('cards').onclick=e=>{const b=e.target.closest('[data-id]');if(b&&isEditingInfo()){notice('Save or cancel your changes before opening another file.',true);return;}if(b&&!working)openFile(b.dataset.id).catch(err=>notice(errText(err),true))};
 $('application').onsubmit=e=>{e.preventDefault();const form=e.currentTarget;busyRun(e.submitter,async()=>{const f=new FormData(form);if(!f.get('email'))throw Error('Client email is required for secure intake.');const payload=Object.fromEntries(f.entries());payload.amount=payload.requestedAmount;delete payload.requestedAmount;const {data,error}=await db.rpc('broker_create_full_application',{p_payload:payload});if(error)throw error;notice('Application saved securely to your broker account.');form.reset();$('form').hidden=true;await refresh();await openFile(data)})};
 (async()=>{try{await loadIdentity();}catch(e){gate();notice('Unable to connect: '+errText(e),true,true)}})();
 })();
