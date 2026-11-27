@@ -27,14 +27,16 @@ function renderPriority(){
  const html=rows.slice(0,8).map(a=>{const n=Number(chatCounts.get(a.id)?.unread||0);return '<div class="priority-deal-row"><div><b>'+esc(a.business_name)+'</b><small>VFC-'+String(a.application_number).padStart(4,'0')+' · '+esc(a.clients?.full_name||'Client')+'</small></div><div class="priority-deal-state">'+(n?'<span class="unread-chip">'+n+' unread</span>':'')+(metricMatch(a,'action')?'<small>'+esc(label(a.status))+'</small>':'')+'</div><button type="button" class="btn secondary priority-open" data-priority="'+esc(a.id)+'">Open</button></div>'}).join('');
  if(root.dataset.content!==html){root.innerHTML=html||'<p class="subtle">No deals currently need your attention.</p>';root.dataset.content=html;}const more=$('priorityMore');more.hidden=rows.length<=8;
 }
+const financingUpdateTypes=new Set(['decision_published','status_changed','status_updated','application_status_updated','application_status_changed','lender_update','lender_status_updated','lender_response_received']);
+function isFinancingUpdate(n){return financingUpdateTypes.has(n.event_type);}
 function renderDashboardNotifications(){
  const root=$('dashboardNotifications');if(!root)return;const own=new Map(apps.map(a=>[a.id,a]));const rows=dashboardUpdates.filter(n=>!n.application_id||own.has(n.application_id));const unread=rows.filter(n=>!n.read_at).length;const count=$('notificationCount');count.textContent=String(unread);count.hidden=!unread;
- const visibleRows=unreadOnly?rows.filter(n=>!n.read_at):rows;const rail=$('railUnread');if(rail){rail.textContent=String(unread);rail.hidden=!unread;}const html=visibleRows.map(n=>{const a=own.get(n.application_id),deal=a?'VFC-'+String(a.application_number).padStart(4,'0')+' · '+a.business_name:'General update';return '<article class="dashboard-notification-row '+(!n.read_at?'is-unread':'')+'"><span class="notification-dot" aria-label="'+(n.read_at?'Read':'Unread')+'"></span><div class="notification-copy"><b>'+esc(n.title)+'</b><p>'+esc(n.body)+'</p><small>'+esc(deal)+' · '+esc(new Date(n.created_at).toLocaleString('en-CA'))+'</small></div>'+(a?'<button type="button" class="btn secondary notification-open" data-notification="'+esc(n.id)+'">Open File</button>':(!n.read_at?'<button type="button" class="btn secondary notification-open" data-notification="'+esc(n.id)+'">Mark Read</button>':''))+'</article>';}).join('');
+ const visibleRows=unreadOnly?rows.filter(n=>!n.read_at):rows;const rail=$('railUnread');if(rail){rail.textContent=String(unread);rail.hidden=!unread;}const html=visibleRows.map(n=>{const a=own.get(n.application_id),deal=a?'VFC-'+String(a.application_number).padStart(4,'0')+' · '+a.business_name:'General update';return '<article class="dashboard-notification-row '+(!n.read_at?'is-unread':'')+(isFinancingUpdate(n)?' financing-update':'')+'"><span class="notification-dot" aria-label="'+(n.read_at?'Read':'Unread')+'"></span><div class="notification-copy">'+(isFinancingUpdate(n)?'<span class="financing-update-label">Financing update · via Admin</span>':'')+'<b>'+esc(n.title)+'</b><p>'+esc(n.body)+'</p><small>'+esc(deal)+' · '+esc(new Date(n.created_at).toLocaleString('en-CA'))+'</small></div>'+(a?'<button type="button" class="btn secondary notification-open" data-notification="'+esc(n.id)+'">Open File</button>':(!n.read_at?'<button type="button" class="btn secondary notification-open" data-notification="'+esc(n.id)+'">Mark Read</button>':''))+'</article>';}).join('');
  if(root.dataset.content!==html){root.innerHTML=html||'<p class="subtle">'+(unreadOnly?'No unread notifications.':'You’re all caught up. New Admin updates will appear here.')+'</p>';root.dataset.content=html;}
 }
 async function refreshDashboardNotifications(){
  if(!authorized()||notificationBusy)return;notificationBusy=true;const uid=user.id;
- try{const r=await db.from('notifications').select('id,application_id,event_type,title,body,read_at,created_at').eq('recipient_id',uid).neq('event_type','test_fixture_created').order('created_at',{ascending:false}).limit(100);if(r.error)throw r.error;if(!authorized()||user.id!==uid)return;dashboardUpdates=r.data||[];renderDashboardNotifications();if(workspaceView==='deals')render();}
+ try{const r=await db.from('notifications').select('id,application_id,event_type,title,body,read_at,created_at').eq('recipient_id',uid).neq('event_type','test_fixture_created').order('created_at',{ascending:false}).limit(100);if(r.error)throw r.error;if(!authorized()||user.id!==uid)return;dashboardUpdates=r.data||[];renderDashboardNotifications();if(workspaceView==='deals')render();if(workspaceView==='dashboard')renderMetricPreview();}
  catch(e){if(authorized()&&user.id===uid){$('dashboardNotifications').textContent='Unable to load updates. Use Refresh to try again.';delete $('dashboardNotifications').dataset.content;}throw e;}finally{notificationBusy=false;}
 }
 
@@ -70,9 +72,26 @@ function renderDealRow(a){
  const id=esc(a.id),file='VFC-'+String(a.application_number).padStart(4,'0'),name=esc(a.clients?.full_name||'Client'),business=esc(a.business_name);
  return '<article class="broker-list-row" role="listitem"><div class="broker-list-client"><div class="deal-list-meta"><span class="eyebrow">'+file+'</span>'+(docs?'<span class="deal-list-docs"> · '+docs+' '+(docs===1?'doc':'docs')+'</span>':'')+'</div><strong title="'+name+'">'+name+'</strong><small class="deal-business-name" title="'+business+'">'+business+'</small></div><div class="broker-list-financing"><strong>'+fmt(a.requested_amount)+'</strong><small>'+esc(a.financing_product||'')+'</small></div><div class="broker-list-status"><span class="broker-status-chip decision-status" data-status="'+esc(a.status)+'">'+esc(label(a.status))+'</span><small class="deal-list-date">'+fmtDate(a.created_at)+'</small></div><div class="deal-list-actions">'+(hasUnread?'<button type="button" class="deal-notification-bell" data-deal-bell="'+id+'" title="Unread updates" aria-label="View unread updates for '+file+'">'+dealBellIcon+'</button>':'')+'<button type="button" class="btn secondary open-deal" data-id="'+id+'" aria-label="Open file '+file+'">Open</button></div></article>';
 }
+let modalMetric=null;
+const metricTitles={all:'My Applications',review:'Under Review',approved:'Approvals',action:'Action Required',funded:'Funded'};
+function renderMetricPreview(){
+ const dialog=$('metricDealDialog');if(!dialog?.open||!modalMetric)return;
+ const rows=apps.filter(a=>metricMatch(a,modalMetric)).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+ $('metricDialogTitle').textContent=metricTitles[modalMetric];$('metricDialogCount').textContent=rows.length+' '+(rows.length===1?'deal':'deals');
+ const list=$('metricDealList'),html=rows.map(renderDealRow).join('')||'<p class="subtle metric-empty">No deals in this category yet.</p>';
+ if(list.dataset.content!==html){list.innerHTML=html;list.dataset.content=html;}
+}
+function openMetricPreview(key){
+ if(working||workspaceView!=='dashboard'||!Object.hasOwn(metricTitles,key))return;
+ const dialog=$('metricDealDialog');modalMetric=key;dialog.showModal();renderMetricPreview();
+}
+function closeMetricPreview(){
+ const dialog=$('metricDealDialog');modalMetric=null;if(dialog?.open)dialog.close();
+ metricFilter='all';
+}
 function render(){
  const mine=apps;
- const metrics=[['My Applications','all'],['Under Review','review'],['Approvals','approved'],['Action Required','action'],['Funded','funded']].map(([k,key])=>'<button type="button" class="metric card metric-link" data-metric="'+key+'" title="View '+esc(k)+'"><span>'+esc(k)+'</span><strong>'+mine.filter(a=>metricMatch(a,key)).length+'</strong></button>').join('');if($('metrics').dataset.content!==metrics){$('metrics').innerHTML=metrics;$('metrics').dataset.content=metrics;}renderPriority();
+ const metrics=[['My Applications','all'],['Under Review','review'],['Approvals','approved'],['Action Required','action'],['Funded','funded']].map(([k,key])=>'<button type="button" class="metric card metric-link" data-metric="'+key+'" title="View '+esc(k)+'"><span>'+esc(k)+'</span><strong>'+mine.filter(a=>metricMatch(a,key)).length+'</strong></button>').join('');if($('metrics').dataset.content!==metrics){$('metrics').innerHTML=metrics;$('metrics').dataset.content=metrics;}renderPriority();renderMetricPreview();
  const term=$('search').value.trim().toLowerCase();
  const rows=mine.filter(a=>{
    const haystack=[a.business_name,a.clients?.full_name,a.clients?.email,a.clients?.phone,a.financing_product,a.status,'VFC-'+String(a.application_number).padStart(4,'0')].join(' ').toLowerCase();
@@ -88,7 +107,7 @@ async function busyRun(button,func){
 }
 let fileRequest=0,activeFileTab='information',workspaceView='dashboard';
 const sectionNames={decision:'Financing Decision',information:'Client & Business',documents:'Documents',signing:'Application & Signing',activity:'Messages & Activity'};
-function showWorkspace(view,scroll=true){workspaceView=view;$('appView').classList.toggle('deal-open',view==='file');$('appView').classList.remove('deal-drawer-open');['dashboard','deals','new','file','sample'].forEach(name=>{const el=$('view-'+name);if(el)el.hidden=name!==view;});document.querySelectorAll('[data-workspace]').forEach(b=>{const active=b.dataset.workspace===(view==='file'?'deals':view==='sample'?'dashboard':view);if(active)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});if(view==='dashboard'||view==='deals')render();if(scroll)window.scrollTo({top:0,behavior:'auto'});}
+function showWorkspace(view,scroll=true){if(view!=='dashboard'&&$('metricDealDialog')?.open)closeMetricPreview();workspaceView=view;$('appView').classList.toggle('deal-open',view==='file');$('appView').classList.remove('deal-drawer-open');['dashboard','deals','new','file','sample'].forEach(name=>{const el=$('view-'+name);if(el)el.hidden=name!==view;});document.querySelectorAll('[data-workspace]').forEach(b=>{const active=b.dataset.workspace===(view==='file'?'deals':view==='sample'?'dashboard':view);if(active)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});if(view==='dashboard'||view==='deals')render();if(scroll)window.scrollTo({top:0,behavior:'auto'});}
 function navigateWorkspace(view){if(working)return;if(isEditingInfo()){notice('Save or cancel your changes before leaving the file.',true);return;}selected=null;fileRequest++;$('detail').innerHTML='';showWorkspace(view);notice('');}
 function isEditingInfo(){return $('editClientForm')?.classList.contains('is-editing')===true;}
 function setDealDrawer(open,focus=false){const drawer=$('dealDrawer'),toggle=$('dealMenuToggle'),backdrop=$('dealDrawerBackdrop');if(!drawer||!toggle||!backdrop)return;drawer.hidden=!open;backdrop.hidden=!open;toggle.setAttribute('aria-expanded',String(open));$('appView').classList.toggle('deal-drawer-open',open);if(focus){if(open)$('dealDrawerClose').focus({preventScroll:true});else toggle.focus({preventScroll:true});}}
@@ -255,7 +274,14 @@ function openMetric(key){if(working)return;metricFilter=key;statusFilter='all';p
 $('dashboardDeals').onclick=()=>openMetric('all');
 $('openSampleDecision').onclick=openSampleDecision;
 $('closeSampleDecision').onclick=()=>navigateWorkspace('dashboard');
-$('metrics').onclick=e=>{const b=e.target.closest('[data-metric]');if(b)openMetric(b.dataset.metric);};
+$('metrics').onclick=e=>{const b=e.target.closest('[data-metric]');if(b)openMetricPreview(b.dataset.metric);};
+$('metricDialogClose').onclick=()=>closeMetricPreview();
+$('metricDealDialog').addEventListener('close',()=>{modalMetric=null;metricFilter='all';render();});
+$('metricDealDialog').addEventListener('click',e=>{if(e.target===$('metricDealDialog')){const r=e.currentTarget.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)closeMetricPreview();}});
+$('metricDealList').onclick=e=>{
+ const bell=e.target.closest('[data-deal-bell]'),b=e.target.closest('[data-id]');if((!bell&&!b)||working)return;
+ const id=bell?bell.dataset.dealBell:b.dataset.id;closeMetricPreview();busyRun(null,async()=>{try{const n=bell?dealUnreadUpdate(id):null;if(n)await openNotification(n);else{await openFile(id);if(bell&&selected===id)selectFileTab('activity');}}catch(err){selected=null;fileRequest++;$('detail').innerHTML='';showWorkspace('dashboard',false);throw err;}});
+};
 $('metricFilterChip').onclick=()=>{metricFilter='all';render();};
 $('unreadOnly').onchange=e=>{unreadOnly=e.target.checked;renderDashboardNotifications();};
 $('priorityMore').onclick=()=>{openMetric('all');};
@@ -263,7 +289,7 @@ $('priorityDeals').onclick=e=>{const b=e.target.closest('[data-priority]');if(!b
 
 $('refreshNotifications').onclick=e=>busyRun(e.currentTarget,async()=>{await refreshChatCounts();await refreshDashboardNotifications();});
 async function openNotification(n){
- if(n.application_id){await openFile(n.application_id);if(selected!==n.application_id)return;if(n.event_type==='message_received')selectFileTab('activity');else if(['decision_published','status_changed'].includes(n.event_type))selectFileTab('decision');}
+ if(n.application_id){await openFile(n.application_id);if(selected!==n.application_id)return;if(n.event_type==='message_received')selectFileTab('activity');else if(isFinancingUpdate(n))selectFileTab('decision');}
  if(!n.read_at){const r=await db.rpc('mark_notification_read',{p_notification:n.id});if(r.error)throw r.error;n.read_at=new Date().toISOString();renderDashboardNotifications();}
  await refreshDashboardNotifications();
 }
