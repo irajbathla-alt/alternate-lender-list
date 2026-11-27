@@ -69,3 +69,34 @@ export async function updateStatus(f:FormData){
  redirect('/admin'+(error?'?error=status':'?success=status'));
 }
 export async function logOut(){const s=await supabase();await s.auth.signOut();redirect('/login')}
+
+export async function uploadDocument(f:FormData){
+ const s=await supabase(),{data:{user}}=await s.auth.getUser();if(!user)redirect('/login');
+ const {data:p}=await s.from('profiles').select('role,active').eq('id',user.id).single();
+ if(!p?.active||!['broker','client','admin'].includes(p.role))throw new Error('Account inactive');
+ const app=String(f.get('application')||'');
+ const {data:allowed}=await s.from('applications').select('id').eq('id',app).single();
+ const dest=p.role==='broker'?'/broker/applications/'+app:p.role==='client'?'/client':'/admin';
+ if(!allowed)redirect(dest+'?error=access');
+ const file=f.get('document');
+ if(!(file instanceof File)||!file.size||file.size>20*1024*1024)redirect(dest+'?error=file');
+ const types:{[key:string]:{ext:string,match:(b:Uint8Array)=>boolean}}={
+  'application/pdf':{ext:'pdf',match:b=>b.length>5&&[37,80,68,70,45].every((x,i)=>b[i]===x)},
+  'image/jpeg':{ext:'jpg',match:b=>b.length>3&&b[0]===255&&b[1]===216&&b[2]===255},
+  'image/png':{ext:'png',match:b=>b.length>8&&[137,80,78,71,13,10,26,10].every((x,i)=>b[i]===x)}
+ };
+ const t=types[file.type];if(!t)redirect(dest+'?error=filetype');
+ const buffer=Buffer.from(await file.arrayBuffer());
+ if(!t.match(buffer))redirect(dest+'?error=filetype');
+ const {createHash,randomUUID}=await import('node:crypto');
+ const name=(file.name||'document').replace(/[\x00-\x1f]/g,'').slice(0,200);
+ const path=app+'/'+user.id+'/'+randomUUID()+'.'+t.ext;
+ const {error:storageError}=await s.storage.from('application-documents').upload(path,buffer,{contentType:file.type,upsert:false});
+ if(storageError)redirect(dest+'?error=upload');
+ const {error}=await s.rpc('register_document',{
+  p_application:app,p_storage_path:path,p_filename:name,p_mime:file.type,p_size:file.size,
+  p_sha256:createHash('sha256').update(buffer).digest('hex'),
+  p_category:String(f.get('category')||'other'),p_visibility:p.role==='client'?'broker_client':String(f.get('visibility')||'broker_client')
+ });
+ redirect(dest+(error?'?error=register':'?success=upload'));
+}
