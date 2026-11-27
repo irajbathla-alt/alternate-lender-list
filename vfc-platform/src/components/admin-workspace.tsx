@@ -24,7 +24,7 @@ export function AdminWorkspace({applications,notifications,brokers}:{application
  const [brokerFilter,setBrokerFilter]=useState('all')
  const [view,setView]=useState<'applications'|'brokers'|'announcements'>('applications')
  const [selectedId,setSelectedId]=useState<string|null>(null)
- const [activeTab,setActiveTab]=useState<'file'|'activity'>('file')
+ const [activeTab,setActiveTab]=useState<'file'|'activity'|'lender'>('file')
  const selected=applications.find(a=>a.id===selectedId)||null
  const matched=useMemo(()=>applications.filter(a=>{
   const terms=[a.business_name,a.client?.full_name,a.client?.email,'VFC-'+String(a.application_number).padStart(4,'0')].join(' ').toLowerCase()
@@ -82,8 +82,8 @@ export function AdminWorkspace({applications,notifications,brokers}:{application
        <header className="admin-drawer-head"><div><div className="eyebrow">APPLICATION FILE · VFC-{String(selected.application_number).padStart(4,'0')}</div><h2>{selected.business_name}</h2></div><button onClick={()=>setSelectedId(null)} aria-label="Close application file" className="admin-close">×</button></header>
        <div className="admin-drawer-body">
          <div className="admin-file-kpis"><div className="card"><small>Application Status</small><strong>{statusLabels[selected.status]||selected.status}</strong></div><div className="card"><small>Financing Requested</small><strong>{money(selected.requested_amount)}</strong></div></div>
-         <div className="admin-tabs"><button className={activeTab==='file'?'active':''} onClick={()=>setActiveTab('file')}>Client & Application</button><button className={activeTab==='activity'?'active':''} onClick={()=>setActiveTab('activity')}>Activity</button></div>
-         {activeTab==='file'?<><section className="card admin-file-section"><div className="eyebrow">APPLICATION INFORMATION</div><h3>Client & Financing</h3>
+         <div className="admin-tabs"><button className={activeTab==='file'?'active':''} onClick={()=>setActiveTab('file')}>Client & Application</button><button className={activeTab==='activity'?'active':''} onClick={()=>setActiveTab('activity')}>Activity</button><button className={activeTab==='lender'?'active':''} onClick={()=>setActiveTab('lender')}>Email Lender</button></div>
+         {activeTab==='lender'?<LenderEmailComposer application={selected} brokerName={brokers.find(b=>b.broker_id===selected.broker_id)?.broker_name||'VFC Direct'}/>:activeTab==='file'?<><section className="card admin-file-section"><div className="eyebrow">APPLICATION INFORMATION</div><h3>Client & Financing</h3>
            {([['Client',selected.client?.full_name],['Email',selected.client?.email],['Phone',selected.client?.phone],['Business',selected.business_name],['Product',selected.financing_product],['Requested',money(selected.requested_amount)],['Intake',selected.source==='broker'?'Broker':'Direct'],['Broker',brokers.find(b=>b.broker_id===selected.broker_id)?.broker_name||'Direct'],['Submitted',date(selected.submitted_at)]] as [string,string|null|undefined][]).map(([key,value])=><div className="admin-kv" key={key}><span>{key}</span><strong>{value||'—'}</strong></div>)}
          </section>
          <section className="card admin-file-section"><div className="eyebrow">UNDERWRITING WORKFLOW</div><h3>Update Application Status</h3><p className="muted small">Changes are permission-checked, recorded in the database audit log, and generate portal notifications.</p>
@@ -95,6 +95,33 @@ export function AdminWorkspace({applications,notifications,brokers}:{application
    </div>}
  </div>
 }
+
+function LenderEmailComposer({application:a,brokerName}:{application:Application,brokerName:string}){
+ const [email,setEmail]=useState('')
+ const [subject,setSubject]=useState('Financing Inquiry | '+a.business_name+' | VFC-'+String(a.application_number).padStart(4,'0'))
+ const [message,setMessage]=useState('Hello,\\n\\nWe are reviewing the following business financing request and would appreciate your initial feedback on whether it fits your lending guidelines.\\n\\nBusiness: '+a.business_name+'\\nProduct: '+a.financing_product+'\\nAmount Requested: '+money(a.requested_amount)+'\\nBroker: '+brokerName+'\\nReference: VFC-'+String(a.application_number).padStart(4,'0')+'\\n\\nPlease let us know if this is a fit and what additional information would be required.\\n\\nThank you,\\nVancouver Finance Company Inc.')
+ const [confirmed,setConfirmed]=useState(false)
+ const isTest=a.business_name.startsWith('TEST - ')
+ const validEmail=/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/.test(email.trim())
+ const ready=validEmail&&subject.trim().length>3&&message.trim().length>10&&confirmed&&message.length<5500
+ const text=isTest?'TEST ONLY — FICTIONAL RECORD. DO NOT UNDERWRITE OR FUND.\\n\\n'+message:message
+ const uri='mailto:'+encodeURIComponent(email.trim())+'?subject='+encodeURIComponent((isTest?'TEST ONLY | ':'')+subject.trim())+'&body='+encodeURIComponent(text)
+ return <section className="card admin-file-section">
+ <div className="eyebrow">LENDER COMMUNICATIONS</div><h3>Prepare Lender Email</h3>
+ <p className="muted small">This panel prepares an email in your computer's email program. Review and click Send there. The portal itself does not send emails automatically or attach private documents yet.</p>
+ {isTest&&<p className="callout small">TEST FILE: This message is clearly labeled as fictional. Do not send it to a real lender.</p>}
+ <div className="field"><label>Lender Email Address</label><input type="email" value={email} onChange={e=>{setEmail(e.target.value);setConfirmed(false)}} placeholder="lender@example.com" required/></div>
+ <div className="field"><label>Subject</label><input value={subject} onChange={e=>setSubject(e.target.value)} maxLength={180} required/></div>
+ <div className="field"><label>Email Message</label><textarea rows={11} value={message} maxLength={5500} onChange={e=>setMessage(e.target.value)} required/></div>
+ <label className="admin-confirm"><input type="checkbox" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)}/> I have reviewed the recipient, client consent and message details, and understand that sending occurs in my email program.</label>
+ <div className="buttonrow">
+  <a className={'btn'+(!ready?' disabled-link':'')} aria-disabled={!ready} href={ready?uri:undefined} onClick={e=>{if(!ready)e.preventDefault()}}>Open in My Email to Send</a>
+  <button type="button" className="btn secondary" onClick={()=>navigator.clipboard?.writeText('To: '+email+'\\nSubject: '+subject+'\\n\\n'+text)}>Copy Email Draft</button>
+ </div>
+ <p className="muted small">To send directly from inside this portal in the future, we must connect an authorized mail service with a verified sender. No automatic lender emails are enabled in this staging version.</p>
+ </section>
+}
+
 type Note={id:string,title:string,body:string,created_at:string,read_at:string|null}
 export function NotificationBell({notifications}:{notifications:Note[]}){
  const [open,setOpen]=useState(false),[pending,start]=useTransition(),router=useRouter()
