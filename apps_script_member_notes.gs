@@ -65,7 +65,7 @@ function doGet(e) {
     if (resource === 'health') {
       var ss = getSpreadsheet_();
       var accounts = ss.getSheetByName(ACCOUNT_SHEET);
-      return jsonWithCallback_({ok:true,version:'2026-11-26.2',spreadsheetConnected:true,accountsReady:!!accounts},p);
+      return jsonWithCallback_({ok:true,version:'2026-11-26.3',spreadsheetConnected:true,accountsReady:!!accounts},p);
     }
     if (resource === 'admin_auth') return adminAuthGet_(p);
     if (resource === 'deal_threads') {
@@ -111,6 +111,15 @@ function doGet(e) {
 
 function doPost(e) {
   try {
+    // VFC sends a JSON body as text/plain; keep all legacy form routes unchanged.
+    var raw = e && e.postData && e.postData.contents;
+    if (raw && /^\s*\{/.test(raw)) {
+      var vfcPayload = null;
+      try { vfcPayload = JSON.parse(raw); } catch (ignored) {}
+      if (vfcPayload && vfcPayload.action === 'send_vfc_mail') {
+        return handleVfcMail_(vfcPayload);
+      }
+    }
     var p = getParams_(e);
     if (String(p.action || '').toLowerCase() === 'account_signup') {
       return handleAccountSignup_(p);
@@ -411,4 +420,46 @@ function configureExistingSpreadsheet() {
   if (!ss) throw new Error('Open this script from the existing spreadsheet, or set SPREADSHEET_ID explicitly.');
   PropertiesService.getScriptProperties().setProperty('SPREADSHEET_ID', ss.getId());
   Logger.log('Spreadsheet connection configured. Accounts tab present: ' + !!ss.getSheetByName(ACCOUNT_SHEET));
+}
+
+
+// VFC email extension: set VFC_MAIL_SHARED_SECRET in Script Properties.
+// Never add a second doPost or expose this secret in frontend code.
+function handleVfcMail_(payload) {
+  function reply(obj){return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);}
+  try {
+    var configured=PropertiesService.getScriptProperties().getProperty('VFC_MAIL_SHARED_SECRET');
+    if(!configured||configured.length<32||typeof payload.secret!=='string'||payload.secret!==configured){
+      return reply({ok:false,error:'Unauthorized'});
+    }
+    if(payload.action!=='send_vfc_mail')return reply({ok:false,error:'Invalid action'});
+    var to=String(payload.to||'').trim().toLowerCase();
+    var cc=String(payload.cc||'').trim().toLowerCase();
+    var subject=String(payload.subject||'').trim().replace(/[\r\n]/g,' ');
+    var body=String(payload.body||'');
+    var regex=/^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]+$/;
+    if(!regex.test(to)||cc&&cc!=='vancouverfinancecompany@gmail.com'
+       ||!subject||subject.length>180||!body||body.length>15000){
+      return reply({ok:false,error:'Invalid message'});
+    }
+    var opts={name:'Vancouver Finance Company Inc.',replyTo:'vancouverfinancecompany@gmail.com'};
+    if(cc)opts.cc=cc;
+    if(payload.attachment){
+      var b64=String(payload.attachment||'');
+      if(b64.length>4200000||!/^[A-Za-z0-9+/=]+$/.test(b64))return reply({ok:false,error:'Invalid attachment'});
+      var bytes=Utilities.base64Decode(b64);
+      if(bytes.length>3000000||bytes.length<50)return reply({ok:false,error:'Invalid attachment size'});
+      if(bytes[0]!==37||bytes[1]!==80||bytes[2]!==68||bytes[3]!==70)return reply({ok:false,error:'Only PDFs are accepted'});
+      var name=String(payload.filename||'Signed-Application.pdf').replace(/[^\w .-]/g,'_').slice(0,110);
+      if(!/\.pdf$/i.test(name))name+='.pdf';
+      opts.attachments=[Utilities.newBlob(bytes,'application/pdf',name)];
+    }
+    if(MailApp.getRemainingDailyQuota()<(cc?2:1))return reply({ok:false,error:'Mail quota reached'});
+    MailApp.sendEmail(to,subject,body,opts);
+    console.log(JSON.stringify({event:'vfc_mail_sent',at:new Date().toISOString()}));
+    return reply({ok:true});
+  }catch(err){
+    console.error(String(err));
+    return reply({ok:false,error:'Mail service error'});
+  }
 }
