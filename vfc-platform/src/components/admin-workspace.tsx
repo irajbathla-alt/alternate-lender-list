@@ -7,7 +7,7 @@ type Application={
  source:string;status:string;submitted_at:string|null;updated_at:string|null;created_at:string;
  broker_id:string|null;client:{full_name:string;email:string;phone:string|null}|null
 }
-type Note={id:string;title:string;body:string;created_at:string;read_at:string|null}
+
 type Broker={broker_id:string;broker_name:string;broker_email:string;submitted_count:number}
 const statusLabels:Record<string,string>={
  draft:'Draft',pending_client_info:'Pending Client Info',pending_signature:'Pending Signature',
