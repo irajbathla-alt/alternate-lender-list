@@ -117,3 +117,9 @@ export async function broadcastAnnouncement(f:FormData){
  if(error)redirect('/admin?error=broadcast')
  redirect('/admin?success=broadcast&sent='+Number(data||0))
 }
+
+export async function submitTestToAdmin(f:FormData){
+ const s=await role('broker'),id=String(f.get('application')||'');
+ const {error}=await s.rpc('broker_submit_test_application',{p_application:id});
+ redirect('/broker/applications/'+id+(error?'?error=testsubmission':'?success=testsubmitted'));
+}
