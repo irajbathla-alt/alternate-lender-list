@@ -16,7 +16,22 @@ async function loadIdentity(){
  if(user){const r=await db.from('profiles').select('id,role,active,full_name').eq('id',user.id).maybeSingle();if(r.error)throw r.error;profile=r.data;}
  gate();
  if(user&&!authorized())notice('Your Supabase account is not an active Broker account. Please contact VFC Admin.',true,true);
- if(authorized()){ showWorkspace(workspaceView,false); $('welcome').textContent='Welcome, '+(profile.full_name||user.email?.split('@')[0]||'Broker')+'.'; $('accountEmail').textContent=user.email||''; await refresh(); }
+ if(authorized()){
+  $('welcome').textContent='Welcome, '+(profile.full_name||user.email?.split('@')[0]||'Broker')+'.';$('accountEmail').textContent=user.email||'';
+  const saved=readWorkspace();restoringWorkspace=true;
+  try{
+   showWorkspace(saved?.view==='file'?'deals':saved?.view||'dashboard',false);
+   await refresh(false);
+   if(saved?.view==='file'){
+    if(apps.some(a=>a.id===saved.deal)){
+     selected=saved.deal;activeFileTab=saved.tab;
+     try{await openFile(saved.deal,false);}catch(e){selected=null;fileRequest++;$('detail').innerHTML='';showWorkspace('deals',false);notice('Unable to reopen the previous file: '+errText(e),true);}
+    }else{notice('The previously opened file is no longer available.',true);}
+   }else if(saved?.view==='sample'){renderSampleDecision();}
+  }finally{restoringWorkspace=false;}
+  const y=saved?.view===workspaceView?saved.scroll:0;rememberWorkspace(y);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{window.scrollTo({top:y,behavior:'auto'});}));
+ }
 }
 let chatCounts=new Map(),chatPolling=false,dashboardUpdates=[],notificationBusy=false,unreadOnly=false,metricFilter='all';
 const metricGroups={all:null,review:['under_review'],approved:['approved','conditional_approval'],action:['additional_documents_required','pending_client_info'],funded:['funded']};
@@ -107,14 +122,36 @@ async function busyRun(button,func){
 }
 let fileRequest=0,activeFileTab='information',workspaceView='dashboard';
 const sectionNames={decision:'Financing Decision',information:'Client & Business',documents:'Documents',signing:'Application & Signing',activity:'Messages & Activity'};
-function showWorkspace(view,scroll=true){if(view!=='dashboard'&&$('metricDealDialog')?.open)closeMetricPreview();workspaceView=view;$('appView').classList.toggle('deal-open',view==='file');$('appView').classList.remove('deal-drawer-open');['dashboard','deals','new','file','sample'].forEach(name=>{const el=$('view-'+name);if(el)el.hidden=name!==view;});document.querySelectorAll('[data-workspace]').forEach(b=>{const active=b.dataset.workspace===(view==='file'?'deals':view==='sample'?'dashboard':view);if(active)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});if(view==='dashboard'||view==='deals')render();if(scroll)window.scrollTo({top:0,behavior:'auto'});}
-function navigateWorkspace(view){if(working)return;if(isEditingInfo()){notice('Save or cancel your changes before leaving the file.',true);return;}selected=null;fileRequest++;$('detail').innerHTML='';showWorkspace(view);notice('');}
+let restoringWorkspace=false;
+const workspaceKey=uid=>'vfc.broker.workspace.v1.'+uid;
+function readWorkspace(){
+ if(!authorized())return null;
+ try{
+  const s=JSON.parse(sessionStorage.getItem(workspaceKey(user.id))||'null');
+  if(!s||!['dashboard','deals','new','file','sample'].includes(s.view))return null;
+  if(s.view==='file'&&(typeof s.deal!=='string'||!s.deal||s.deal.length>80))return null;
+  return {view:s.view,deal:s.view==='file'?s.deal:null,tab:Object.prototype.hasOwnProperty.call(sectionNames,s.tab)?s.tab:'information',scroll:Number.isFinite(s.scroll)?Math.max(0,Math.min(100000,s.scroll)):0};
+ }catch{return null;}
+}
+function rememberWorkspace(scroll=window.scrollY){
+ if(restoringWorkspace||!authorized())return;
+ try{sessionStorage.setItem(workspaceKey(user.id),JSON.stringify({view:workspaceView,deal:workspaceView==='file'?selected:null,tab:workspaceView==='file'?activeFileTab:null,scroll:Math.max(0,Number(scroll)||0)}));}catch{}
+}
+function clearWorkspace(uid){try{sessionStorage.removeItem(workspaceKey(uid));}catch{}}
+window.addEventListener('pagehide',()=>rememberWorkspace());
+document.addEventListener('visibilitychange',()=>{if(document.hidden)rememberWorkspace();});
+try{history.scrollRestoration='manual';}catch{}
+
+function showWorkspace(view,scroll=true){if(view!=='dashboard'&&$('metricDealDialog')?.open)closeMetricPreview();workspaceView=view;$('appView').classList.toggle('deal-open',view==='file');$('appView').classList.remove('deal-drawer-open');['dashboard','deals','new','file','sample'].forEach(name=>{const el=$('view-'+name);if(el)el.hidden=name!==view;});document.querySelectorAll('[data-workspace]').forEach(b=>{const active=b.dataset.workspace===(view==='file'?'deals':view==='sample'?'dashboard':view);if(active)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});if(view==='dashboard'||view==='deals')render();if(scroll)window.scrollTo({top:0,behavior:'auto'});rememberWorkspace(scroll?0:window.scrollY);}
+function navigateWorkspace(view){if(working||restoringWorkspace)return;if(isEditingInfo()){notice('Save or cancel your changes before leaving the file.',true);return;}selected=null;fileRequest++;$('detail').innerHTML='';showWorkspace(view);notice('');}
 function isEditingInfo(){return $('editClientForm')?.classList.contains('is-editing')===true;}
 function setDealDrawer(open,focus=false){const drawer=$('dealDrawer'),toggle=$('dealMenuToggle'),backdrop=$('dealDrawerBackdrop');if(!drawer||!toggle||!backdrop)return;drawer.hidden=!open;backdrop.hidden=!open;toggle.setAttribute('aria-expanded',String(open));$('appView').classList.toggle('deal-drawer-open',open);if(focus){if(open)$('dealDrawerClose').focus({preventScroll:true});else toggle.focus({preventScroll:true});}}
-function selectFileTab(name){if(!sectionNames[name])return false;if(name!=='information'&&isEditingInfo()){notice('Save or cancel your changes before switching sections.',true);return false;}activeFileTab=name;document.querySelectorAll('#openedFile [data-file-tab]').forEach(b=>{if(b.dataset.fileTab===name)b.setAttribute('aria-current','true');else b.removeAttribute('aria-current');});document.querySelectorAll('#openedFile [data-file-panel]').forEach(p=>p.hidden=p.dataset.filePanel!==name);$('fileSectionTitle').textContent=sectionNames[name];setDealDrawer(false);if(name==='activity')refreshDealChat(selected).catch(e=>notice(errText(e),true));if(name==='decision')refreshDecision(selected).catch(e=>notice(errText(e),true));return true;}
+function selectFileTab(name){if(!sectionNames[name])return false;if(name!=='information'&&isEditingInfo()){notice('Save or cancel your changes before switching sections.',true);return false;}activeFileTab=name;document.querySelectorAll('#openedFile [data-file-tab]').forEach(b=>{if(b.dataset.fileTab===name)b.setAttribute('aria-current','true');else b.removeAttribute('aria-current');});document.querySelectorAll('#openedFile [data-file-panel]').forEach(p=>p.hidden=p.dataset.filePanel!==name);$('fileSectionTitle').textContent=sectionNames[name];setDealDrawer(false);if(name==='activity')refreshDealChat(selected).catch(e=>notice(errText(e),true));if(name==='decision')refreshDecision(selected).catch(e=>notice(errText(e),true));rememberWorkspace();return true;}
 function openSampleDecision(){
- if(!authorized()||working||isEditingInfo())return;
- navigateWorkspace('sample');
+ if(!authorized()||working||restoringWorkspace||isEditingInfo())return;
+ navigateWorkspace('sample');renderSampleDecision();
+}
+function renderSampleDecision(){
  const sample={status:'conditional_approval',amount:75000,product:'Business Term Loan',conditions:'Term: 24 months\nInterest rate: 12.99% per annum\nRepayment: Monthly\nOutstanding: October and November bank statements; signed financing agreement.',note:'Conditional approval received. Please provide the outstanding documents for final review. No funds have been disbursed.',published_at:'2026-11-26T18:00:00Z'};
  $('sampleDecisionCurrent').innerHTML=decisionRecord(sample);
  $('sampleDecisionHistory').innerHTML=decisionRecord({status:'under_review',note:'Application received and assigned for underwriting.',published_at:'2026-11-25T18:00:00Z'});
@@ -225,7 +262,7 @@ async function openFile(id,scroll=true){
  }));
 
 
- $('refreshActivity').onclick=e=>busyRun(e.currentTarget,async()=>{await openFile(id);notice('Activity history refreshed.');});
+ $('refreshActivity').onclick=e=>busyRun(e.currentTarget,async()=>{await openFile(id,false);notice('Activity history refreshed.');});
  $('downloadPdf').onclick=()=>{try{window.downloadVFCApplication({...a,...(details.data||{}),id:'VFC-'+String(a.application_number).padStart(4,'0'),business:a.business_name,name:a.clients?.full_name,email:a.clients?.email,phone:a.clients?.phone,requestedAmount:a.requested_amount,product:a.financing_product,summary:a.deal_summary})}catch(e){notice(errText(e),true)}};
  $('submitAdmin').onclick=e=>busyRun(e.currentTarget,async()=>{const {error}=await db.rpc('broker_submit_application',{p_application:id});if(error)throw error;notice('Application submitted to VFC Admin.');await refresh();});
  if($('testSubmit'))$('testSubmit').onclick=e=>busyRun(e.currentTarget,async()=>{if(!confirm('Submit fictional TEST application to Admin?'))return;const {error}=await db.rpc('broker_submit_test_application',{p_application:id});if(error)throw error;notice('Fictional test application submitted.');await refresh()});
@@ -268,7 +305,7 @@ async function openFile(id,scroll=true){
 }
 $('loginForm').onsubmit=async e=>{e.preventDefault();const button=e.submitter;await busyRun(button,async()=>{const {email,password}=Object.fromEntries(new FormData(e.currentTarget));const {error}=await db.auth.signInWithPassword({email:String(email).trim(),password:String(password)});if(error)throw error;notice('',false,true);await loadIdentity()})};
 $('resetPassword').onclick=e=>busyRun(e.currentTarget,async()=>{const email=$('loginEmail').value.trim();if(!email)throw Error('Enter your account email first.');const {error}=await db.auth.resetPasswordForEmail(email,{redirectTo:location.origin+'/broker/'});if(error)throw error;notice('If the email belongs to an account, password reset instructions have been sent.',false,true)});
-$('logout').onclick=e=>busyRun(e.currentTarget,async()=>{if(isEditingInfo()&&!confirm('Discard unsaved changes and log out?'))return;const {error}=await db.auth.signOut();if(error)throw error;user=null;profile=null;selected=null;fileRequest++;apps=[];dashboardUpdates=[];chatCounts.clear();metricFilter='all';unreadOnly=false;$('unreadOnly').checked=false;$('search').value='';statusFilter='all';productFilter='all';listSort='newest';$('statusFilter').value='all';$('productFilter').value='all';$('sortFilter').value='newest';renderDashboardNotifications();$('detail').innerHTML='';showWorkspace('dashboard',false);gate();notice('You have signed out.',false,true)});
+$('logout').onclick=e=>busyRun(e.currentTarget,async()=>{if(isEditingInfo()&&!confirm('Discard unsaved changes and log out?'))return;const uid=user.id;const {error}=await db.auth.signOut();if(error)throw error;clearWorkspace(uid);user=null;profile=null;selected=null;fileRequest++;apps=[];dashboardUpdates=[];chatCounts.clear();metricFilter='all';unreadOnly=false;$('unreadOnly').checked=false;$('search').value='';statusFilter='all';productFilter='all';listSort='newest';$('statusFilter').value='all';$('productFilter').value='all';$('sortFilter').value='newest';renderDashboardNotifications();$('detail').innerHTML='';showWorkspace('dashboard',false);gate();notice('You have signed out.',false,true)});
 $('new').onclick=()=>navigateWorkspace('new');
 function openMetric(key){if(working)return;metricFilter=key;statusFilter='all';productFilter='all';listSort='newest';$('search').value='';$('statusFilter').value='all';$('productFilter').value='all';$('sortFilter').value='newest';navigateWorkspace('deals');}
 $('dashboardDeals').onclick=()=>openMetric('all');
@@ -313,7 +350,7 @@ $('statusFilter').onchange=e=>{metricFilter='all';statusFilter=e.target.value;re
 $('productFilter').onchange=e=>{productFilter=e.target.value;render()};
 $('sortFilter').onchange=e=>{listSort=e.target.value;render()};
 $('clearFilters').onclick=()=>{$('search').value='';$('statusFilter').value='all';$('productFilter').value='all';$('sortFilter').value='newest';metricFilter='all';statusFilter='all';productFilter='all';listSort='newest';render()};
-$('refreshList').onclick=e=>{if(isEditingInfo()){notice('Save or cancel your changes before refreshing.',true);return;}return busyRun(e.currentTarget,async()=>{await refresh();notice('Application list updated.')});};
+$('refreshList').onclick=e=>{if(isEditingInfo()){notice('Save or cancel your changes before refreshing.',true);return;}return busyRun(e.currentTarget,async()=>{await refresh(false);notice('Application list updated.')});};
 $('cards').onclick=e=>{const bell=e.target.closest('[data-deal-bell]');if(bell){if(working||isEditingInfo())return;const id=bell.dataset.dealBell;busyRun(null,async()=>{bell.disabled=true;try{const n=dealUnreadUpdate(id);if(n)await openNotification(n);else{await openFile(id);if(selected===id)selectFileTab('activity');}}catch(err){selected=null;fileRequest++;$('detail').innerHTML='';showWorkspace('deals',false);throw err;}finally{bell.disabled=false;}});return;}const b=e.target.closest('[data-id]');if(b&&isEditingInfo()){notice('Save or cancel your changes before opening another file.',true);return;}if(b&&!working)busyRun(b,async()=>{try{await openFile(b.dataset.id)}catch(err){selected=null;fileRequest++;$('detail').innerHTML='';showWorkspace('deals',false);throw err;}})};
 $('application').onsubmit=e=>{e.preventDefault();const form=e.currentTarget;busyRun(e.submitter,async()=>{const f=new FormData(form);if(!f.get('email'))throw Error('Client email is required for secure intake.');const payload=Object.fromEntries(f.entries());payload.amount=payload.requestedAmount;delete payload.requestedAmount;const {data,error}=await db.rpc('broker_create_full_application',{p_payload:payload});if(error)throw error;notice('Application saved securely to your broker account.');form.reset();await refresh();await openFile(data)})};
 setInterval(async()=>{if(document.hidden||!authorized()||working||chatPolling)return;chatPolling=true;try{if(selected&&activeFileTab==='activity')await refreshDealChat(selected);else await refreshChatCounts();await refreshDashboardNotifications();if(selected&&activeFileTab==='decision')await refreshDecision(selected);}catch(e){console.warn('Deal updates unavailable');}finally{chatPolling=false;}},20000);
