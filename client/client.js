@@ -1,0 +1,51 @@
+(()=>{'use strict';
+const db=window.supabase.createClient('https://wyejyzxecvvspdruryzh.supabase.co','sb_publishable_JAC4bzslO4RRdlgmGdD_Gg_ywwkuXGC',{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+const $=id=>document.getElementById(id);
+const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=x=>Number(x||0).toLocaleString('en-CA',{style:'currency',currency:'CAD',maximumFractionDigits:0});
+let user=null,profile=null,apps=[],active=null,busy=false;
+const invitation=new URL(location.href).searchParams.get('invite')||sessionStorage.getItem('vfc_client_invitation');
+if(invitation&&/^[a-f0-9]{64}$/.test(invitation))sessionStorage.setItem('vfc_client_invitation',invitation);
+function note(message,error=false){const e=$('notice');e.textContent=message;e.className='note'+(error?' error':'');e.hidden=!message;}
+function setView(){const activeAccount=user&&profile?.active&&profile?.role==='client';$('authPanel').hidden=!!activeAccount;$('clientPanel').hidden=!activeAccount;$('logout').hidden=!activeAccount}
+async function identity(){const u=await db.auth.getUser();if(u.error)throw u.error;user=u.data.user;profile=null;
+ if(user){const p=await db.from('profiles').select('role,active').eq('id',user.id).maybeSingle();if(p.error)throw p.error;profile=p.data;
+ const token=sessionStorage.getItem('vfc_client_invitation');
+ if(token&&/^[a-f0-9]{64}$/.test(token)&&!profile?.active){const result=await db.rpc('vfc_claim_client_invitation',{p_token:token});if(result.error){note('Unable to accept invitation: '+result.error.message,true)}else{sessionStorage.removeItem('vfc_client_invitation');history.replaceState(null,'',location.pathname);const p2=await db.from('profiles').select('role,active').eq('id',user.id).single();profile=p2.data;note('Your invitation has been accepted. Your private documents are ready.')}}else if(token&&profile?.role==='client'&&profile?.active){const r=await db.rpc('vfc_claim_client_invitation',{p_token:token});if(!r.error){sessionStorage.removeItem('vfc_client_invitation');history.replaceState(null,'',location.pathname);note('Client invitation accepted.')}}
+ }
+ setView();if(user&&profile?.active&&profile.role==='client')await loadApps();
+ else if(user&&!profile?.active&&!sessionStorage.getItem('vfc_client_invitation'))note('Account verification complete. Open the original secure invitation link to activate client access.',true);
+}
+async function safe(button,fn){if(busy)return;busy=true;const t=button?.textContent;if(button){button.disabled=true;button.textContent='Processing…'}try{await fn()}catch(e){note(e.message||'Operation failed',true)}finally{busy=false;if(button){button.disabled=false;button.textContent=t}}}
+async function loadApps(){const r=await db.from('applications').select('id,application_number,business_name,financing_product,requested_amount,status,created_at').order('created_at',{ascending:false}).limit(100);if(r.error)throw r.error;apps=r.data||[];$('applications').innerHTML=apps.length?apps.map(a=>'<div class="row"><div><b>'+esc(a.business_name)+'</b><small>VFC-'+String(a.application_number).padStart(4,'0')+' · '+esc(a.financing_product)+' · '+fmt(a.requested_amount)+'</small></div><div class="actions"><span class="pill">'+esc(a.status.replace(/_/g,' '))+'</span><button type="button" class="btn secondary open-app" data-id="'+a.id+'">Open Documents</button></div></div>').join(''):'<p class="muted">No linked applications yet. Accept your broker invitation using the verified email address.';
+ document.querySelectorAll('.open-app').forEach(b=>b.onclick=()=>openApp(b.dataset.id).catch(e=>note(e.message,true)));
+ if(active&&apps.some(a=>a.id===active))await openApp(active)}
+async function openApp(id){
+ if(!apps.some(a=>a.id===id))return;active=id;
+ const [tasks,docs,notes]=await Promise.all([
+ db.from('checklist_items').select('id,title,description,item_type,status,created_at').eq('application_id',id).order('created_at',{ascending:false}),
+ db.from('documents').select('id,original_filename,category,storage_path,created_at,scan_status,uploaded_by').eq('application_id',id).order('created_at',{ascending:false}),
+ db.from('notifications').select('id,title,body,created_at').eq('application_id',id).order('created_at',{ascending:false}).limit(12)
+ ]);for(const r of [tasks,docs,notes])if(r.error)throw r.error;
+ const a=apps.find(a=>a.id===id);const requested=tasks.data||[],uploaded=docs.data||[];
+ $('applicationDetail').hidden=false;
+ $('applicationDetail').innerHTML='<div class="box"><div class="row"><div><div class="eyebrow">SECURE CLIENT FILE</div><h2>'+esc(a.business_name)+'</h2></div><span class="pill">VFC-'+String(a.application_number).padStart(4,'0')+'</span></div><div class="split"><div><h3>Requested Documents</h3><p class="muted">Select a request when uploading the file so your broker receives confirmation and the file is tracked.</p>'+
+ (requested.length?requested.map(t=>'<div class="task"><strong>'+esc(t.title)+'</strong><span class="pill">'+esc(t.status)+'</span><p>'+esc(t.description||'')+'</p>'+(t.item_type==='form'&&t.status!=='accepted'?'<form class="answer-form" data-task="'+t.id+'"><label>Your Response<textarea name="answer" required maxlength="10000"></textarea></label><button class="btn secondary">Submit Response</button></form>':'')+'</div>').join(''):'<p class="muted">No requests have been assigned yet.</p>')+
+ '<h3>Upload Secure Document</h3><form id="clientUpload"><label>Which request is this for?<select name="request"><option value="">General document upload</option>'+requested.filter(t=>t.item_type==='document'&&t.status!=='accepted').map(t=>'<option value="'+t.id+'">'+esc(t.title)+'</option>').join('')+'</select></label><label>Document Category<select name="category">'+['bank_statements','identification','financial_statements','business_registration','tax_documents','property_documents','application','other'].map(c=>'<option value="'+c+'">'+esc(c.replace(/_/g,' '))+'</option>').join('')+'</select></label><label>Select PDF, JPG or PNG<input type="file" name="file" accept=".pdf,.jpg,.jpeg,.png" required></label><button class="btn">Upload to My Secure File</button></form><p class="muted">Maximum 20 MB. Files are initially marked pending security verification.</p></div>'+
+ '<div><h3>Uploaded Files</h3>'+(uploaded.length?uploaded.map(d=>'<div class="row"><div><b>'+esc(d.original_filename)+'</b><small>'+new Date(d.created_at).toLocaleString('en-CA')+' · '+esc(d.scan_status)+'</small></div><button type="button" class="btn secondary download-file" data-path="'+esc(d.storage_path)+'">View</button></div>').join(''):'<p class="muted">No files uploaded yet.</p>')+
+ '<h3>Updates &amp; Confirmations</h3>'+(notes.data?.length?notes.data.map(n=>'<div class="row"><div><b>'+esc(n.title)+'</b><small>'+new Date(n.created_at).toLocaleString('en-CA')+' · '+esc(n.body)+'</small></div></div>').join(''):'<p class="muted">No recent updates.</p>')+
+ '</div></div></div>';
+ $('clientUpload').onsubmit=e=>{e.preventDefault();const form=e.currentTarget;safe(e.submitter,async()=>{const f=new FormData(form),file=f.get('file');if(!(file instanceof File)||!file.size||file.size>20*1024*1024)throw Error('Select a document up to 20 MB.');const sig={'application/pdf':{ext:'pdf',match:b=>[37,80,68,70,45].every((x,i)=>b[i]===x)},'image/png':{ext:'png',match:b=>[137,80,78,71,13,10,26,10].every((x,i)=>b[i]===x)},'image/jpeg':{ext:'jpg',match:b=>b[0]===255&&b[1]===216&&b[2]===255}};
+ const item=sig[file.type],buffer=await file.arrayBuffer(),bytes=new Uint8Array(buffer);if(!item||!item.match(bytes))throw Error('Only valid PDF, JPG and PNG files are accepted.');const hash=await crypto.subtle.digest('SHA-256',buffer);const sha=[...new Uint8Array(hash)].map(x=>x.toString(16).padStart(2,'0')).join('');const path=id+'/'+user.id+'/'+crypto.randomUUID()+'.'+item.ext;const up=await db.storage.from('application-documents').upload(path,file,{contentType:file.type,upsert:false});if(up.error)throw up.error;
+ const doc=await db.rpc('register_document',{p_application:id,p_storage_path:path,p_filename:file.name.slice(0,180),p_mime:file.type,p_size:file.size,p_sha256:sha,p_category:String(f.get('category')),p_visibility:'broker_client'});if(doc.error)throw Error('File uploaded but registration could not be completed. Contact VFC support; do not duplicate the upload.');
+ const task=String(f.get('request')||'');if(task){const linked=await db.rpc('vfc_client_attach_document',{p_task:task,p_document:doc.data});if(linked.error)throw Error('File saved, but the request was not marked submitted: '+linked.error.message)}
+ note('Your document was received and logged. Your broker has been notified inside the portal.');await openApp(id)})};
+ document.querySelectorAll('.download-file').forEach(b=>b.onclick=()=>safe(b,async()=>{const r=await db.storage.from('application-documents').createSignedUrl(b.dataset.path,60);if(r.error)throw r.error;window.open(r.data.signedUrl,'_blank','noopener,noreferrer')}));
+ document.querySelectorAll('.answer-form').forEach(form=>form.onsubmit=e=>{e.preventDefault();safe(e.submitter,async()=>{const answer=new FormData(form).get('answer');const r=await db.rpc('client_submit_task',{p_task:form.dataset.task,p_answers:{response:answer}});if(r.error)throw r.error;note('Response submitted to your broker.');await openApp(id)})});
+ $('applicationDetail').scrollIntoView({behavior:'smooth',block:'start'});
+}
+$('signin').onsubmit=e=>{e.preventDefault();safe(e.submitter,async()=>{const f=new FormData(e.currentTarget);const r=await db.auth.signInWithPassword({email:String(f.get('email')).trim(),password:String(f.get('password'))});if(r.error)throw r.error;await identity()})};
+$('signup').onsubmit=e=>{e.preventDefault();safe(e.submitter,async()=>{const f=new FormData(e.currentTarget);const r=await db.auth.signUp({email:String(f.get('email')).trim(),password:String(f.get('password'))});if(r.error)throw r.error;note('Check your email to verify the account. Then reopen the original invitation link and sign in.');})};
+$('logout').onclick=e=>safe(e.currentTarget,async()=>{await db.auth.signOut();user=null;profile=null;apps=[];active=null;setView();note('You have signed out.')});
+identity().catch(e=>note('Client portal could not load: '+e.message,true));
+})();
