@@ -100,3 +100,20 @@ export async function uploadDocument(f:FormData){
  });
  redirect(dest+(error?'?error=register':'?success=upload'));
 }
+
+export async function markNotificationRead(notificationId:string){
+ const s=await supabase();const {data:{user}}=await s.auth.getUser();if(!user)redirect('/login')
+ if(!/^[0-9a-f-]{36}$/i.test(notificationId))return
+ const {error}=await s.rpc('mark_notification_read',{p_notification:notificationId})
+ if(error)throw new Error('Unable to mark notification as read')
+}
+export async function broadcastAnnouncement(f:FormData){
+ const s=await role('admin')
+ const {data,error}=await s.rpc('admin_broadcast_announcement',{
+  p_title:String(f.get('title')||'').trim(),
+  p_body:String(f.get('body')||'').trim(),
+  p_audience:String(f.get('audience')||'all_clients')
+ })
+ if(error)redirect('/admin?error=broadcast')
+ redirect('/admin?success=broadcast&sent='+Number(data||0))
+}
