@@ -1,6 +1,0 @@
-import Link from 'next/link';import {supabase} from '../../lib/server';import {redirect} from 'next/navigation'
-export default async function Login({searchParams}:{searchParams:Promise<{error?:string,registered?:string}>}){
- async function login(f:FormData){'use server';const s=await supabase();const {error}=await s.auth.signInWithPassword({email:String(f.get('email')||''),password:String(f.get('password')||'')});if(error)redirect('/login?error=1');redirect('/')}
- const q=await searchParams;
- return <main className="auth card"><div className="eyebrow">VFC SECURE ACCESS</div><h1>Welcome Back</h1><p className="muted">One login for Broker, Client and Admin workspaces.</p>{q.error&&<p className="alert">Unable to sign in. Check your email verification and credentials.</p>}{q.registered&&<p className="success">Account created. Verify your email, then wait for activation.</p>}<form action={login}><div className="field"><label>Email</label><input name="email" type="email" required autoComplete="email"/></div><div className="field"><label>Password</label><input name="password" type="password" required autoComplete="current-password"/></div><button className="btn">Log In</button></form><p className="small muted">New client? <Link href="/register" className="textlink">Create an account</Link></p></main>
-}
