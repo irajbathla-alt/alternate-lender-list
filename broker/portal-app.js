@@ -18,8 +18,19 @@ async function loadIdentity(){
  if(user&&!authorized())notice('Your Supabase account is not an active Broker account. Please contact VFC Admin.',true,true);
  if(authorized()){ showWorkspace(workspaceView,false); $('welcome').textContent='Welcome, '+(profile.full_name||user.email?.split('@')[0]||'Broker')+'.'; $('accountEmail').textContent=user.email||''; await refresh(); }
 }
-let chatCounts=new Map(),chatPolling=false;
-async function refreshChatCounts(){if(!authorized())return;const uid=user.id;const r=await db.rpc('vfc_deal_chat_list');if(r.error)throw r.error;if(!authorized()||user.id!==uid)return;chatCounts=new Map((r.data||[]).map(x=>[x.application_id,x]));if(workspaceView==='deals')render();const b=$('dealUnread');if(b){const n=Number(chatCounts.get(selected)?.unread||0);b.textContent=n?String(n):'';b.hidden=!n;}}
+let chatCounts=new Map(),chatPolling=false,dashboardUpdates=[],notificationBusy=false;
+function renderDashboardNotifications(){
+ const root=$('dashboardNotifications');if(!root)return;const own=new Map(apps.map(a=>[a.id,a]));const rows=dashboardUpdates.filter(n=>!n.application_id||own.has(n.application_id));const unread=rows.filter(n=>!n.read_at).length;const count=$('notificationCount');count.textContent=String(unread);count.hidden=!unread;
+ const html=rows.map(n=>{const a=own.get(n.application_id),deal=a?'VFC-'+String(a.application_number).padStart(4,'0')+' · '+a.business_name:'General update';return '<article class="dashboard-notification-row '+(!n.read_at?'is-unread':'')+'"><span class="notification-dot" aria-label="'+(n.read_at?'Read':'Unread')+'"></span><div class="notification-copy"><b>'+esc(n.title)+'</b><p>'+esc(n.body)+'</p><small>'+esc(deal)+' · '+esc(new Date(n.created_at).toLocaleString('en-CA'))+'</small></div>'+(a?'<button type="button" class="btn secondary notification-open" data-notification="'+esc(n.id)+'">Open File</button>':(!n.read_at?'<button type="button" class="btn secondary notification-open" data-notification="'+esc(n.id)+'">Mark Read</button>':''))+'</article>';}).join('');
+ if(root.dataset.content!==html){root.innerHTML=html||'<p class="subtle">You’re all caught up. New Admin updates will appear here.</p>';root.dataset.content=html;}
+}
+async function refreshDashboardNotifications(){
+ if(!authorized()||notificationBusy)return;notificationBusy=true;const uid=user.id;
+ try{const r=await db.from('notifications').select('id,application_id,event_type,title,body,read_at,created_at').eq('recipient_id',uid).neq('event_type','test_fixture_created').order('created_at',{ascending:false}).limit(100);if(r.error)throw r.error;if(!authorized()||user.id!==uid)return;dashboardUpdates=r.data||[];renderDashboardNotifications();}
+ catch(e){if(authorized()&&user.id===uid){$('dashboardNotifications').textContent='Unable to load updates. Use Refresh to try again.';delete $('dashboardNotifications').dataset.content;}throw e;}finally{notificationBusy=false;}
+}
+
+async function refreshChatCounts(){if(!authorized())return;const uid=user.id;const r=await db.rpc('vfc_deal_chat_list');if(r.error)throw r.error;if(!authorized()||user.id!==uid)return;chatCounts=new Map((r.data||[]).map(x=>[x.application_id,x]));if(workspaceView==='dashboard'||workspaceView==='deals'){apps.forEach(a=>{const v=chatCounts.get(a.id);if(v?.status)a.status=v.status;});render();}const b=$('dealUnread');if(b){const n=Number(chatCounts.get(selected)?.unread||0);b.textContent=n?String(n):'';b.hidden=!n;}}
 async function refreshDealChat(id){if(!authorized()||selected!==id||activeFileTab!=='activity'||document.hidden)return;const r=await db.rpc('vfc_deal_chat_messages',{p_application:id});if(r.error)throw r.error;if(!authorized()||selected!==id||activeFileTab!=='activity'||document.hidden||!$('dealChatList'))return;const rows=(r.data||[]).slice().reverse();const list=$('dealChatList'),nearBottom=list.scrollHeight-list.scrollTop-list.clientHeight<70;const sig=rows.map(m=>m.id).join(',');if(list.dataset.signature!==sig){list.innerHTML=rows.map(m=>'<div class="broker-chat '+(m.sender_id===user.id?'chat-own':'chat-other')+'"><b>'+esc(m.sender_id===user.id?'You':m.actor_role==='admin'?'VFC Admin':'Broker')+'</b><p>'+esc(m.body)+'</p><small>'+esc(new Date(m.created_at).toLocaleString('en-CA'))+'</small></div>').join('')||'<p class="subtle">No messages yet. Send a message to start the conversation.</p>';list.dataset.signature=sig;if(nearBottom)list.scrollTop=list.scrollHeight;}const ids=rows.filter(m=>m.sender_id!==user.id).map(m=>m.id);if(ids.length&&list.dataset.readSignature!==sig){const mark=await db.rpc('vfc_deal_chat_read',{p_application:id,p_messages:ids});if(mark.error)throw mark.error;list.dataset.readSignature=sig;}await refreshChatCounts();}
 function groupDealDocs(){
  const list=$('docList'),grid=$('docFolderGrid'),content=$('docFolderView');if(!list||!grid||!content)return;
@@ -38,7 +49,7 @@ function groupDealDocs(){
 async function refresh(scroll=true){
  if(!authorized())return;
  const r=await db.from('applications').select('id,application_number,business_name,financing_product,requested_amount,status,submitted_at,created_at,deal_summary,clients(id,full_name,email,phone)').eq('broker_id',user.id).order('created_at',{ascending:false}).limit(250);
- if(r.error)throw r.error;apps=r.data||[];await refreshChatCounts().catch(()=>{});render();
+ if(r.error)throw r.error;apps=r.data||[];await refreshChatCounts().catch(()=>{});render();await refreshDashboardNotifications().catch(()=>{});
  if(selected){const exists=apps.find(a=>a.id===selected);if(exists)await openFile(selected,scroll);else{$('detail').innerHTML='';selected=null;showWorkspace('deals',false);}}
 }
 function signingStatus(x){if(!x)return 'Not sent';if(x.status==='signed')return 'Signed';if(x.status==='pending'&&new Date(x.expires_at).getTime()<Date.now())return 'Link expired';if(x.status==='pending')return 'Awaiting signature';return label(x.status);}
@@ -188,13 +199,20 @@ async function openFile(id,scroll=true){
 }
 $('loginForm').onsubmit=async e=>{e.preventDefault();const button=e.submitter;await busyRun(button,async()=>{const {email,password}=Object.fromEntries(new FormData(e.currentTarget));const {error}=await db.auth.signInWithPassword({email:String(email).trim(),password:String(password)});if(error)throw error;notice('',false,true);await loadIdentity()})};
 $('resetPassword').onclick=e=>busyRun(e.currentTarget,async()=>{const email=$('loginEmail').value.trim();if(!email)throw Error('Enter your account email first.');const {error}=await db.auth.resetPasswordForEmail(email,{redirectTo:location.origin+'/broker/'});if(error)throw error;notice('If the email belongs to an account, password reset instructions have been sent.',false,true)});
-$('logout').onclick=e=>busyRun(e.currentTarget,async()=>{if(isEditingInfo()&&!confirm('Discard unsaved changes and log out?'))return;const {error}=await db.auth.signOut();if(error)throw error;user=null;profile=null;selected=null;fileRequest++;apps=[];$('detail').innerHTML='';showWorkspace('dashboard',false);gate();notice('You have signed out.',false,true)});
+$('logout').onclick=e=>busyRun(e.currentTarget,async()=>{if(isEditingInfo()&&!confirm('Discard unsaved changes and log out?'))return;const {error}=await db.auth.signOut();if(error)throw error;user=null;profile=null;selected=null;fileRequest++;apps=[];dashboardUpdates=[];chatCounts.clear();renderDashboardNotifications();$('detail').innerHTML='';showWorkspace('dashboard',false);gate();notice('You have signed out.',false,true)});
 $('new').onclick=()=>navigateWorkspace('new');
 $('dashboardDeals').onclick=()=>navigateWorkspace('deals');
+$('refreshNotifications').onclick=e=>busyRun(e.currentTarget,async()=>{await refreshChatCounts();await refreshDashboardNotifications();});
+$('dashboardNotifications').onclick=e=>{const b=e.target.closest('[data-notification]');if(!b||working)return;const n=dashboardUpdates.find(x=>x.id===b.dataset.notification);if(!n)return;busyRun(b,async()=>{
+ if(n.application_id){await openFile(n.application_id);if(selected!==n.application_id)return;if(n.event_type==='message_received')selectFileTab('activity');}
+ if(!n.read_at){const r=await db.rpc('mark_notification_read',{p_notification:n.id});if(r.error)throw r.error;n.read_at=new Date().toISOString();renderDashboardNotifications();}
+ await refreshDashboardNotifications();
+ });};
+
 $('newDealFromList').onclick=()=>navigateWorkspace('new');
 const topHeader=document.querySelector('header.tfc-top');const fitRail=()=>{if(topHeader)$('appView').style.setProperty('--broker-header-height',Math.ceil(topHeader.getBoundingClientRect().height)+'px');};fitRail();if(window.ResizeObserver&&topHeader)new ResizeObserver(fitRail).observe(topHeader);else window.addEventListener('resize',fitRail);
 $('cancelNew').onclick=()=>navigateWorkspace('deals');
-$('railLogout').onclick=()=>$('logout').click();
+
 document.querySelectorAll('[data-workspace]').forEach(b=>b.onclick=()=>navigateWorkspace(b.dataset.workspace));
 document.addEventListener('keydown',e=>{const drawer=$('dealDrawer');if(e.key==='Escape'&&drawer&&!drawer.hidden){e.preventDefault();setDealDrawer(false,true);}});
 const filterMenu=$('dealsFilters');
@@ -212,6 +230,6 @@ $('clearFilters').onclick=()=>{$('search').value='';$('statusFilter').value='all
 $('refreshList').onclick=e=>{if(isEditingInfo()){notice('Save or cancel your changes before refreshing.',true);return;}return busyRun(e.currentTarget,async()=>{await refresh();notice('Application list updated.')});};
 $('cards').onclick=e=>{const b=e.target.closest('[data-id]');if(b&&isEditingInfo()){notice('Save or cancel your changes before opening another file.',true);return;}if(b&&!working)busyRun(b,async()=>{try{await openFile(b.dataset.id)}catch(err){selected=null;fileRequest++;$('detail').innerHTML='';showWorkspace('deals',false);throw err;}})};
 $('application').onsubmit=e=>{e.preventDefault();const form=e.currentTarget;busyRun(e.submitter,async()=>{const f=new FormData(form);if(!f.get('email'))throw Error('Client email is required for secure intake.');const payload=Object.fromEntries(f.entries());payload.amount=payload.requestedAmount;delete payload.requestedAmount;const {data,error}=await db.rpc('broker_create_full_application',{p_payload:payload});if(error)throw error;notice('Application saved securely to your broker account.');form.reset();await refresh();await openFile(data)})};
-setInterval(async()=>{if(document.hidden||!authorized()||working||chatPolling)return;chatPolling=true;try{if(selected&&activeFileTab==='activity')await refreshDealChat(selected);else await refreshChatCounts();}catch(e){console.warn('Deal updates unavailable');}finally{chatPolling=false;}},20000);
+setInterval(async()=>{if(document.hidden||!authorized()||working||chatPolling)return;chatPolling=true;try{if(selected&&activeFileTab==='activity')await refreshDealChat(selected);else await refreshChatCounts();if(workspaceView==='dashboard')await refreshDashboardNotifications();}catch(e){console.warn('Deal updates unavailable');}finally{chatPolling=false;}},20000);
 (async()=>{try{await loadIdentity();}catch(e){gate();notice('Unable to connect: '+errText(e),true,true)}})();
 })();
