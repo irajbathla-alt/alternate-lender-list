@@ -87,10 +87,7 @@ async function openFile(id,scroll=true){
  if($('editClientInfo'))$('editClientInfo').onclick=()=>{
  const container=$('editClientPanel');container.hidden=!container.hidden;if(container.hidden)return;
  const d=details.data||{};const value=(x)=>esc(x??'');
- container.innerHTML='<form id="editClientForm" class="broker-edit-form"><div class="form-grid">'+
- '<div class="field"><label>Owner Full Name<input name="name" required value="'+value(a.clients?.full_name)+'"></label></div>'+
- '<div class="field"><label>Client Email<input name="email" type="email" required value="'+value(a.clients?.email)+'"></label></div>'+
- '<div class="field"><label>Phone<input name="phone" type="tel" value="'+value(a.clients?.phone)+'"></label></div>'+
+ container.innerHTML='<form id="editClientForm" class="broker-edit-form"><h3>Business Information</h3><div class="form-grid">'+
  '<div class="field"><label>Legal Business Name<input name="business" required value="'+value(a.business_name)+'"></label></div>'+
  '<div class="field"><label>Nature of Business<input name="nature" value="'+value(d.nature_of_business)+'"></label></div>'+
  '<div class="field"><label>Employees<input type="number" name="employees" min="0" value="'+value(d.employee_count)+'"></label></div>'+
@@ -98,8 +95,13 @@ async function openFile(id,scroll=true){
  '<div class="field"><label>Business Address<input name="businessAddress" value="'+value(d.business_address)+'"></label></div>'+
  '<div class="field"><label>Registration Year<input name="registrationYear" type="number" min="1800" max="2030" value="'+value(d.registration_year)+'"></label></div>'+
  '<div class="field"><label>Business Bank<input name="bank" value="'+value(d.business_bank)+'"></label></div>'+
+ '</div><h3>Client Information</h3><div class="form-grid">'+
+ '<div class="field"><label>Owner Full Name<input name="name" required value="'+value(a.clients?.full_name)+'"></label></div>'+
+ '<div class="field"><label>Client Email<input name="email" type="email" required value="'+value(a.clients?.email)+'"></label></div>'+
+ '<div class="field"><label>Phone<input name="phone" type="tel" value="'+value(a.clients?.phone)+'"></label></div>'+
  '<div class="field"><label>Date of Birth<input name="dob" type="date" value="'+value(d.owner_date_of_birth)+'"></label></div>'+
  '<div class="field"><label>Residential Address<input name="ownerAddress" value="'+value(d.owner_address)+'"></label></div>'+
+ '</div><h3>Financing Information</h3><div class="form-grid">'+
  '<div class="field"><label>Requested Amount<input name="amount" type="number" min="1" step=".01" required value="'+value(a.requested_amount)+'"></label></div>'+
  '<div class="field"><label>Financing Product<select name="product">'+['Term Loan','Business LOC','Flex Funds','Mortgage Financing'].map(p=>'<option value="'+esc(p)+'" '+(p===a.financing_product?'selected':'')+'>'+esc(p)+'</option>').join('')+'</select></label></div>'+
  '<div class="field full"><label>Deal Summary<textarea name="summary" rows="3">'+esc(a.deal_summary||'')+'</textarea></label></div></div><div class="broker-actions"><button class="btn" type="submit">Save Changes</button><button class="btn secondary" type="button" id="cancelClientEdit">Cancel</button></div></form>';
