@@ -1,3 +1,4 @@
+import {DocumentVault} from '../../../../components/document-vault'
 import Link from 'next/link'
 import {supabase} from '../../../../lib/server'
 import {redirect,notFound} from 'next/navigation'
@@ -22,8 +23,8 @@ export default async function Deal({params,searchParams}:{params:Promise<{id:str
  </section>
  <section className="card"><h2>Requested Client Items</h2>{(tasks||[]).length?(tasks||[]).map(t=><div className="item" key={t.id}><div><b>{t.title}</b><span className="muted small">{t.description||t.item_type}</span></div><StateTag status={t.status}/></div>):<p className="muted">No requests yet.</p>}
  <hr className="line"/><h3>New Request</h3><form action={requestTask}><input type="hidden" name="application" value={id}/><div className="field"><label>Title</label><input name="title" required minLength={3} placeholder="Most recent six months bank statements"/></div><div className="field"><label>Request Type</label><select name="type"><option value="document">Document</option><option value="form">Information Form</option><option value="signature">Signature</option></select></div><div className="field"><label>Instructions</label><textarea name="description"/></div><button className="btn">Add Client Request</button></form></section></div>
- <section className="card"><h2>Secure Conversations</h2><p className="muted small">Broker / Client and Broker / Admin threads are separate.</p>
+ <div className="stack"><DocumentVault applicationId={id} role="broker"/><section className="card"><h2>Secure Conversations</h2><p className="muted small">Broker / Client and Broker / Admin threads are separate.</p>
  {(messages||[]).map(m=><div className="message" key={m.id}><small>{m.channel==='broker_admin'?'Broker / Admin':'Broker / Client'} · {m.sender_id===user.id?'You':'Other participant'} · {new Date(m.created_at).toLocaleDateString('en-CA')}</small><p>{m.body}</p></div>)}
  <form action={postMessage}><input type="hidden" name="application" value={id}/><input type="hidden" name="returnTo" value={'/broker/applications/'+id}/><div className="field"><label>Recipient</label><select name="channel"><option value="broker_client">Client</option>{a.submitted_at&&<option value="broker_admin">VFC Admin</option>}</select></div><div className="field"><label>Message</label><textarea name="body" required maxLength={10000}/></div><button className="btn">Send Secure Message</button></form><p className="small muted">Messages are stored in the portal. Email alerts are not connected yet.</p>
- </section></div><p style={{marginTop:20}}><Link className="textlink muted" href="/broker">Back to applications</Link></p></Shell>
+ </section></div></div><p style={{marginTop:20}}><Link className="textlink muted" href="/broker">Back to applications</Link></p></Shell>
 }
