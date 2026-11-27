@@ -77,3 +77,36 @@ body:has(.vfc-admin) .heading p{font-size:12px}
 .admin-file-footer{font-size:10px;color:#999;text-align:center;padding:6px 0 24px}
 @media(max-width:1000px){.admin-metrics{grid-template-columns:repeat(3,1fr)}.admin-filters{grid-template-columns:1fr 1fr}}
 @media(max-width:650px){body:has(.vfc-admin) .workspace{width:100%;padding:0 12px}body:has(.vfc-admin) .heading h1{font-size:34px}.admin-metrics{grid-template-columns:repeat(2,1fr);gap:8px}.admin-metric{padding:14px!important;min-height:85px}.admin-metric strong{font-size:28px}.admin-section-head{padding:17px 15px 12px}.admin-filters{padding:0 15px 15px;grid-template-columns:1fr 1fr}.admin-search{grid-column:1/-1}.admin-notification-list{padding:0 15px 15px}.admin-kv{grid-template-columns:110px minmax(0,1fr)}.admin-file-kpis{grid-template-columns:1fr 1fr}.admin-notification small{display:none}.admin-drawer-body{padding:12px}}
+
+
+/* Shared role-based notification bell */
+.top nav{position:relative}
+.bell-wrap{position:relative;display:flex;align-items:center}
+.bell-button{position:relative;color:#fff;background:transparent;border:1px solid rgba(255,255,255,.24);border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center}
+.bell-button:hover{background:rgba(255,255,255,.12)}
+.bell-count{position:absolute;top:-5px;right:-8px;display:flex;align-items:center;justify-content:center;background:#b13e3e;color:#fff;border-radius:14px;font-size:9px;min-width:18px;height:18px;padding:0 4px}
+.bell-panel{position:absolute;right:-18px;top:45px;width:min(380px,calc(100vw - 26px));max-height:min(520px,75vh);display:flex;flex-direction:column;background:#fff;color:#292929;z-index:120;border-radius:12px;border:1px solid #ddd;box-shadow:0 18px 45px rgba(0,0,0,.17);overflow:hidden}
+.bell-panel-head{padding:15px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e8e8e8}
+.bell-panel-head strong{font-size:14px}.bell-panel-head button{border:1px solid #ddd;background:#fff;border-radius:20px;padding:7px 11px;font-size:10px}
+.bell-list{overflow-y:auto}.bell-item{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;border-bottom:1px solid #eee;padding:13px 16px}
+.bell-item.unread{background:#f6f8fa}.bell-item strong{font-size:12px;display:block;overflow-wrap:anywhere}.bell-item p{font-size:11px;margin:5px 0;color:#6a6a6a;line-height:1.5;overflow-wrap:anywhere}.bell-item small{font-size:9px;color:#999}
+.bell-item button{border:0;background:none;color:#1c5073;font-size:10px;min-width:56px;padding:5px 0;text-decoration:underline}
+.bell-empty{padding:25px;color:#777;font-size:11px;text-align:center}.bell-foot{padding:12px 16px;border-top:1px solid #eee;color:#999;font-size:9px}
+.admin-view-tabs{display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px solid #e7e7e7;margin:0 0 17px;padding-bottom:14px}
+.admin-view-tabs button{font-size:10px;background:#fff;border:1px solid #d7d7d7;border-radius:20px;padding:10px 15px;cursor:pointer}
+.admin-view-tabs button.active{background:#292929;color:#fff;border-color:#292929}
+.vfc-admin .admin-filters{grid-template-columns:minmax(160px,1fr) 150px 130px 180px auto}
+.admin-broker-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:0 22px 22px}
+.admin-broker-card{padding:18px;border:1px solid #e5e5e5;border-radius:10px;background:#fff;min-width:0}
+.admin-broker-card h3{font:400 22px Georgia,serif;margin:7px 0;overflow-wrap:anywhere}
+.admin-broker-card p{font-size:11px;overflow-wrap:anywhere}
+.admin-broker-bottom{display:flex;gap:9px;align-items:center;justify-content:space-between;margin-top:20px;flex-wrap:wrap}
+.admin-broker-bottom strong{font-size:11px}
+.admin-broker-footnote{font-size:11px;margin:0;padding:0 22px 22px;color:#777}
+.admin-announcement-card{padding:24px!important;margin-bottom:15px}
+.admin-announcement-card h2{font-family:Georgia,serif;font-size:28px;text-transform:uppercase;margin:7px 0}
+.admin-announcement-form{max-width:650px;margin-top:20px}
+.admin-confirm{font-size:11px;display:flex;align-items:flex-start;gap:8px;margin:16px 0}
+.admin-confirm input{flex-shrink:0;margin-top:1px}
+@media(max-width:1050px){.vfc-admin .admin-filters{grid-template-columns:1fr 1fr}.admin-broker-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:650px){.vfc-admin .admin-filters{grid-template-columns:1fr 1fr}.vfc-admin .admin-search{grid-column:1/-1}.admin-broker-grid{grid-template-columns:1fr;padding:0 14px 14px}.admin-broker-footnote{padding:0 14px 14px}.bell-panel{right:-75px}.admin-view-tabs button{flex:1;font-size:9px;padding:9px 6px}.topinner nav{gap:9px}}
