@@ -94,7 +94,7 @@ async function openFile(id,scroll=true){
  })};
  container.scrollIntoView({behavior:'smooth',block:'nearest'});
  };
- if($('sendForSignature'))$('sendForSignature').onclick=e=>{if((pending||e.currentTarget.dataset.pending==='true')&&!confirm('Create a replacement signing link? The earlier link will no longer work.'))return;return busyRun(e.currentTarget,async()=>{
+ if($('sendForSignature'))$('sendForSignature').onclick=e=>{if(!$('editClientPanel').hidden){notice('Save or cancel your changes before sending the application.',true);return;}if((pending||e.currentTarget.dataset.pending==='true')&&!confirm('Create a replacement signing link? The earlier link will no longer work.'))return;return busyRun(e.currentTarget,async()=>{
  const {data:token,error}=await db.rpc('vfc_broker_create_signing_link',{p_application:id});
  if(error||!token)throw error||Error('Unable to create signing request.');
  const link=location.origin+'/sign/?token='+token;
@@ -102,6 +102,7 @@ async function openFile(id,scroll=true){
  const body='Hello '+(a.clients?.full_name||'')+',\n\nPlease review and electronically sign your Vancouver Finance Company financing application using the secure link below:\n\n'+link+'\n\nNo login is required. Your link expires in 72 hours.\n\nThank you,\nVancouver Finance Company Inc.';
  const draft='mailto:'+encodeURIComponent(a.clients?.email||'')+'?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
  if(selected!==id)return;
+ const edit=$('editClientInfo');if(edit)edit.hidden=true;const trigger=$('sendForSignature');if(trigger)trigger.dataset.pending='true';
  const panel=$('signingEmailPanel');panel.innerHTML='<div class="broker-link-ready"><p><b>Secure signing link created.</b> Automatic email is not confirmed. Open the email draft and press Send, or copy the confidential link.</p><div class="broker-actions"><a class="btn" href="'+esc(draft)+'" id="signingMailDraft">Open Signing Email</a><button type="button" class="btn secondary" id="copySigningLink">Copy Signing Link</button></div></div>';
  $('copySigningLink').onclick=async()=>{await navigator.clipboard.writeText(link);notice('Signing link copied. Treat it as confidential.')};
  const active=await db.rpc('vfc_broker_signing_history',{p_application:id});
@@ -115,7 +116,7 @@ async function openFile(id,scroll=true){
  document.querySelectorAll('.signed-copy').forEach(button=>button.onclick=e=>busyRun(e.currentTarget,async()=>{
  const {data,error}=await db.functions.invoke('vfc-sign',{body:{action:'broker_download',signing_id:button.dataset.id}});
  if(error||!data?.url)throw error||Error(data?.error||'Unable to download signed PDF');
- const anchor=document.createElement('a');anchor.href=data.url;anchor.target='_self';anchor.rel='noopener noreferrer';anchor.click();
+ const anchor=document.createElement('a');anchor.href=data.url;anchor.rel='noopener noreferrer';anchor.click();
  }));
 
 
