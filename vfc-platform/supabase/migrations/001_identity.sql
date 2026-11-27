@@ -1,0 +1,12 @@
+begin;
+create type public.user_role as enum ('admin','broker','client');
+create table public.profiles(id uuid primary key references auth.users(id) on delete restrict, role public.user_role not null default 'client', full_name text not null default '', active boolean not null default false, created_at timestamptz not null default now());
+alter table public.profiles enable row level security;
+revoke all on public.profiles from public,anon,authenticated;
+grant select on public.profiles to authenticated;
+grant all on public.profiles to service_role;
+create policy own_profile on public.profiles for select to authenticated using(id=auth.uid());
+create function public.provision_profile() returns trigger language plpgsql security definer set search_path='' as $$ begin insert into public.profiles(id) values(new.id);return new;end;$$;
+revoke all on function public.provision_profile() from public,anon,authenticated;
+create trigger provision_profile after insert on auth.users for each row execute function public.provision_profile();
+commit;
