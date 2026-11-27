@@ -36,6 +36,7 @@ function render(){
    return haystack.includes(term)&&(statusFilter==='all'||a.status===statusFilter)&&(productFilter==='all'||a.financing_product===productFilter);
  }).sort((a,b)=>listSort==='amount-desc'?Number(b.requested_amount)-Number(a.requested_amount):listSort==='amount-asc'?Number(a.requested_amount)-Number(b.requested_amount):listSort==='oldest'?new Date(a.created_at)-new Date(b.created_at):new Date(b.created_at)-new Date(a.created_at));
  $('resultsCount').textContent=rows.length+' of '+mine.length+' applications';
+ const activeFilters=Number(statusFilter!=='all')+Number(productFilter!=='all')+Number(listSort!=='newest');const filterCount=$('filterCount');if(filterCount){filterCount.textContent=String(activeFilters);filterCount.hidden=!activeFilters;$('dealsFilters').classList.toggle('has-filters',activeFilters>0);}
   $('cards').innerHTML=rows.map(a=>'<article class="broker-list-row" role="listitem"><div class="broker-list-client"><div class="eyebrow">VFC-'+String(a.application_number).padStart(4,'0')+'</div><strong>'+esc(a.clients?.full_name||'Client')+'</strong><small>'+esc(a.business_name)+'</small></div><div class="broker-list-financing"><strong>'+fmt(a.requested_amount)+'</strong><small>'+esc(a.financing_product||'')+'</small></div><div class="broker-list-status"><span class="broker-status-chip">'+esc(label(a.status))+'</span><small>'+fmtDate(a.created_at)+'</small></div><button class="btn secondary open-deal" data-id="'+esc(a.id)+'">Open File</button></article>').join('')||'<p class="subtle">No applications match your search.</p>';
 }
 async function busyRun(button,func){
@@ -174,6 +175,13 @@ $('cancelNew').onclick=()=>navigateWorkspace('deals');
 $('railLogout').onclick=()=>$('logout').click();
 document.querySelectorAll('[data-workspace]').forEach(b=>b.onclick=()=>navigateWorkspace(b.dataset.workspace));
 document.addEventListener('keydown',e=>{const drawer=$('dealDrawer');if(e.key==='Escape'&&drawer&&!drawer.hidden){e.preventDefault();setDealDrawer(false,true);}});
+const filterMenu=$('dealsFilters');
+if(filterMenu){
+ const closeFilters=()=>{filterMenu.open=false;filterMenu.querySelector('summary').focus({preventScroll:true});};
+ $('applyFilters').onclick=closeFilters;
+ document.addEventListener('click',e=>{if(filterMenu.open&&!filterMenu.contains(e.target))filterMenu.open=false;});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&filterMenu.open){e.preventDefault();closeFilters();}});
+}
 $('search').oninput=render;
 $('statusFilter').onchange=e=>{statusFilter=e.target.value;render()};
 $('productFilter').onchange=e=>{productFilter=e.target.value;render()};
