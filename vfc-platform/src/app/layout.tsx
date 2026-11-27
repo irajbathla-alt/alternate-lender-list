@@ -1,0 +1,1 @@
+import type {ReactNode} from 'react';export default function Layout({children}:{children:ReactNode}){return <html lang="en"><body style={{margin:0,fontFamily:'Arial',background:'#f5f5f5',color:'#292929'}}><header style={{background:'#292929',color:'white',padding:16,textAlign:'center'}}>VANCOUVER FINANCE COMPANY INC.</header>{children}</body></html>}
