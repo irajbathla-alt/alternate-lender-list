@@ -100,6 +100,11 @@ async function refresh(scroll=true){
  if(selected){const exists=apps.find(a=>a.id===selected);if(exists)await openFile(selected,scroll);else{$('detail').innerHTML='';selected=null;showWorkspace('deals',false);}}
 }
 function signingStatus(x){if(!x)return 'Not sent';if(x.status==='signed')return 'Signed';if(x.status==='pending'&&new Date(x.expires_at).getTime()<Date.now())return 'Link expired';if(x.status==='pending')return 'Awaiting signature';return label(x.status);}
+function signingProgress(x){
+ const signed=x?.status==='signed',pending=x?.status==='pending'&&new Date(x.expires_at).getTime()>Date.now();
+ const rows=[['Signing request',x?'Created':'Not sent'],['Client signature',signed?'Received':pending?'Awaiting signature':x?'Not received':'Not started'],['Signed PDF',signed?'Available in Other Documents':'Pending'],['PDF email',signed?label(x.email_status||'unconfirmed'):'Pending']];
+ return '<div class="signing-progress">'+rows.map(([k,v])=>'<div><span>'+esc(k)+'</span><b>'+esc(v)+'</b></div>').join('')+'</div>';
+}
 function signingRows(rows){return rows.map(x=>'<div class="broker-mini broker-sign-row"><span><b>'+esc(signingStatus(x))+'</b><small>Created: '+new Date(x.created_at).toLocaleString('en-CA')+(x.signed_at?' · Signed: '+new Date(x.signed_at).toLocaleString('en-CA'):'')+(x.status==='signed'&&x.email_status?' · PDF email: '+esc(label(x.email_status)):'')+'</small></span>'+(x.status==='signed'?'<button type="button" class="btn secondary signed-copy" data-id="'+esc(x.id)+'">Download Signed PDF</button>':'')+'</div>').join('')||'<p class="subtle">No signing requests created.</p>';}
 function label(s){return String(s||'draft').replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());}
 const dealBellIcon='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/><circle cx="19" cy="4" r="2.5" fill="currentColor" stroke="#fff" stroke-width="1"/></svg>';
@@ -232,7 +237,7 @@ async function openFile(id,scroll=true){
  '</div>'+
  panel('decision')+'<section class="decision-section"><div class="decision-heading"><div><h3>Financing Decision</h3><p class="subtle">Official updates from VFC Admin.</p></div><button type="button" class="btn secondary" id="refreshDecision">Refresh</button></div><div id="decisionCurrent" aria-live="polite"></div><div id="decisionHistory"></div></section></div>'+
  panel('signing')+
- '<section class="broker-workflow-panel"><div class="broker-workflow-title"><div><h3>Client Application &amp; Signing</h3><p class="subtle">Send the application to the client by email. No client account required.</p></div><div class="broker-actions">'+(!a.submitted_at&&a.status==='draft'&&!detailData.signing.some(x=>x.status==='signed')?'<button type="button" class="btn" id="sendForSignature">'+(pending?'Reissue Signing Link':'Send Application for Signature')+'</button>':'')+'</div></div><div id="signingEmailPanel"></div><div class="broker-sign-summary"><span class="sign-state '+(signed?'is-signed':pending?'is-pending':'')+'">'+esc(signingStatus(signed||pending||detailData.signing[0]))+'</span><button type="button" class="btn secondary" id="refreshSignature">Refresh Status</button></div><div id="signingHistory">'+signingRows(detailData.signing)+'</div></section>'+
+ '<section class="broker-workflow-panel"><div class="broker-workflow-title"><div><h3>Client Application &amp; Signing</h3><p class="subtle">Send the application to the client by email. No client account required.</p></div><div class="broker-actions">'+(!a.submitted_at&&a.status==='draft'&&!detailData.signing.some(x=>x.status==='signed')?'<button type="button" class="btn" id="sendForSignature">'+(pending?'Resend Invitation':'Send Application for Signature')+'</button>':'')+'</div></div><div id="signingEmailPanel"></div><div class="broker-sign-summary"><span class="sign-state '+(signed?'is-signed':pending?'is-pending':'')+'">'+esc(signingStatus(signed||pending||detailData.signing[0]))+'</span><button type="button" class="btn secondary" id="refreshSignature">Refresh Status</button></div><div id="signingProgress">'+signingProgress(signed||pending||detailData.signing[0])+'</div><div id="signingHistory">'+signingRows(detailData.signing)+'</div></section>'+
 
  '<div class="broker-actions"><button class="btn secondary" id="downloadPdf">Download Draft PDF</button><button class="btn" id="submitAdmin" '+(a.submitted_at?'disabled':'')+'>'+(a.submitted_at?'Submitted to Admin':'Submit to Admin')+'</button>'+(cleanTest&&!a.submitted_at?'<button class="btn secondary" id="testSubmit">Submit Fictional TEST File</button>':'')+'</div><p class="subtle">Submission requires a recorded electronic signature and accepted required checklist items. The test exception accepts only fictional records without documents.</p>'+
 
@@ -263,7 +268,7 @@ async function openFile(id,scroll=true){
  setEditing(false);await refresh(false);notice('Information saved with an audit entry.');
  })};
  }
- if($('sendForSignature'))$('sendForSignature').onclick=e=>{if(isEditingInfo()){notice('Save or cancel your changes before sending the application.',true);return;}if((pending||e.currentTarget.dataset.pending==='true')&&!confirm('Create a replacement signing link? The earlier link will no longer work.'))return;return busyRun(e.currentTarget,async()=>{
+ if($('sendForSignature'))$('sendForSignature').onclick=e=>{if(isEditingInfo()){notice('Save or cancel your changes before sending the application.',true);return;}if((pending||e.currentTarget.dataset.pending==='true')&&!confirm('Resend the invitation? This replaces the previous signing link.'))return;return busyRun(e.currentTarget,async()=>{
  const {data:token,error}=await db.rpc('vfc_broker_create_signing_link',{p_application:id});
  if(error||!token)throw error||Error('Unable to create signing request.');
  const link=location.origin+'/sign/?token='+token;
@@ -276,7 +281,7 @@ async function openFile(id,scroll=true){
  $('copySigningLink').onclick=async()=>{await navigator.clipboard.writeText(link);notice('Signing link copied. Treat it as confidential.')};
  const active=await db.rpc('vfc_broker_signing_history',{p_application:id});
  if(selected!==id)return;
- if(!active.error&&active.data?.length){const record=active.data[0];$('signingHistory').innerHTML=signingRows(active.data);document.querySelectorAll('#openedFile .sign-state').forEach(badge=>{badge.textContent='Awaiting signature';badge.className='sign-state is-pending';});const trigger=$('sendForSignature');if(trigger){trigger.dataset.pending='true';}
+ if(!active.error&&active.data?.length){const record=active.data[0];$('signingHistory').innerHTML=signingRows(active.data);$('signingProgress').innerHTML=signingProgress(record);document.querySelectorAll('#openedFile .sign-state').forEach(badge=>{badge.textContent='Awaiting signature';badge.className='sign-state is-pending';});const trigger=$('sendForSignature');if(trigger){trigger.dataset.pending='true';trigger.textContent='Resend Invitation';}
  const mailed=await db.functions.invoke('vfc-sign',{body:{action:'send_invitation',signing_id:record.id,token}});
  if(selected!==id)return;
  if(!mailed.error&&mailed.data?.email_status==='sent'){$('signingEmailPanel').innerHTML='<div class="broker-link-ready"><b>Signing email sent successfully through Apps Script.</b></div>';notice('Signing email sent and logged.')}else notice('Signing link created; open the email draft to send it.');
