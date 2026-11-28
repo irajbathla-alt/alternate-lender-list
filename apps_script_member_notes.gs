@@ -444,6 +444,17 @@ function handleVfcMail_(payload) {
     }
     var opts={name:'Vancouver Finance Company Inc.',replyTo:'vancouverfinancecompany@gmail.com'};
     if(cc)opts.cc=cc;
+    // Render the signing invitation as a branded email. Keep the original
+    // plain-text body as the accessible fallback and leave all other mail routes intact.
+    if(subject==='Please Sign Your Application — Vancouver Finance Company'){
+      var signingLink=body.match(/https:\/\/www\.vancouverfinancecompany\.com\/sign\/\?token=[a-f0-9]{64}(?![a-f0-9])/);
+      if(signingLink){
+        var htmlEscape=function(value){return String(value).replace(/[&<>"']/g,function(ch){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];});};
+        var greeting=body.split(/\r?\n/)[0];
+        var safeLink=htmlEscape(signingLink[0]);
+        opts.htmlBody='<div style="background:#f5f5f5;padding:24px 10px;font-family:Arial,sans-serif;color:#292929"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;margin:auto;background:#fff;border:1px solid #ddd"><tr><td align="center" style="padding:22px 14px;background:#292929;color:#fff;font-family:Georgia,serif;font-size:17px">VANCOUVER FINANCE COMPANY INC.</td></tr><tr><td style="padding:28px 24px"><p style="font-size:11px;letter-spacing:2px;color:#777">ELECTRONIC APPLICATION</p><h1 style="font-family:Georgia,serif;font-weight:normal;font-size:28px;margin:0 0 22px">Review &amp; Sign</h1><p>'+htmlEscape(greeting)+'</p><p>Your financing application is ready for your review and electronic signature.</p><p>Review your business and applicant information, accept the consent and sign. No client account is required.</p><table role="presentation" cellspacing="0" cellpadding="0" style="margin:24px auto"><tr><td bgcolor="#292929" style="border-radius:6px"><a href="'+safeLink+'" style="display:inline-block;padding:15px 24px;color:#fff;text-decoration:none;font-weight:bold">REVIEW &amp; SIGN APPLICATION</a></td></tr></table><p style="font-size:12px;color:#666;line-height:1.6">This confidential link expires in 72 hours. Please do not forward it. A signed PDF copy will be available after signing.</p><p style="font-size:12px;color:#666;overflow-wrap:anywhere">If the button does not work, open this link:<br><a href="'+safeLink+'" style="color:#444;word-break:break-all">'+safeLink+'</a></p></td></tr><tr><td align="center" style="padding:15px;border-top:1px solid #eee;color:#777;font-size:11px">Vancouver Finance Company Inc.<br>www.vancouverfinancecompany.com</td></tr></table></div>';
+      }
+    }
     if(payload.attachment){
       var b64=String(payload.attachment||'');
       if(b64.length>4200000||!/^[A-Za-z0-9+/=]+$/.test(b64))return reply({ok:false,error:'Invalid attachment'});
