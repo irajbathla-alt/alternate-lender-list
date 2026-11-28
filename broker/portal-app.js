@@ -35,24 +35,33 @@ async function loadIdentity(){
 }
 let chatCounts=new Map(),chatPolling=false,dashboardUpdates=[],notificationBusy=false,unreadOnly=false,metricFilter='all';
 const metricGroups={all:null,review:['under_review'],approved:['approved','conditional_approval'],action:['additional_documents_required','pending_client_info'],funded:['funded']};
-function metricMatch(a,key){return !metricGroups[key]||metricGroups[key].includes(a.status);}
-function renderPriority(){
- const root=$('priorityDeals');if(!root)return;const rows=apps.filter(a=>metricMatch(a,'action')||Number(chatCounts.get(a.id)?.unread||0)>0).sort((a,b)=>Number(chatCounts.get(b.id)?.unread||0)-Number(chatCounts.get(a.id)?.unread||0)||new Date(b.created_at)-new Date(a.created_at));
- const total=$('priorityCount');total.textContent=String(rows.length);total.hidden=!rows.length;
- const html=rows.slice(0,8).map(a=>{const n=Number(chatCounts.get(a.id)?.unread||0);return '<div class="priority-deal-row"><div><b>'+esc(a.business_name)+'</b><small>VFC-'+String(a.application_number).padStart(4,'0')+' · '+esc(a.clients?.full_name||'Client')+'</small></div><div class="priority-deal-state">'+(n?'<span class="unread-chip">'+n+' unread</span>':'')+(metricMatch(a,'action')?'<small>'+esc(label(a.status))+'</small>':'')+'</div><button type="button" class="btn secondary priority-open" data-priority="'+esc(a.id)+'">Open</button></div>'}).join('');
- if(root.dataset.content!==html){root.innerHTML=html||'<p class="subtle">No deals currently need your attention.</p>';root.dataset.content=html;}const more=$('priorityMore');more.hidden=rows.length<=8;
-}
+function needsAction(a){return metricGroups.action.includes(a.status)||Number(chatCounts.get(a.id)?.unread||0)>0||dashboardUpdates.some(n=>n.application_id===a.id&&!n.read_at&&n.event_type==='message_received');}
+function metricMatch(a,key){return key==='action'?needsAction(a):!metricGroups[key]||metricGroups[key].includes(a.status);}
 const financingUpdateTypes=new Set(['decision_published','status_changed','status_updated','application_status_updated','application_status_changed','lender_update','lender_status_updated','lender_response_received']);
 function isFinancingUpdate(n){return financingUpdateTypes.has(n.event_type);}
+function notificationBucket(n,a){
+ if(!a)return 'general';
+ if(metricMatch(a,'approved')&&isFinancingUpdate(n))return 'approved';
+ if(needsAction(a))return 'action';
+ return 'general';
+}
+function notificationRow(n,a){
+ const deal=a?'VFC-'+String(a.application_number).padStart(4,'0')+' · '+a.business_name:'General update';
+ return '<article class="dashboard-notification-row '+(!n.read_at?'is-unread':'')+(isFinancingUpdate(n)?' financing-update':'')+'"><span class="notification-dot" aria-label="'+(n.read_at?'Read':'Unread')+'"></span><div class="notification-copy">'+(isFinancingUpdate(n)?'<span class="financing-update-label">Financing update · via Admin</span>':'')+'<b>'+esc(n.title)+'</b><p>'+esc(n.body)+'</p><small>'+esc(deal)+' · '+esc(new Date(n.created_at).toLocaleString('en-CA'))+'</small></div>'+(a?'<button type="button" class="btn secondary notification-open" data-notification="'+esc(n.id)+'">Open File</button>':(!n.read_at?'<button type="button" class="btn secondary notification-open" data-notification="'+esc(n.id)+'">Mark Read</button>':''))+'</article>';
+}
 function renderDashboardNotifications(){
- const root=$('dashboardNotifications');if(!root)return;const own=new Map(apps.map(a=>[a.id,a]));const rows=dashboardUpdates.filter(n=>!n.application_id||own.has(n.application_id));const unread=rows.filter(n=>!n.read_at).length;const count=$('notificationCount');count.textContent=String(unread);count.hidden=!unread;
- const visibleRows=unreadOnly?rows.filter(n=>!n.read_at):rows;const rail=$('railUnread');if(rail){rail.textContent=String(unread);rail.hidden=!unread;}const html=visibleRows.map(n=>{const a=own.get(n.application_id),deal=a?'VFC-'+String(a.application_number).padStart(4,'0')+' · '+a.business_name:'General update';return '<article class="dashboard-notification-row '+(!n.read_at?'is-unread':'')+(isFinancingUpdate(n)?' financing-update':'')+'"><span class="notification-dot" aria-label="'+(n.read_at?'Read':'Unread')+'"></span><div class="notification-copy">'+(isFinancingUpdate(n)?'<span class="financing-update-label">Financing update · via Admin</span>':'')+'<b>'+esc(n.title)+'</b><p>'+esc(n.body)+'</p><small>'+esc(deal)+' · '+esc(new Date(n.created_at).toLocaleString('en-CA'))+'</small></div>'+(a?'<button type="button" class="btn secondary notification-open" data-notification="'+esc(n.id)+'">Open File</button>':(!n.read_at?'<button type="button" class="btn secondary notification-open" data-notification="'+esc(n.id)+'">Mark Read</button>':''))+'</article>';}).join('');
- if(root.dataset.content!==html){root.innerHTML=html||'<p class="subtle">'+(unreadOnly?'No unread notifications.':'You’re all caught up. New Admin updates will appear here.')+'</p>';root.dataset.content=html;}
+ const root=$('dashboardNotifications');if(!root)return;const own=new Map(apps.map(a=>[a.id,a]));const rows=dashboardUpdates.filter(n=>!n.application_id||own.has(n.application_id)),unread=rows.filter(n=>!n.read_at).length;
+ const general=rows.filter(n=>notificationBucket(n,own.get(n.application_id))==='general'),visibleRows=unreadOnly?general.filter(n=>!n.read_at):general;
+ const count=$('notificationCount'),generalUnread=general.filter(n=>!n.read_at).length;count.textContent=String(generalUnread);count.hidden=!generalUnread;
+ const rail=$('railUnread');if(rail){rail.textContent=String(unread);rail.hidden=!unread;}
+ $('generalUpdates').hidden=!general.length;
+ const html=visibleRows.map(n=>notificationRow(n,own.get(n.application_id))).join('');
+ const content=html||'<p class="subtle">No unread updates.</p>';if(root.dataset.content!==content){root.innerHTML=content;root.dataset.content=content;}
 }
 async function refreshDashboardNotifications(){
  if(!authorized()||notificationBusy)return;notificationBusy=true;const uid=user.id;
- try{const r=await db.from('notifications').select('id,application_id,event_type,title,body,read_at,created_at').eq('recipient_id',uid).neq('event_type','test_fixture_created').order('created_at',{ascending:false}).limit(100);if(r.error)throw r.error;if(!authorized()||user.id!==uid)return;dashboardUpdates=r.data||[];renderDashboardNotifications();if(workspaceView==='deals')render();if(workspaceView==='dashboard')renderMetricPreview();}
- catch(e){if(authorized()&&user.id===uid){$('dashboardNotifications').textContent='Unable to load updates. Use Refresh to try again.';delete $('dashboardNotifications').dataset.content;}throw e;}finally{notificationBusy=false;}
+ try{const r=await db.from('notifications').select('id,application_id,event_type,title,body,read_at,created_at').eq('recipient_id',uid).neq('event_type','test_fixture_created').order('created_at',{ascending:false}).limit(100);if(r.error)throw r.error;if(!authorized()||user.id!==uid)return;dashboardUpdates=r.data||[];renderDashboardNotifications();if(workspaceView==='deals'||workspaceView==='dashboard')render();}
+ catch(e){if(authorized()&&user.id===uid){$('generalUpdates').hidden=false;$('dashboardNotifications').textContent='Unable to load updates. Use the refresh icon to try again.';delete $('dashboardNotifications').dataset.content;}throw e;}finally{notificationBusy=false;}
 }
 
 async function refreshChatCounts(){if(!authorized())return;const uid=user.id;const r=await db.rpc('vfc_deal_chat_list');if(r.error)throw r.error;if(!authorized()||user.id!==uid)return;chatCounts=new Map((r.data||[]).map(x=>[x.application_id,x]));apps.forEach(a=>{const v=chatCounts.get(a.id);if(v?.status)a.status=v.status;});if(workspaceView==='dashboard'||workspaceView==='deals')render();const status=$('decisionShortcut'),current=apps.find(a=>a.id===selected);if(status&&current){status.textContent=label(current.status);status.dataset.status=current.status;}const b=$('dealUnread');if(b){const n=Number(chatCounts.get(selected)?.unread||0);b.textContent=n?String(n):'';b.hidden=!n;}}
@@ -96,6 +105,10 @@ function renderMetricPreview(){
  $('metricDialogTitle').textContent=metricTitles[modalMetric];$('metricDialogCount').textContent=rows.length+' '+(rows.length===1?'deal':'deals');
  const list=$('metricDealList'),html=rows.map(renderDealRow).join('')||'<p class="subtle metric-empty">No deals in this category yet.</p>';
  if(list.dataset.content!==html){list.innerHTML=html;list.dataset.content=html;}
+ const updates=$('metricUpdates'),own=new Map(rows.map(a=>[a.id,a]));
+ const notices=['approved','action'].includes(modalMetric)?dashboardUpdates.filter(n=>own.has(n.application_id)&&notificationBucket(n,own.get(n.application_id))===modalMetric):[];
+ updates.hidden=!notices.length;const body=notices.length?'<h3>Recent Updates</h3>'+notices.map(n=>notificationRow(n,own.get(n.application_id))).join(''):'';
+ if(updates.dataset.content!==body){updates.innerHTML=body;updates.dataset.content=body;}
 }
 function openMetricPreview(key){
  if(working||workspaceView!=='dashboard'||!Object.hasOwn(metricTitles,key))return;
@@ -107,7 +120,7 @@ function closeMetricPreview(){
 }
 function render(){
  const mine=apps;
- const metrics=[['My Applications','all'],['Under Review','review'],['Approvals','approved'],['Action Required','action'],['Funded','funded']].map(([k,key])=>'<button type="button" class="metric card metric-link" data-metric="'+key+'" title="View '+esc(k)+'"><span>'+esc(k)+'</span><strong>'+mine.filter(a=>metricMatch(a,key)).length+'</strong></button>').join('');if($('metrics').dataset.content!==metrics){$('metrics').innerHTML=metrics;$('metrics').dataset.content=metrics;}renderPriority();renderMetricPreview();
+ const metrics=[['My Applications','all'],['Under Review','review'],['Approvals','approved'],['Action Required','action'],['Funded','funded']].map(([k,key])=>'<button type="button" class="metric card metric-link" data-metric="'+key+'" title="View '+esc(k)+'"><span>'+esc(k)+'</span><strong>'+mine.filter(a=>metricMatch(a,key)).length+'</strong></button>').join('');if($('metrics').dataset.content!==metrics){$('metrics').innerHTML=metrics;$('metrics').dataset.content=metrics;}renderDashboardNotifications();renderMetricPreview();
  const term=$('search').value.trim().toLowerCase();
  const rows=mine.filter(a=>{
    const haystack=[a.business_name,a.clients?.full_name,a.clients?.email,a.clients?.phone,a.financing_product,a.status,'VFC-'+String(a.application_number).padStart(4,'0')].join(' ').toLowerCase();
@@ -318,14 +331,13 @@ $('metricDealDialog').addEventListener('close',()=>{modalMetric=null;metricFilte
 $('metricDealDialog').addEventListener('click',e=>{if(e.target===$('metricDealDialog')){const r=e.currentTarget.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)closeMetricPreview();}});
 $('metricDealList').onclick=e=>{
  const bell=e.target.closest('[data-deal-bell]'),b=e.target.closest('[data-id]');if((!bell&&!b)||working)return;
- const id=bell?bell.dataset.dealBell:b.dataset.id;closeMetricPreview();busyRun(null,async()=>{try{const n=bell?dealUnreadUpdate(id):null;if(n)await openNotification(n);else{await openFile(id);if(bell&&selected===id)selectFileTab('activity');}}catch(err){selected=null;fileRequest++;$('detail').innerHTML='';showWorkspace('dashboard',false);throw err;}});
+ const id=bell?bell.dataset.dealBell:b.dataset.id,category=modalMetric;closeMetricPreview();busyRun(null,async()=>{try{const a=apps.find(x=>x.id===id);const n=dashboardUpdates.find(x=>x.application_id===id&&!x.read_at&&notificationBucket(x,a)===category)||(bell?dealUnreadUpdate(id):null);if(n)await openNotification(n);else{await openFile(id);if(selected===id){if(category==='approved')selectFileTab('decision');else if(bell||category==='action'&&Number(chatCounts.get(id)?.unread||0)>0)selectFileTab('activity');else if(category==='action')selectFileTab('decision');}}}catch(err){selected=null;fileRequest++;$('detail').innerHTML='';showWorkspace('dashboard',false);throw err;}});
 };
 $('metricFilterChip').onclick=()=>{metricFilter='all';render();};
 $('unreadOnly').onchange=e=>{unreadOnly=e.target.checked;renderDashboardNotifications();};
-$('priorityMore').onclick=()=>{openMetric('all');};
-$('priorityDeals').onclick=e=>{const b=e.target.closest('[data-priority]');if(!b||working)return;busyRun(b,async()=>{await openFile(b.dataset.priority);if(selected===b.dataset.priority&&Number(chatCounts.get(selected)?.unread||0))selectFileTab('activity');});};
 
-$('refreshNotifications').onclick=e=>busyRun(e.currentTarget,async()=>{await refreshChatCounts();await refreshDashboardNotifications();});
+$('refreshNotifications').onclick=e=>{if(working)return;const b=e.currentTarget;busyRun(null,async()=>{b.disabled=true;b.setAttribute('aria-busy','true');try{await refresh(false);}finally{b.disabled=false;b.removeAttribute('aria-busy');}});};
+$('metricUpdates').onclick=e=>{const b=e.target.closest('[data-notification]');if(!b||working)return;const n=dashboardUpdates.find(x=>x.id===b.dataset.notification);if(n){closeMetricPreview();busyRun(null,()=>openNotification(n));}};
 async function openNotification(n){
  if(n.application_id){await openFile(n.application_id);if(selected!==n.application_id)return;if(n.event_type==='message_received')selectFileTab('activity');else if(isFinancingUpdate(n))selectFileTab('decision');}
  if(!n.read_at){const r=await db.rpc('mark_notification_read',{p_notification:n.id});if(r.error)throw r.error;n.read_at=new Date().toISOString();renderDashboardNotifications();}
