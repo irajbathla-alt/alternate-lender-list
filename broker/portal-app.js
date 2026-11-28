@@ -92,6 +92,7 @@ const metricTitles={all:'My Applications',review:'Under Review',approved:'Approv
 function renderMetricPreview(){
  const dialog=$('metricDealDialog');if(!dialog?.open||!modalMetric)return;
  const rows=apps.filter(a=>metricMatch(a,modalMetric)).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+ $('openSampleDecision').hidden=modalMetric!=='approved';
  $('metricDialogTitle').textContent=metricTitles[modalMetric];$('metricDialogCount').textContent=rows.length+' '+(rows.length===1?'deal':'deals');
  const list=$('metricDealList'),html=rows.map(renderDealRow).join('')||'<p class="subtle metric-empty">No deals in this category yet.</p>';
  if(list.dataset.content!==html){list.innerHTML=html;list.dataset.content=html;}
@@ -306,9 +307,9 @@ async function openFile(id,scroll=true){
 $('loginForm').onsubmit=async e=>{e.preventDefault();const button=e.submitter;await busyRun(button,async()=>{const {email,password}=Object.fromEntries(new FormData(e.currentTarget));const {error}=await db.auth.signInWithPassword({email:String(email).trim(),password:String(password)});if(error)throw error;notice('',false,true);await loadIdentity()})};
 $('resetPassword').onclick=e=>busyRun(e.currentTarget,async()=>{const email=$('loginEmail').value.trim();if(!email)throw Error('Enter your account email first.');const {error}=await db.auth.resetPasswordForEmail(email,{redirectTo:location.origin+'/broker/'});if(error)throw error;notice('If the email belongs to an account, password reset instructions have been sent.',false,true)});
 $('logout').onclick=e=>busyRun(e.currentTarget,async()=>{if(isEditingInfo()&&!confirm('Discard unsaved changes and log out?'))return;const uid=user.id;const {error}=await db.auth.signOut();if(error)throw error;clearWorkspace(uid);user=null;profile=null;selected=null;fileRequest++;apps=[];dashboardUpdates=[];chatCounts.clear();metricFilter='all';unreadOnly=false;$('unreadOnly').checked=false;$('search').value='';statusFilter='all';productFilter='all';listSort='newest';$('statusFilter').value='all';$('productFilter').value='all';$('sortFilter').value='newest';renderDashboardNotifications();$('detail').innerHTML='';showWorkspace('dashboard',false);gate();notice('You have signed out.',false,true)});
-$('new').onclick=()=>navigateWorkspace('new');
+
 function openMetric(key){if(working)return;metricFilter=key;statusFilter='all';productFilter='all';listSort='newest';$('search').value='';$('statusFilter').value='all';$('productFilter').value='all';$('sortFilter').value='newest';navigateWorkspace('deals');}
-$('dashboardDeals').onclick=()=>openMetric('all');
+
 $('openSampleDecision').onclick=openSampleDecision;
 $('closeSampleDecision').onclick=()=>navigateWorkspace('dashboard');
 $('metrics').onclick=e=>{const b=e.target.closest('[data-metric]');if(b)openMetricPreview(b.dataset.metric);};
