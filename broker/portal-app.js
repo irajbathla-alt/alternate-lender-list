@@ -295,7 +295,7 @@ async function openFile(id,scroll=true){
 
 
  $('refreshActivity').onclick=e=>busyRun(e.currentTarget,async()=>{await openFile(id,false);notice('Activity history refreshed.');});
- $('downloadPdf').onclick=()=>{try{window.downloadVFCApplication({...a,...(details.data||{}),id:'VFC-'+String(a.application_number).padStart(4,'0'),business:a.business_name,name:a.clients?.full_name,email:a.clients?.email,phone:a.clients?.phone,requestedAmount:a.requested_amount,product:a.financing_product,summary:a.deal_summary})}catch(e){notice(errText(e),true)}};
+ $('downloadPdf').onclick=()=>{try{window.downloadVFCApplication({...a,...(details.data||{}),id:'VFC-'+String(a.application_number).padStart(4,'0'),business:a.business_name,name:a.clients?.full_name,email:a.clients?.email,phone:a.clients?.phone,requestedAmount:a.requested_amount,product:a.financing_product,summary:a.deal_summary,brokerName:profile.full_name,brokerId:profile.id,brokerEmail:user.email,brokerPhone:user.phone||'Not provided'})}catch(e){notice(errText(e),true)}};
  $('submitAdmin').onclick=e=>busyRun(e.currentTarget,async()=>{const {error}=await db.rpc('broker_submit_application',{p_application:id});if(error)throw error;notice('Application submitted to VFC Admin.');await refresh();});
  if($('testSubmit'))$('testSubmit').onclick=e=>busyRun(e.currentTarget,async()=>{if(!confirm('Submit fictional TEST application to Admin?'))return;const {error}=await db.rpc('broker_submit_test_application',{p_application:id});if(error)throw error;notice('Fictional test application submitted.');await refresh()});
 
